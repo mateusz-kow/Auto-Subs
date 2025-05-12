@@ -1,0 +1,7 @@
+torch
+git+https://github.com/openai/whisper.git
+git+https://github.com/FFmpeg/FFmpeg
+PySide6
+qasync
+appdirs
+python-vlc

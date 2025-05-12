@@ -1,0 +1,17 @@
+{
+  "title": "Whisper Subtitles",
+  "font": "Verdana",
+  "font_size": 36,
+  "primary_color": "&H00FFFFFF",
+  "alignment": 2,
+  "margin_l": 10,
+  "margin_r": 10,
+  "margin_v": 10,
+  "bold": 0,
+  "italic": 0,
+  "border_style": 1,
+  "outline": 2,
+  "shadow": 0,
+  "encoding": 1,
+  "highlight_style": "{\\1c&H99CCFF\\3c&000000}"
+}
