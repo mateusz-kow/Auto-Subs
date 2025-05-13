@@ -1,35 +1,4 @@
-DEFAULT = {
-    'title': 'Untitled',
-    'font': 'Arial',
-    'font_size': 75,
-    'primary_color': '&H00FFFFFF',
-    'secondary_color': '&H000000FF',
-    'outline_color': '&H00000000',
-    'back_color': '&H64000000',
-    'bold': 0,
-    'italic': 0,
-    'underline': 0,
-    'strikeout': 0,
-    'scale_x': 100,
-    'scale_y': 100,
-    'spacing_spinbox': 0,
-    'angle': 0,
-    'border_style': 1,
-    'outline': 1,
-    'shadow': 0,
-    'alignment': 2,
-    'margin_l': 10,
-    'margin_r': 10,
-    'margin_v': 500,
-    'encoding': 1,
-    'play_res_x': 1920,
-    'play_res_y': 1080,
-    'wrap_style': 0,
-    'scaled_border_and_shadow': 'yes'
-}
-
-
-def generate_ass_header(settings: dict, default: dict = DEFAULT) -> str:
+def generate_ass_header(settings: dict) -> str:
     """
     Generates the ASS file header section using fallback defaults from DEFAULT dict.
 
@@ -40,7 +9,7 @@ def generate_ass_header(settings: dict, default: dict = DEFAULT) -> str:
     Returns:
         str: ASS header string.
     """
-    get = lambda key: settings.get(key, default.get(key))
+    get = lambda key: settings.get(key)
 
     return f"""[Script Info]
 Title: {get('title')}

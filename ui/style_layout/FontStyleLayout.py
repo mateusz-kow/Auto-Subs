@@ -17,7 +17,7 @@ def _create_labeled_row(label_text, widget):
 class FontStyleLayout(QVBoxLayout):
     settings_changed = Signal(object)
 
-    def __init__(self):
+    def __init__(self, style: dict):
         super().__init__()
 
         self.color_buttons = {}
@@ -124,6 +124,8 @@ class FontStyleLayout(QVBoxLayout):
         self.encoding.addItems(["ANSI", "UTF-8", "Unicode"])
         self.encoding.currentIndexChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Encoding:", self.encoding))
+
+        self.set_settings(style)
 
     def _update_color_button_style(self, name):
         color = self.color_buttons[name]["color"]

@@ -18,8 +18,9 @@ class StyleLayout(QVBoxLayout):
 
         self.addWidget(QLabel("Subtitle Styling"))
 
-        self.font_layout = FontStyleLayout()
-        self.highlight_layout = HighlightStyleLayout()
+        style = StyleManager().to_dict()
+        self.font_layout = FontStyleLayout(style)
+        self.highlight_layout = HighlightStyleLayout(style)
 
         self.addLayout(self.font_layout)
         self.addLayout(self.highlight_layout)
