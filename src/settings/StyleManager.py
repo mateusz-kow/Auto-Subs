@@ -4,7 +4,7 @@ import logging
 from typing import Callable, Optional
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEFAULT_STYLE = {
@@ -22,7 +22,7 @@ DEFAULT_STYLE = {
     "outline": 2,
     "shadow": 0,
     "encoding": 1,
-    "highlight_style": r"{\1c&H99CCFF\3c&000000}"
+    "highlight_style": None
 }
 
 

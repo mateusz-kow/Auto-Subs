@@ -31,3 +31,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+#
+# New style: {'title': 'Default',
+#             'font': 'Segoe UI',
+#             'font_size': 56,
+#             'bold': -1,
+#             'italic': 0, 'primary_color': '&H00FFFFFF',
+#             'alignment': 2, 'margin_l': 10, 'margin_r': 10, 'margin_v': 500, 'border_style': 1,
+#             'outline': 8, 'shadow': 0, 'encoding': 0, 'highlight_style': '{\\1c&H99CCFF\\3c&H000000}'}

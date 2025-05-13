@@ -1,6 +1,6 @@
 import warnings
 
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QVBoxLayout, QLabel
 
 from src.settings.StyleManager import StyleManager
 from .FontStyleLayout import FontStyleLayout
@@ -23,10 +23,6 @@ class StyleLayout(QVBoxLayout):
 
         self.addLayout(self.font_layout)
         self.addLayout(self.highlight_layout)
-
-        self.apply_button = QPushButton("Apply Style")
-        self.apply_button.clicked.connect(self.apply_current_style)
-        self.addWidget(self.apply_button)
 
         self.font_layout.settings_changed.connect(self.apply_current_style)
         self.highlight_layout.settings_changed.connect(self.apply_current_style)
