@@ -89,6 +89,7 @@ class SubtitlesManager:
 
         # Refresh the segment to update its state
         segment.refresh()
+        self.subtitles.refresh()
 
         # Notify all listeners about the updated subtitles
         for listener in self.subtitles_listeners:
