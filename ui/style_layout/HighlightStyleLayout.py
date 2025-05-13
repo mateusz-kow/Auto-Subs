@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QPushButton, QCheckBox, QColorDialog
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
+from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 class HighlightStyleLayout(QVBoxLayout):
@@ -55,13 +56,8 @@ class HighlightStyleLayout(QVBoxLayout):
         Returns:
             dict: Dictionary containing the highlight style string.
         """
-        def to_ass_color(qcolor: QColor) -> str:
-            rgb = qcolor.rgb() & 0xFFFFFF
-            bgr_hex = f'{(rgb & 0xFF):02X}{(rgb >> 8 & 0xFF):02X}{(rgb >> 16 & 0xFF):02X}'
-            return f"&H{bgr_hex}"
-
-        text_color = to_ass_color(self.highlight_color)
-        border_color = to_ass_color(self.highlight_border_color)
+        text_color = qcolor_to_ass(self.highlight_color)
+        border_color = qcolor_to_ass(self.highlight_border_color)
         highlight_style = rf"{{\1c{text_color}\3c{border_color}}}"
 
         if self.fade_highlight_checkbox.isChecked():
@@ -78,14 +74,6 @@ class HighlightStyleLayout(QVBoxLayout):
         Args:
             settings (dict): Dictionary containing 'highlight_style' key.
         """
-        def from_ass_color(ass_color: str) -> QColor:
-            # Convert &HBBGGRR to QColor(R, G, B)
-            hex_part = ass_color[2:] if ass_color.startswith("&H") else ass_color
-            r = int(hex_part[4:6], 16)
-            g = int(hex_part[2:4], 16)
-            b = int(hex_part[0:2], 16)
-            return QColor(r, g, b)
-
         highlight_style = settings.get("highlight_style", "")
         if not highlight_style:
             return
@@ -97,7 +85,7 @@ class HighlightStyleLayout(QVBoxLayout):
             if end == -1:
                 end = highlight_style.find("}", start)
             color_str = highlight_style[start:end].strip("\\")
-            self.highlight_color = from_ass_color(f"&H{color_str}")
+            self.highlight_color = ass_to_qcolor(f"&H{color_str}")
             self.highlight_color_button.setStyleSheet(f"background-color: {self.highlight_color.name()}")
 
         # Extract \3c&HXXXXXX for border color
@@ -107,7 +95,7 @@ class HighlightStyleLayout(QVBoxLayout):
             if end == -1:
                 end = highlight_style.find("}", start)
             color_str = highlight_style[start:end].strip("\\")
-            self.highlight_border_color = from_ass_color(f"&H{color_str}")
+            self.highlight_border_color = ass_to_qcolor(f"&H{color_str}")
             self.highlight_border_button.setStyleSheet(f"background-color: {self.highlight_border_color.name()}")
 
         # Determine if fading is used

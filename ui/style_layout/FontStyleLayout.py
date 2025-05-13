@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (
     QVBoxLayout, QFontComboBox, QSpinBox, QCheckBox, QPushButton,
-    QComboBox, QHBoxLayout, QLabel, QColorDialog
+    QComboBox, QHBoxLayout, QLabel, QColorDialog, QDoubleSpinBox
 )
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
+from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 def _create_labeled_row(label_text, widget):
@@ -14,34 +15,27 @@ def _create_labeled_row(label_text, widget):
 
 
 class FontStyleLayout(QVBoxLayout):
-    """
-    Layout providing UI controls for configuring font-related subtitle styles,
-    such as font family, size, color, margins, borders, and encoding.
-
-    Emits:
-        settings_changed: Signal emitted whenever a user changes a font-related setting.
-    """
-
     settings_changed = Signal(object)
 
     def __init__(self):
         super().__init__()
 
-        # Font family selector
+        self.color_buttons = {}
+
+        # === Font family ===
         self.font_selector = QFontComboBox()
         self.font_selector.currentFontChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Font:", self.font_selector))
 
-        # Font size
+        # === Font size ===
         self.font_size = QSpinBox()
         self.font_size.setRange(6, 100)
-        self.font_size.setValue(55)
+        self.font_size.setValue(36)
         self.font_size.valueChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Size:", self.font_size))
 
-        # Bold/Italic checkboxes
+        # === Font styles ===
         self.bold_checkbox = QCheckBox("Bold")
-        self.bold_checkbox.setChecked(True)
         self.bold_checkbox.stateChanged.connect(self.settings_changed.emit)
         self.addWidget(self.bold_checkbox)
 
@@ -49,21 +43,30 @@ class FontStyleLayout(QVBoxLayout):
         self.italic_checkbox.stateChanged.connect(self.settings_changed.emit)
         self.addWidget(self.italic_checkbox)
 
-        # Text color button
-        self.color_button = QPushButton("Text color")
-        self.selected_color_qcolor = QColor("#ffffff")
-        self._update_color_button_style()
-        self.color_button.clicked.connect(self.select_color)
-        self.addWidget(self.color_button)
+        self.underline_checkbox = QCheckBox("Underline")
+        self.underline_checkbox.stateChanged.connect(self.settings_changed.emit)
+        self.addWidget(self.underline_checkbox)
 
-        # Alignment dropdown
+        self.strikeout_checkbox = QCheckBox("Strikeout")
+        self.strikeout_checkbox.stateChanged.connect(self.settings_changed.emit)
+        self.addWidget(self.strikeout_checkbox)
+
+        # === Color pickers ===
+        for name in ["primary_color", "secondary_color", "outline_color", "back_color"]:
+            btn = QPushButton(f"{name.replace('_', ' ').title()}")
+            btn.clicked.connect(lambda _, n=name: self.select_color(n))
+            self.color_buttons[name] = {"button": btn, "color": QColor("#ffffff")}
+            self._update_color_button_style(name)
+            self.addWidget(btn)
+
+        # === Alignment ===
         self.alignment = QComboBox()
         self.alignment.addItems(["Left", "Center", "Right"])
         self.alignment.setCurrentIndex(1)
         self.alignment.currentIndexChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Alignment:", self.alignment))
 
-        # Margins
+        # === Margins ===
         self.margin_l = QSpinBox()
         self.margin_r = QSpinBox()
         self.margin_v = QSpinBox()
@@ -71,63 +74,80 @@ class FontStyleLayout(QVBoxLayout):
             spinbox.setRange(0, 1000)
             spinbox.valueChanged.connect(self.settings_changed.emit)
 
-        self.margin_l.setValue(10)
-        self.margin_r.setValue(10)
-        self.margin_v.setValue(500)
         self.addLayout(_create_labeled_row("Left margin:", self.margin_l))
         self.addLayout(_create_labeled_row("Right margin:", self.margin_r))
         self.addLayout(_create_labeled_row("Vertical margin:", self.margin_v))
 
-        # Border style
+        # === Border style ===
         self.border_style = QComboBox()
         self.border_style.addItems(["Outline", "Opaque Box"])
-        self.border_style.setCurrentIndex(0)
         self.border_style.currentIndexChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Border style:", self.border_style))
 
-        # Outline and shadow
+        # === Outline & Shadow ===
         self.outline = QSpinBox()
         self.outline.setRange(0, 20)
-        self.outline.setValue(8)
         self.outline.valueChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Outline:", self.outline))
 
         self.shadow = QSpinBox()
         self.shadow.setRange(0, 20)
-        self.shadow.setValue(0)
         self.shadow.valueChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Shadow:", self.shadow))
 
-        # Encoding
+        # === Scale X/Y ===
+        self.scale_x = QSpinBox()
+        self.scale_y = QSpinBox()
+        for scale in (self.scale_x, self.scale_y):
+            scale.setRange(10, 500)
+            scale.setSuffix("%")
+            scale.valueChanged.connect(self.settings_changed.emit)
+        self.addLayout(_create_labeled_row("Scale X:", self.scale_x))
+        self.addLayout(_create_labeled_row("Scale Y:", self.scale_y))
+
+        # === Spacing ===
+        self.spacing_spinbox = QDoubleSpinBox()
+        self.spacing_spinbox.setRange(-10.0, 10.0)
+        self.spacing_spinbox.setDecimals(2)
+        self.spacing_spinbox.setSingleStep(0.1)
+        self.spacing_spinbox.valueChanged.connect(self.settings_changed.emit)
+        self.addLayout(_create_labeled_row("Letter spacing:", self.spacing_spinbox))
+
+        # === Angle ===
+        self.angle = QSpinBox()
+        self.angle.setRange(-360, 360)
+        self.angle.valueChanged.connect(self.settings_changed.emit)
+        self.addLayout(_create_labeled_row("Rotation (Angle):", self.angle))
+
+        # === Encoding ===
         self.encoding = QComboBox()
         self.encoding.addItems(["ANSI", "UTF-8", "Unicode"])
-        self.encoding.setCurrentIndex(0)
         self.encoding.currentIndexChanged.connect(self.settings_changed.emit)
         self.addLayout(_create_labeled_row("Encoding:", self.encoding))
 
-    def _update_color_button_style(self):
-        self.color_button.setStyleSheet(f"background-color: {self.selected_color_qcolor.name()}")
+    def _update_color_button_style(self, name):
+        color = self.color_buttons[name]["color"]
+        self.color_buttons[name]["button"].setStyleSheet(f"background-color: {color.name()}")
 
-    def select_color(self):
-        """Open a color dialog to select the text color."""
-        color = QColorDialog.getColor(self.selected_color_qcolor)
-        if color.isValid() and color != self.selected_color_qcolor:
-            self.selected_color_qcolor = color
-            self._update_color_button_style()
-            self.settings_changed.emit(color)
+    def select_color(self, name):
+        color = QColorDialog.getColor(self.color_buttons[name]["color"])
+        if color.isValid():
+            self.color_buttons[name]["color"] = color
+            self._update_color_button_style(name)
+            self.settings_changed.emit(self.get_settings())
 
     def get_settings(self):
-        """Return the current font-related style settings as a dictionary."""
-        rgb = self.selected_color_qcolor.rgb() & 0xFFFFFF
-        bgr_hex = f'{(rgb & 0xFF):02X}{(rgb >> 8 & 0xFF):02X}{(rgb >> 16 & 0xFF):02X}'
-        primary_color = f"&H00{bgr_hex}"
-
         return {
             "font": self.font_selector.currentText(),
             "font_size": self.font_size.value(),
             "bold": -1 if self.bold_checkbox.isChecked() else 0,
             "italic": 1 if self.italic_checkbox.isChecked() else 0,
-            "primary_color": primary_color,
+            "underline": 1 if self.underline_checkbox.isChecked() else 0,
+            "strikeout": 1 if self.strikeout_checkbox.isChecked() else 0,
+            "primary_color": qcolor_to_ass(self.color_buttons["primary_color"]["color"]),
+            "secondary_color": qcolor_to_ass(self.color_buttons["secondary_color"]["color"]),
+            "outline_color": qcolor_to_ass(self.color_buttons["outline_color"]["color"]),
+            "back_color": qcolor_to_ass(self.color_buttons["back_color"]["color"]),
             "alignment": self.alignment.currentIndex() + 1,
             "margin_l": self.margin_l.value(),
             "margin_r": self.margin_r.value(),
@@ -135,25 +155,24 @@ class FontStyleLayout(QVBoxLayout):
             "border_style": 1 if self.border_style.currentIndex() == 0 else 3,
             "outline": self.outline.value(),
             "shadow": self.shadow.value(),
-            "encoding": self.encoding.currentIndex()
+            "scale_x": self.scale_x.value(),
+            "scale_y": self.scale_y.value(),
+            "spacing_spinbox": self.spacing_spinbox.value(),
+            "angle": self.angle.value(),
+            "encoding": self.encoding.currentIndex(),
         }
 
     def set_settings(self, settings: dict):
-        """Apply style settings from a dictionary."""
-        def from_ass_color(ass_color: str) -> QColor:
-            bgr = ass_color[2:] if ass_color.startswith("&H") else ass_color
-            r = int(bgr[4:6], 16)
-            g = int(bgr[2:4], 16)
-            b = int(bgr[0:2], 16)
-            return QColor(r, g, b)
-
         self.font_selector.setCurrentText(settings["font"])
         self.font_size.setValue(settings["font_size"])
         self.bold_checkbox.setChecked(settings["bold"] == -1)
         self.italic_checkbox.setChecked(settings["italic"] == 1)
+        self.underline_checkbox.setChecked(settings.get("underline", 0) == 1)
+        self.strikeout_checkbox.setChecked(settings.get("strikeout", 0) == 1)
 
-        self.selected_color_qcolor = from_ass_color(settings["primary_color"])
-        self._update_color_button_style()
+        for name in ["primary_color", "secondary_color", "outline_color", "back_color"]:
+            self.color_buttons[name]["color"] = ass_to_qcolor(settings[name])
+            self._update_color_button_style(name)
 
         self.alignment.setCurrentIndex(settings["alignment"] - 1)
         self.margin_l.setValue(settings["margin_l"])
@@ -162,4 +181,8 @@ class FontStyleLayout(QVBoxLayout):
         self.border_style.setCurrentIndex(0 if settings["border_style"] == 1 else 1)
         self.outline.setValue(settings["outline"])
         self.shadow.setValue(settings["shadow"])
+        self.scale_x.setValue(settings.get("scale_x", 100))
+        self.scale_y.setValue(settings.get("scale_y", 100))
+        self.spacing_spinbox.setValue(settings.get("spacing_spinbox", 0.0))
+        self.angle.setValue(settings.get("angle", 0))
         self.encoding.setCurrentIndex(settings["encoding"])

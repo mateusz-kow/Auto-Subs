@@ -8,21 +8,33 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEFAULT_STYLE = {
-    "title": "Current",
-    "font": "Arial",
-    "font_size": 36,
-    "primary_color": "&H00FFFFFF",
-    "alignment": 2,
-    "margin_l": 10,
-    "margin_r": 10,
-    "margin_v": 10,
-    "bold": -1,
-    "italic": 0,
-    "border_style": 1,
-    "outline": 2,
-    "shadow": 0,
-    "encoding": 1,
-    "highlight_style": None
+    'title': 'Untitled',
+    'font': 'Arial',
+    'font_size': 75,
+    'primary_color': '&H00FFFFFF',
+    'secondary_color': '&H000000FF',
+    'outline_color': '&H00000000',
+    'back_color': '&H64000000',
+    'bold': 0,
+    'italic': 0,
+    'underline': 0,
+    'strikeout': 0,
+    'scale_x': 100,
+    'scale_y': 100,
+    'spacing_spinbox': 0,
+    'angle': 0,
+    'border_style': 1,
+    'outline': 1,
+    'shadow': 0,
+    'alignment': 2,
+    'margin_l': 10,
+    'margin_r': 10,
+    'margin_v': 500,
+    'encoding': 1,
+    'play_res_x': 1920,
+    'play_res_y': 1080,
+    'wrap_style': 0,
+    'scaled_border_and_shadow': 'yes'
 }
 
 
@@ -109,6 +121,7 @@ class StyleManager:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
+            data = DEFAULT_STYLE | data   # Merge with default style
             if data == self._style or data is None:
                 return
 

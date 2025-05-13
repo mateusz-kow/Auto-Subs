@@ -1,7 +1,7 @@
 DEFAULT = {
     'title': 'Untitled',
     'font': 'Arial',
-    'font_size': 36,
+    'font_size': 75,
     'primary_color': '&H00FFFFFF',
     'secondary_color': '&H000000FF',
     'outline_color': '&H00000000',
@@ -12,7 +12,7 @@ DEFAULT = {
     'strikeout': 0,
     'scale_x': 100,
     'scale_y': 100,
-    'spacing': 0,
+    'spacing_spinbox': 0,
     'angle': 0,
     'border_style': 1,
     'outline': 1,
@@ -20,7 +20,7 @@ DEFAULT = {
     'alignment': 2,
     'margin_l': 10,
     'margin_r': 10,
-    'margin_v': 10,
+    'margin_v': 500,
     'encoding': 1,
     'play_res_x': 1920,
     'play_res_y': 1080,
@@ -53,7 +53,7 @@ ScaledBorderAndShadow: {get('scaled_border_and_shadow')}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{get('font')},{get('font_size')},{get('primary_color')},{get('secondary_color')},{get('outline_color')},{get('back_color')},{get('bold')},{get('italic')},{get('underline')},{get('strikeout')},{get('scale_x')},{get('scale_y')},{get('spacing')},{get('angle')},{get('border_style')},{get('outline')},{get('shadow')},{get('alignment')},{get('margin_l')},{get('margin_r')},{get('margin_v')},{get('encoding')}
+Style: Default,{get('font')},{get('font_size')},{get('primary_color')},{get('secondary_color')},{get('outline_color')},{get('back_color')},{get('bold')},{get('italic')},{get('underline')},{get('strikeout')},{get('scale_x')},{get('scale_y')},{get('spacing_spinbox')},{get('angle')},{get('border_style')},{get('outline')},{get('shadow')},{get('alignment')},{get('margin_l')},{get('margin_r')},{get('margin_v')},{get('encoding')}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
