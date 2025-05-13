@@ -103,13 +103,23 @@ class TopBar(QWidget):
     def export_mp4(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
         if path:
-            get_video_with_subtitles(path,
-                                     SubtitleGenerator.to_ass(
-                                         self.subtitles_manager.subtitles,
-                                         self.style_manager.to_dict()),
-                                     output_path=path)
-            QMessageBox.information(self, "Export", f"Exported MP4 to:\n{path}")
-            # TODO: implement actual export logic
+            try:
+                # Generate subtitles in ASS format
+                ass_subtitles = SubtitleGenerator.to_ass(
+                    self.subtitles_manager.subtitles,
+                    self.style_manager.to_dict()
+                )
+
+                # Export video with subtitles
+                get_video_with_subtitles(
+                    self.video_manager.video_path,  # Input video path
+                    ass_subtitles,  # Subtitles in ASS format
+                    output_path=path  # Output MP4 path
+                )
+
+                QMessageBox.information(self, "Export", f"Exported MP4 to:\n{path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to export MP4:\n{str(e)}")
 
     # --- Style Menu Handlers ---
 
