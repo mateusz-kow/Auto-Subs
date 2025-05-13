@@ -29,6 +29,9 @@ class SubtitleSegment:
     def __str__(self):
         return " ".join(word.text for word in self.words)
 
+    def __eq__(self, other):
+        return self.words == other.words
+
     def add_word(self, word: SubtitleWord = None):
         if word is None:
             word = SubtitleWord("", self.start, self.start)

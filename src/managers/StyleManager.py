@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_STYLE = {
   "title": "Default",
   "font": "Comic Sans MS",
-  "font_size": 20,
+  "font_size": 80,
   "primary_color": "&H00FFAAFF",
   "secondary_color": "&H00000000",
   "outline_color": "&H005D3E5D",
@@ -29,7 +29,7 @@ DEFAULT_STYLE = {
   "alignment": 2,
   "margin_l": 10,
   "margin_r": 10,
-  "margin_v": 90,
+  "margin_v": 350,
   "encoding": 0,
   "play_res_x": 1920,
   "play_res_y": 1080,
@@ -45,20 +45,15 @@ DEFAULT_STYLE = {
 
 class StyleManager:
     """Singleton class for managing subtitle styles and related file operations."""
-
-    _instance: Optional["StyleManager"] = None
     _style: dict
     _style_listeners: list[Callable]
     _style_loaded_listeners: list[Callable]
 
-    def __new__(cls) -> "StyleManager":
+    def __init__(self):
         """Ensure that there is only one instance of StyleManager."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._style = DEFAULT_STYLE.copy()
-            cls._instance._style_listeners = []
-            cls._instance._style_loaded_listeners = []
-        return cls._instance
+        self._style = DEFAULT_STYLE.copy()
+        self._style_listeners = []
+        self._style_loaded_listeners = []
 
     def to_dict(self) -> dict:
         """
@@ -190,4 +185,8 @@ class StyleManager:
             logger.debug(f"Removed style loaded listener: {listener}")
         else:
             logger.warning("Listener not found")
+
+    @property
+    def style(self):
+        return self._style
 

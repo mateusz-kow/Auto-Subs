@@ -3,7 +3,7 @@ import json
 import unittest
 from tests.utils import OUTPUT_DIR, INPUT_DIR
 
-from src.settings.StyleManager import StyleManager, DEFAULT_STYLE
+from src.managers.StyleManager import StyleManager, DEFAULT_STYLE
 
 
 class TestStyleManager(unittest.TestCase):
@@ -11,11 +11,6 @@ class TestStyleManager(unittest.TestCase):
     def setUp(self):
         self.manager = StyleManager()
         self.manager.reset_to_default()
-
-    def test_singleton_behavior(self):
-        sm1 = StyleManager()
-        sm2 = StyleManager()
-        self.assertIs(sm1, sm2)
 
     def test_default_style(self):
         self.manager.reset_to_default()

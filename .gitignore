@@ -136,11 +136,11 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
+# Spyder project managers
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope project managers
 .ropeproject
 
 # mkdocs documentation

@@ -3,7 +3,7 @@ def generate_ass_header(settings: dict) -> str:
     Generates the ASS file header section using fallback defaults from DEFAULT dict.
 
     Args:
-        settings (dict): User-specified settings.
+        settings (dict): User-specified managers.
         default (dict): Default fallback values.
 
     Returns:

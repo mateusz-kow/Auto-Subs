@@ -62,7 +62,7 @@ class HighlightStyleLayout(QVBoxLayout):
 
     def set_settings(self, settings: dict):
         """
-        Apply highlight style from dictionary settings.
+        Apply highlight style from dictionary managers.
         """
         style = settings.get("highlight_style", {})
 

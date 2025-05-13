@@ -26,8 +26,8 @@ class TestColorConversion(unittest.TestCase):
             QColor(255, 255, 255),
             QColor(128, 64, 32),
             QColor(10, 20, 30),
-            QColor(0, 0, 0),
-            QColor(1, 2, 3)
+            QColor(0, 0, 0, a=0),
+            QColor(1, 2, 3, a=123)
         ]
         for color in original_colors:
             ass = qcolor_to_ass(color)
