@@ -1,20 +1,11 @@
-import asyncio
-
-from PySide6.QtWidgets import QVBoxLayout, QListWidget, QTreeWidget, QLineEdit, QPushButton, QHBoxLayout, QLabel, \
-    QApplication, QMenu
+from PySide6.QtWidgets import QVBoxLayout, QListWidget, QTreeWidget, QLineEdit, QPushButton, QHBoxLayout, QLabel
 
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.models import Subtitles, SubtitleWord
-from src.transcriber import transcribe
 from PySide6.QtWidgets import QTreeWidgetItem
-from src.subtitles.models import SubtitleSegment
-from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtCore import Qt
-from PySide6.QtCore import Qt, QPoint
 from PySide6.QtWidgets import QMenu
-
-executor = ThreadPoolExecutor()
 
 
 class SubtitlesLayout(QVBoxLayout):
@@ -50,16 +41,16 @@ class SubtitlesLayout(QVBoxLayout):
             row.addWidget(widget)
             return row
 
-        save_button = QPushButton("Zapisz słowo")
+        save_button = QPushButton("Save word")
         save_button.clicked.connect(self.save_word_edit)
 
         self.addWidget(self.segment_list)
-        add_segment_button = QPushButton("Dodaj new_segment")
+        add_segment_button = QPushButton("Add new segment")
         add_segment_button.clicked.connect(self.add_segment)
         self.addWidget(add_segment_button)
 
         self.addWidget(self.word_tree)
-        add_word_button = QPushButton("Dodaj słowo")
+        add_word_button = QPushButton("Add word")
         add_word_button.clicked.connect(self.add_word)
         self.addWidget(add_word_button)
 
@@ -74,8 +65,8 @@ class SubtitlesLayout(QVBoxLayout):
 
     def show_word_context_menu(self, position):
         menu = QMenu()
-        merge_action = menu.addAction("Scal słowa")
-        delete_action = menu.addAction("Usuń słowa")
+        merge_action = menu.addAction("Merge words")
+        delete_action = menu.addAction("Delete words")
 
         action = menu.exec(self.word_tree.viewport().mapToGlobal(position))
         if action == merge_action:
@@ -85,7 +76,7 @@ class SubtitlesLayout(QVBoxLayout):
 
     def show_segment_context_menu(self, position):
         menu = QMenu()
-        delete_action = menu.addAction("Usuń segmenty")
+        delete_action = menu.addAction("Delete segments")
         # Możesz dodać tu też scalanie segmentów później
 
         action = menu.exec(self.segment_list.viewport().mapToGlobal(position))
@@ -147,27 +138,17 @@ class SubtitlesLayout(QVBoxLayout):
         word = SubtitleWord(text, start, end)
         self.subtitles_manager.set_word(self.selected_segment_index, self.selected_word_index, word)
 
-    async def async_transcribe(self, video_path: str):
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(executor, transcribe, video_path)
-
     def on_video_changed(self, video_path: str):
         self.segment_list.clear()
         self.word_tree.clear()
 
-        asyncio.create_task(self._handle_video_change(video_path))
-
-    async def _handle_video_change(self, video_path: str):
-        transcription = await self.async_transcribe(video_path)
-        self.subtitles_manager.set_subtitles(Subtitles.from_transcription(transcription))
-
-    def update_segment_list(self):
+    def update_segment_list(self, subtitles: Subtitles):
         self.segment_list.clear()
 
-        for i, segment in enumerate(self.subtitles_manager.subtitles.segments):
+        for i, segment in enumerate(subtitles.segments):
             text = f"{i + 1}. [{segment.start:.2f}-{segment.end:.2f}] {str(segment)}"
             self.segment_list.addItem(text)
 
     def on_subtitles_changed(self, subtitles: Subtitles):
-        self.update_segment_list()
+        self.update_segment_list(subtitles)
         self.load_words_for_segment()

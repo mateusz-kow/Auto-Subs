@@ -111,3 +111,15 @@ class SubtitlesManager:
         # Notify all listeners about the updated subtitles
         for listener in self.subtitles_listeners:
             listener(self.subtitles)
+
+    def on_transcription_changed(self, transcription):
+        """
+        Called when the transcription changes. Can be used to update the subtitles.
+        """
+        self.subtitles = Subtitles.from_transcription(transcription)
+
+        # Notify all listeners about the updated subtitles
+        for listener in self.subtitles_listeners:
+            listener(self.subtitles)
+
+

@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.ffmpeg_manager import get_preview_image
+from src.utils.ffmpeg_utils import get_preview_image
 from tests.utils import INPUT_DIR, OUTPUT_DIR
 
 

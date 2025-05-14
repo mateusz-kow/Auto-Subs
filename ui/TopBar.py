@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QFileDialog, QMessageBox, QMenu
 )
 
-from src.ffmpeg_manager import get_video_with_subtitles
+from src.utils.ffmpeg_utils import get_video_with_subtitles
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
@@ -41,6 +41,9 @@ class TopBar(QWidget):
         import_mp4.triggered.connect(self.import_mp4)
 
         # Export
+        export_txt = QAction("Export as TXT", self)
+        export_txt.triggered.connect(self.export_txt)
+
         export_srt = QAction("Export as SRT", self)
         export_srt.triggered.connect(self.export_srt)
 
@@ -52,6 +55,7 @@ class TopBar(QWidget):
 
         self.file_menu.addAction(import_mp4)
         self.file_menu.addSeparator()
+        self.file_menu.addAction(export_txt)
         self.file_menu.addAction(export_srt)
         self.file_menu.addAction(export_ass)
         self.file_menu.addAction(export_mp4)
@@ -61,9 +65,6 @@ class TopBar(QWidget):
         reset_style = QAction("Reset to Default", self)
         reset_style.triggered.connect(self.reset_style_to_default)
 
-        change_default_style = QAction("Change Default Style", self)
-        change_default_style.triggered.connect(self.change_default_style)
-
         save_style = QAction("Save Style", self)
         save_style.triggered.connect(self.save_style_to_file)
 
@@ -71,7 +72,6 @@ class TopBar(QWidget):
         load_style.triggered.connect(self.load_style_from_file)
 
         self.style_menu.addAction(reset_style)
-        self.style_menu.addAction(change_default_style)
         self.style_menu.addSeparator()
         self.style_menu.addAction(save_style)
         self.style_menu.addAction(load_style)
@@ -83,22 +83,28 @@ class TopBar(QWidget):
     def import_mp4(self):
         path, _ = QFileDialog.getOpenFileName(self, "Import MP4", "", "MP4 files (*.mp4)")
         if path:
-            get_video_with_subtitles(path, SubtitleGenerator.to_ass(self.subtitles_manager.subtitles), output_path=path)
-            QMessageBox.information(self, "Import", f"Imported MP4 from:\n{path}")
-            # TODO: implement actual import logic
+            self.video_manager.set_video_path(path)
 
     def export_srt(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if path:
-
-            QMessageBox.information(self, "Export", f"Exported SRT to:\n{path}")
-            # TODO: implement actual export logic
+            SubtitleGenerator.to_srt(self.subtitles_manager.subtitles, output_path=path)
 
     def export_ass(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if path:
-            QMessageBox.information(self, "Export", f"Exported ASS to:\n{path}")
-            # TODO: implement actual export logic
+            SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style, output_path=path)
+
+    def export_txt(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "Text files (*.txt)")
+        if path:
+            try:
+                with open(path, "w", encoding="utf-8") as file:
+                    for segment in self.subtitles_manager.subtitles.segments:
+                        file.write(f"{str(segment)}\n")
+                QMessageBox.information(self, "Export", f"Exported TXT to:\n{path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{str(e)}")
 
     def export_mp4(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
@@ -107,7 +113,7 @@ class TopBar(QWidget):
                 # Generate subtitles in ASS format
                 ass_subtitles = SubtitleGenerator.to_ass(
                     self.subtitles_manager.subtitles,
-                    self.style_manager.to_dict()
+                    self.style_manager.style
                 )
 
                 # Export video with subtitles
@@ -126,12 +132,6 @@ class TopBar(QWidget):
     def reset_style_to_default(self):
         self.style_manager.reset_to_default()
         QMessageBox.information(self, "Style", "Style has been reset to default.")
-
-    def change_default_style(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Select New Default Style", str(STYLES_DIR), "JSON files (*.json)")
-        if path:
-            self.style_manager.set_as_default(path)
-            QMessageBox.information(self, "Style", "Default style updated.")
 
     def save_style_to_file(self):
         path, _ = QFileDialog.getSaveFileName(self, "Save Style", str(STYLES_DIR), "JSON files (*.json)")

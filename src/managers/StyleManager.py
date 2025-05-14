@@ -8,49 +8,46 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEFAULT_STYLE = {
-  "title": "Default",
-  "font": "Comic Sans MS",
-  "font_size": 80,
-  "primary_color": "&H00FFAAFF",
-  "secondary_color": "&H00000000",
-  "outline_color": "&H005D3E5D",
-  "back_color": "&H00442E44",
-  "bold": -1,
-  "italic": 0,
-  "underline": 0,
-  "strikeout": 0,
-  "scale_x": 100,
-  "scale_y": 100,
-  "spacing_spinbox": 0.0,
-  "angle": 0,
-  "border_style": 1,
-  "outline": 8,
-  "shadow": 10,
-  "alignment": 2,
-  "margin_l": 10,
-  "margin_r": 10,
-  "margin_v": 350,
-  "encoding": 0,
-  "play_res_x": 1920,
-  "play_res_y": 1080,
-  "wrap_style": 0,
-  "scaled_border_and_shadow": "yes",
-  "highlight_style": {
-    "text_color": "&H00FFFF55",
-    "border_color": "&H00353512",
-    "fade": False
-  }
+    "title": "Default",
+    "font": "Comic Sans MS",
+    "font_size": 80,
+    "primary_color": "&H00FFAAFF",
+    "secondary_color": "&H00000000",
+    "outline_color": "&H005D3E5D",
+    "back_color": "&H00442E44",
+    "bold": -1,
+    "italic": 0,
+    "underline": 0,
+    "strikeout": 0,
+    "scale_x": 100,
+    "scale_y": 100,
+    "spacing_spinbox": 0.0,
+    "angle": 0,
+    "border_style": 1,
+    "outline": 8,
+    "shadow": 10,
+    "alignment": 2,
+    "margin_l": 10,
+    "margin_r": 10,
+    "margin_v": 350,
+    "encoding": 0,
+    "play_res_x": 1920,
+    "play_res_y": 1080,
+    "wrap_style": 0,
+    "scaled_border_and_shadow": "yes",
+    "highlight_style": {
+        "text_color": "&H00FFFF55",
+        "border_color": "&H00353512",
+        "fade": False
+    }
 }
 
 
 class StyleManager:
-    """Singleton class for managing subtitle styles and related file operations."""
-    _style: dict
-    _style_listeners: list[Callable]
-    _style_loaded_listeners: list[Callable]
+    """Class for managing subtitle styles and related file operations."""
 
     def __init__(self):
-        """Ensure that there is only one instance of StyleManager."""
+        """Initialize the StyleManager with default values."""
         self._style = DEFAULT_STYLE.copy()
         self._style_listeners = []
         self._style_loaded_listeners = []
@@ -121,7 +118,7 @@ class StyleManager:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            data = DEFAULT_STYLE | data   # Merge with default style
+            data = DEFAULT_STYLE | data  # Merge with default style
             if data == self._style or data is None:
                 return
 
@@ -147,19 +144,6 @@ class StyleManager:
         else:
             logger.warning("Listener already exists")
 
-    def remove_style_listener(self, listener: Callable):
-        """
-        Remove a listener that was previously added.
-
-        Args:
-            listener (Callable): The listener function to be removed.
-        """
-        if listener in self._style_listeners:
-            self._style_listeners.remove(listener)
-            logger.debug(f"Removed style listener: {listener}")
-        else:
-            logger.warning("Listener not found")
-
     def add_style_loaded_listener(self, listener: Callable):
         """
         Add a listener that will be called after the style is loaded.
@@ -173,20 +157,6 @@ class StyleManager:
         else:
             logger.warning("Listener already exists")
 
-    def remove_style_loaded_listener(self, listener: Callable):
-        """
-        Remove a listener that was previously added after the style is loaded.
-
-        Args:
-            listener (Callable): The listener function to be removed.
-        """
-        if listener in self._style_loaded_listeners:
-            self._style_loaded_listeners.remove(listener)
-            logger.debug(f"Removed style loaded listener: {listener}")
-        else:
-            logger.warning("Listener not found")
-
     @property
     def style(self):
         return self._style
-

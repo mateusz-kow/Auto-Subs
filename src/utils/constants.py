@@ -10,16 +10,17 @@ logging.basicConfig(level=logging.INFO)
 
 # Application metadata
 APP_NAME = "MyApp"
-WHISPER_MODEL = "tiny"
+WHISPER_MODEL = "base"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
 LOCAL_DIR: Path = Path(user_data_dir(APP_NAME))
 STYLES_DIR: Path = LOCAL_DIR / "Styles"
 PROJECTS_DIR: Path = LOCAL_DIR / "Projects"
+SETTINGS_DIR: Path = LOCAL_DIR / "Settings"
 
 # Ensure required directories exist
-REQUIRED_DIRS: List[Path] = [TEMP_DIR, LOCAL_DIR, STYLES_DIR, PROJECTS_DIR]
+REQUIRED_DIRS: List[Path] = [TEMP_DIR, LOCAL_DIR, STYLES_DIR, PROJECTS_DIR, SETTINGS_DIR]
 
 
 def create_directories(dirs: List[Path]) -> None:

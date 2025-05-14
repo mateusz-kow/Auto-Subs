@@ -4,7 +4,6 @@ def generate_ass_header(settings: dict) -> str:
 
     Args:
         settings (dict): User-specified managers.
-        default (dict): Default fallback values.
 
     Returns:
         str: ASS header string.
