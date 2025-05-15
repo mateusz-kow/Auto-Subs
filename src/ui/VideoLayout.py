@@ -88,7 +88,7 @@ class VideoLayout(QVBoxLayout):
 
             def worker():
                 try:
-                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style)
+                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style, timestamp=timestamp)
                     preview_image_path = get_preview_image(
                         self.video_manager._video_path, ass_path, timestamp=timestamp
                     )

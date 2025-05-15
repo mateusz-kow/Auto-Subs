@@ -13,18 +13,27 @@ class SubtitleGenerator:
     """Utility class for generating subtitle files in ASS and SRT formats."""
 
     @staticmethod
-    def to_ass(subtitles: Subtitles, ass_settings: Dict[str, any], output_path: str = None) -> str:
+    def to_ass(subtitles: Subtitles,
+               ass_settings: Dict[str, any],
+               output_path: str = None,
+               timestamp: float = 0) -> str:
         """
-        Generate an ASS subtitle file from the given subtitles and settings.
+    Generate an ASS subtitle file from the given subtitles and settings.
 
-        Args:
-            subtitles (Subtitles): The subtitles to export.
-            ass_settings (Dict[str, any]): ASS-specific settings, including styles.
-            output_path (str, optional): Path to save the generated file. Defaults to a temporary file.
+    This method creates an ASS (Advanced SubStation Alpha) subtitle file
+    using the provided subtitles and styling settings. It supports optional
+    highlighting of specific words and offsets the timestamps based on the
+    provided `timestamp` parameter.
 
-        Returns:
-            str: The path to the generated ASS file.
-        """
+    Args:
+        subtitles (Subtitles): The subtitles to export, containing segments and words.
+        ass_settings (Dict[str, any]): ASS-specific settings, including styles and optional highlight styles.
+        output_path (str, optional): Path to save the generated file. If not provided, a temporary file is created.
+        timestamp (float, optional): Offset in seconds to adjust the subtitle timings. Defaults to 0.
+
+    Returns:
+        str: The path to the generated ASS file.
+    """
         def format_ass_timestamp(seconds: float) -> str:
             """Format a timestamp in seconds to ASS format (h:mm:ss.cs)."""
             h = int(seconds // 3600)
@@ -51,10 +60,12 @@ class SubtitleGenerator:
         if highlight_style_dict:
             highlight_tag = build_ass_highlight_tag(highlight_style_dict)
             for segment in subtitles.segments:
+                if segment.end < timestamp:
+                    continue
                 for h_index, highlighted_word in enumerate(segment.words):
                     text = []
-                    start = format_ass_timestamp(highlighted_word.start)
-                    end = format_ass_timestamp(highlighted_word.end)
+                    start = format_ass_timestamp(highlighted_word.start - timestamp)
+                    end = format_ass_timestamp(highlighted_word.end - timestamp)
 
                     for o_index, other_word in enumerate(segment.words):
                         if h_index == o_index:
@@ -65,8 +76,10 @@ class SubtitleGenerator:
                     lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{' '.join(text)}")
         else:
             for segment in subtitles.segments:
-                start = format_ass_timestamp(segment.start)
-                end = format_ass_timestamp(segment.end)
+                if segment.end < timestamp:
+                    continue
+                start = format_ass_timestamp(segment.start - timestamp)
+                end = format_ass_timestamp(segment.end - timestamp)
                 text = str(segment)
                 lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}")
 

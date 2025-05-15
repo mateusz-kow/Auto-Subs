@@ -42,7 +42,7 @@ def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = 
         raise RuntimeError(f"FFmpeg subtitle processing failed: {e}") from e
 
 
-def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str] = None, timestamp: float = 1.0) -> str:
+def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str] = None, timestamp: float = 0.0) -> str:
     """
     Generates a preview image from a video at a given timestamp with ASS subtitles.
 

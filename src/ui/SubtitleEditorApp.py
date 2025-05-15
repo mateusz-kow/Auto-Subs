@@ -4,10 +4,10 @@ from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.TranscriptionManager import TranscriptionManager
 from src.managers.VideoManager import VideoManager
-from ui.VideoLayout import VideoLayout
-from ui.SubtitlesLayout import SubtitlesLayout
-from ui.style_layout.StyleLayout import StyleLayout
-from ui.TopBar import TopBar
+from src.ui.VideoLayout import VideoLayout
+from src.ui.SubtitlesLayout import SubtitlesLayout
+from src.ui.style_layout.StyleLayout import StyleLayout
+from src.ui.TopBar import TopBar
 
 
 class SubtitleEditorApp(QWidget):

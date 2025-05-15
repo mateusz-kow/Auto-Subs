@@ -3,7 +3,7 @@ import asyncio
 from PySide6.QtWidgets import QApplication
 from qasync import QEventLoop
 from src.utils.constants import clean_temp_dir
-from ui.SubtitleEditorApp import SubtitleEditorApp
+from src.ui.SubtitleEditorApp import SubtitleEditorApp
 
 
 def main() -> None:

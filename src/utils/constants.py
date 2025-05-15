@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # Application metadata
-APP_NAME = "MyApp"
-WHISPER_MODEL = "tiny"
+APP_NAME = "AutoSubs"
+COMPANY_NAME = "GithubOzzy420"
+WHISPER_MODEL = "turbo"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
