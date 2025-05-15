@@ -5,8 +5,6 @@ from typing import Dict
 from src.subtitles.models import Subtitles
 from src.utils.file_operations import generate_ass_header
 from src.utils.constants import TEMP_DIR
-from logging import getLogger
-logger = getLogger(__name__)
 
 HIGHLIGHT_END = r"{\\r}"
 
@@ -15,26 +13,18 @@ class SubtitleGenerator:
     """Utility class for generating subtitle files in ASS and SRT formats."""
 
     @staticmethod
-    def to_ass(subtitles: Subtitles,
-               ass_settings: Dict[str, any],
-               output_path: str = None) -> str:
+    def to_ass(subtitles: Subtitles, ass_settings: Dict[str, any], output_path: str = None) -> str:
         """
-    Generate an ASS subtitle file from the given subtitles and settings.
+        Generate an ASS subtitle file from the given subtitles and settings.
 
-    This method creates an ASS (Advanced SubStation Alpha) subtitle file
-    using the provided subtitles and styling settings. It supports optional
-    highlighting of specific words and offsets the timestamps based on the
-    provided `timestamp` parameter.
+        Args:
+            subtitles (Subtitles): The subtitles to export.
+            ass_settings (Dict[str, any]): ASS-specific settings, including styles.
+            output_path (str, optional): Path to save the generated file. Defaults to a temporary file.
 
-    Args:
-        subtitles (Subtitles): The subtitles to export, containing segments and words.
-        ass_settings (Dict[str, any]): ASS-specific settings, including styles and optional highlight styles.
-        output_path (str, optional): Path to save the generated file. If not provided, a temporary file is created.
-
-    Returns:
-        str: The path to the generated ASS file.
-    """
-
+        Returns:
+            str: The path to the generated ASS file.
+        """
         def format_ass_timestamp(seconds: float) -> str:
             """Format a timestamp in seconds to ASS format (h:mm:ss.cs)."""
             h = int(seconds // 3600)
@@ -58,17 +48,13 @@ class SubtitleGenerator:
         lines = [generate_ass_header(ass_settings)]
         highlight_style_dict = ass_settings.get("highlight_style")
 
-        if highlight_style_dict:
-            highlight_tag = build_ass_highlight_tag(highlight_style_dict)
-            for segment in subtitles.segments:
-
+        for segment in subtitles.segments:
+            if highlight_style_dict:
+                highlight_tag = build_ass_highlight_tag(highlight_style_dict)
                 for h_index, highlighted_word in enumerate(segment.words):
                     text = []
                     start = format_ass_timestamp(highlighted_word.start)
-                    if len(segment.words) > h_index + 1:
-                        end = format_ass_timestamp(segment.words[h_index + 1].start)
-                    else:
-                        end = format_ass_timestamp(highlighted_word.end)
+                    end = format_ass_timestamp(highlighted_word.end)
 
                     for o_index, other_word in enumerate(segment.words):
                         if h_index == o_index:
@@ -77,8 +63,7 @@ class SubtitleGenerator:
                             text.append(other_word.text)
 
                     lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{' '.join(text)}")
-        else:
-            for segment in subtitles.segments:
+            else:
                 start = format_ass_timestamp(segment.start)
                 end = format_ass_timestamp(segment.end)
                 text = str(segment)
@@ -92,7 +77,6 @@ class SubtitleGenerator:
         with open(output_path, "w", encoding="utf-8") as file:
             file.write("\n".join(lines))
 
-        logger.info(f"Generated subtitles in {output_path}")
         return output_path
 
     @staticmethod
@@ -107,7 +91,6 @@ class SubtitleGenerator:
         Returns:
             str: The path to the generated SRT file.
         """
-
         def format_to_srt_time(seconds: float) -> str:
             """Format a timestamp in seconds to SRT format (hh:mm:ss,ms)."""
             hrs = int(seconds // 3600)
@@ -133,16 +116,4 @@ class SubtitleGenerator:
 
             file.write("\n".join(srt_lines))
 
-        logger.info(f"Generated subtitles in {output_path}")
-        return output_path
-
-    @staticmethod
-    def to_txt(subtitles: Subtitles, output_path: str = None) -> str:
-        if not output_path:
-            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.txt")
-
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write(str(subtitles))
-
-        logger.info(f"Generated subtitles in {output_path}")
         return output_path

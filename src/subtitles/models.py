@@ -40,10 +40,9 @@ class SubtitleSegment:
         Args:
             words (List[SubtitleWord]): A list of SubtitleWord instances.
         """
-        self.end: float = 0
-        self.start: float = 0
-        self.words: list[SubtitleWord] = words
-        self.refresh()
+        self.words = words
+        self.start = self.words[0].start if self.words else 0
+        self.end = self.words[-1].end if self.words else 0
 
     @classmethod
     def empty(cls) -> "SubtitleSegment":
@@ -93,6 +92,9 @@ class Subtitles:
             segments (List[SubtitleSegment]): A list of SubtitleSegment instances.
         """
         self.segments = segments
+        self.timestamps = [
+            (word.start + word.end) / 2 for segment in self.segments for word in segment.words
+        ]
 
     @classmethod
     def empty(cls) -> "Subtitles":

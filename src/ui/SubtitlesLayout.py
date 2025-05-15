@@ -146,6 +146,7 @@ class SubtitlesLayout(QVBoxLayout):
         self.add_segment_button.setDisabled(True)
         self.add_word_button.setDisabled(True)
 
+
     def update_segment_list(self, subtitles: Subtitles):
         self.segment_list.clear()
 

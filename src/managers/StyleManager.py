@@ -1,12 +1,11 @@
 import json
 import os
-
+import logging
 from typing import Callable, Optional
 
-from src.utils.QThrottler import QThrottler
-
-from logging import getLogger
-logger = getLogger(__name__)
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 DEFAULT_STYLE = {
     "title": "Default",
@@ -52,8 +51,15 @@ class StyleManager:
         self._style = DEFAULT_STYLE.copy()
         self._style_listeners = []
         self._style_loaded_listeners = []
-        self._style_throttler = QThrottler(1000)
-        self._style_loaded_throttler = QThrottler(1000)
+
+    def to_dict(self) -> dict:
+        """
+        Get the current style as a dictionary.
+
+        Returns:
+            dict: The current style configuration.
+        """
+        return self._style
 
     def from_dict(self, new_style: dict):
         """
@@ -68,15 +74,6 @@ class StyleManager:
         logger.debug(f"Updating style: {new_style}")
         self._style.update(new_style)
 
-        self._style_throttler.call(self._notify_style_listeners, self._style)
-
-    def _notify_style_listeners(self, new_style: dict):
-        """
-        Notify all registered style listeners with the new style.
-
-        Args:
-            new_style (dict): The new style to notify listeners with.
-        """
         for listener in self._style_listeners:
             listener(new_style)
 
@@ -128,20 +125,11 @@ class StyleManager:
             logger.debug(f"Loaded style from {path}: {data}")
             self.from_dict(data)
 
-            self._style_loaded_throttler.call(self._notify_style_loaded_listeners, data)
+            for listener in self._style_loaded_listeners:
+                listener(data)
         except (IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load style from {path}: {e}")
             raise
-
-    def _notify_style_loaded_listeners(self, new_style: dict):
-        """
-        Notify all registered style loaded listeners with the new style.
-
-        Args:
-            new_style (dict): The new style to notify listeners with.
-        """
-        for listener in self._style_loaded_listeners:
-            listener(new_style)
 
     def add_style_listener(self, listener: Callable):
         """
@@ -168,7 +156,3 @@ class StyleManager:
             logger.debug(f"Added style loaded listener: {listener}")
         else:
             logger.warning("Listener already exists")
-
-    @property
-    def style(self):
-        return self._style

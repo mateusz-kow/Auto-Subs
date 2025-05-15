@@ -1,7 +1,4 @@
-import asyncio
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
-from logging import getLogger
-logger = getLogger(__name__)
 
 
 class SubtitlesManager:
@@ -10,12 +7,10 @@ class SubtitlesManager:
     def __init__(self, subtitles: Subtitles = None):
         self._subtitles = subtitles
         self._subtitles_listeners = []
-        logger.info("SubtitlesManager initialized with subtitles: %s", subtitles)
 
     def set_subtitles(self, subtitles: Subtitles):
         """Set the current subtitles and notify listeners."""
         self._subtitles = subtitles
-        logger.info("Subtitles set to: %s", subtitles)
         self._notify_listeners()
 
     def add_subtitles_listener(self, listener):
@@ -27,7 +22,7 @@ class SubtitlesManager:
         del self._subtitles.segments[segment_index].words[word_index]
         self._refresh_segment(segment_index)
 
-    def delete_segments(self, segments_indexes: list[int]):
+    def delete_segments(self, segments_indexes):
         """Delete multiple segments by their indexes."""
         for index in sorted(segments_indexes, reverse=True):
             del self._subtitles.segments[index]
@@ -43,26 +38,6 @@ class SubtitlesManager:
         """Add a word to a specific segment."""
         self._subtitles.segments[segment_index].words.append(word)
         self._refresh_segment(segment_index)
-
-    def merge_segments(self, segment_indices: list[int]):
-        """Merge multiple segments into one."""
-        if not segment_indices:
-            return
-
-        first_index = min(segment_indices)
-        last_index = max(segment_indices)
-
-        if first_index == last_index:
-            return
-
-        words = []
-        for index in sorted(segment_indices, reverse=True):
-            words.extend(self._subtitles.segments[index].words)
-            del self._subtitles.segments[index]
-
-        merged_segment = SubtitleSegment(words=words)
-        self.subtitles.add_segment(merged_segment)
-        self._notify_listeners()
 
     def set_word(self, segment_index: int, word_index: int, word: SubtitleWord):
         """Update a word in a specific segment."""
@@ -80,15 +55,8 @@ class SubtitlesManager:
 
     def on_transcription_changed(self, transcription):
         """Update subtitles based on transcription changes."""
-
-        async def task():
-            self._subtitles = await asyncio.to_thread(Subtitles.from_transcription, transcription)
-            self._notify_listeners()
-
-        asyncio.create_task(task())
-
-    def on_video_changed(self, video_path):
-        self._subtitles = Subtitles.empty()
+        self._subtitles = Subtitles.from_transcription(transcription)
+        self._notify_listeners()
 
     def _refresh_segment(self, segment_index: int):
         """Refresh a specific segment and notify listeners."""
@@ -102,10 +70,5 @@ class SubtitlesManager:
 
     def _notify_listeners(self):
         """Notify all registered listeners of subtitle changes."""
-        logger.info("Subtitles changed.")
         for listener in self._subtitles_listeners:
             listener(self._subtitles)
-
-    @property
-    def subtitles(self):
-        return self._subtitles
