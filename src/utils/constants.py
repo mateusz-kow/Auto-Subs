@@ -1,26 +1,26 @@
+import logging
 import tempfile
 from pathlib import Path
 from appdirs import user_data_dir
 from typing import List
-from logging import getLogger
 
-logger = getLogger(__name__)
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Application metadata
-APP_NAME = "AutoSubs"
-COMPANY_NAME = "GithubOzzy420"
-WHISPER_MODEL = "turbo"
+APP_NAME = "MyApp"
+WHISPER_MODEL = "tiny"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
-LOCAL_DIR: Path = Path(user_data_dir(APP_NAME, COMPANY_NAME))
+LOCAL_DIR: Path = Path(user_data_dir(APP_NAME))
 STYLES_DIR: Path = LOCAL_DIR / "Styles"
 PROJECTS_DIR: Path = LOCAL_DIR / "Projects"
 SETTINGS_DIR: Path = LOCAL_DIR / "Settings"
-LOGS_DIR: Path = LOCAL_DIR / "Logs"
 
 # Ensure required directories exist
-REQUIRED_DIRS: List[Path] = [TEMP_DIR, LOCAL_DIR, STYLES_DIR, PROJECTS_DIR, SETTINGS_DIR, LOGS_DIR]
+REQUIRED_DIRS: List[Path] = [TEMP_DIR, LOCAL_DIR, STYLES_DIR, PROJECTS_DIR, SETTINGS_DIR]
 
 
 def create_directories(dirs: List[Path]) -> None:
