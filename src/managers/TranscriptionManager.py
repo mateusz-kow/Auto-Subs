@@ -60,21 +60,21 @@ class TranscriptionManager:
                 self._model.transcribe, audio_path, word_timestamps=word_timestamps
             )
             logger.info("Transcription completed successfully.")
-            await self.notify_listeners(transcription)
-            return transcription
+            self.notify_listeners(transcription)
         except Exception as e:
             logger.exception("Transcription failed")
             raise RuntimeError(f"Transcription failed: {e}") from e
 
-    async def notify_listeners(self, transcription):
+    def notify_listeners(self, transcription):
         """
-        Notifies all listeners with the transcription result.
+        Notify all registered listeners with the transcription result.
 
         Args:
-            transcription (dict): Transcription result from the Whisper model.
+            transcription: The transcription result to pass to listeners.
         """
         for listener in self._transcription_listeners:
-            await listener(transcription)
+            listener(transcription)
+
 
     def add_transcription_listener(self, listener):
         """

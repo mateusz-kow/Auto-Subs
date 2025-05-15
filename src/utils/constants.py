@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Application metadata
 APP_NAME = "MyApp"
-WHISPER_MODEL = "turbo"
+WHISPER_MODEL = "tiny"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
