@@ -48,9 +48,9 @@ class SubtitleGenerator:
         lines = [generate_ass_header(ass_settings)]
         highlight_style_dict = ass_settings.get("highlight_style")
 
-        for segment in subtitles.segments:
-            if highlight_style_dict:
-                highlight_tag = build_ass_highlight_tag(highlight_style_dict)
+        if highlight_style_dict:
+            highlight_tag = build_ass_highlight_tag(highlight_style_dict)
+            for segment in subtitles.segments:
                 for h_index, highlighted_word in enumerate(segment.words):
                     text = []
                     start = format_ass_timestamp(highlighted_word.start)
@@ -63,7 +63,8 @@ class SubtitleGenerator:
                             text.append(other_word.text)
 
                     lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{' '.join(text)}")
-            else:
+        else:
+            for segment in subtitles.segments:
                 start = format_ass_timestamp(segment.start)
                 end = format_ass_timestamp(segment.end)
                 text = str(segment)

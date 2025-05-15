@@ -6,7 +6,7 @@ from src.utils.constants import clean_temp_dir
 from ui.SubtitleEditorApp import SubtitleEditorApp
 
 
-def main():
+def main() -> None:
     """
     Entry point for the Subtitle Editor application.
     Sets up the QApplication, integrates the asyncio event loop with Qt,
