@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.ffmpeg_manager import get_video_with_subtitles
+from src.utils.ffmpeg_utils import get_video_with_subtitles
 from tests.utils import OUTPUT_DIR, INPUT_DIR
 
 

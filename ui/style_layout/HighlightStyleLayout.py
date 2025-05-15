@@ -1,18 +1,18 @@
 from PySide6.QtWidgets import QVBoxLayout, QPushButton, QCheckBox, QColorDialog
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
+from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 class HighlightStyleLayout(QVBoxLayout):
     """
-    Layout providing UI controls for configuring subtitle highlight styles,
-    including text and border colors and fade effect.
+    Layout providing UI controls for configuring subtitle highlight styles
+    using a dictionary format instead of raw ASS tags.
     """
 
-    # Signal emitted when any highlight setting is changed
     settings_changed = Signal(object)
 
-    def __init__(self):
+    def __init__(self, style: dict):
         super().__init__()
 
         self.highlight_color = QColor("#ffcc99")
@@ -32,83 +32,50 @@ class HighlightStyleLayout(QVBoxLayout):
         self.fade_highlight_checkbox.stateChanged.connect(self.settings_changed.emit)
         self.addWidget(self.fade_highlight_checkbox)
 
+        self.set_settings(style)
+
     def select_highlight_color(self):
-        """Open a color picker and update the highlight text color."""
         color = QColorDialog.getColor(self.highlight_color)
         if color.isValid() and color != self.highlight_color:
             self.highlight_color = color
             self.highlight_color_button.setStyleSheet(f"background-color: {color.name()}")
-            self.settings_changed.emit(color)
+            self.settings_changed.emit(self.get_settings())
 
     def select_highlight_border_color(self):
-        """Open a color picker and update the highlight border color."""
         color = QColorDialog.getColor(self.highlight_border_color)
         if color.isValid() and color != self.highlight_border_color:
             self.highlight_border_color = color
             self.highlight_border_button.setStyleSheet(f"background-color: {color.name()}")
-            self.settings_changed.emit(color)
+            self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict:
         """
-        Generate and return the highlight style in ASS format.
-
-        Returns:
-            dict: Dictionary containing the highlight style string.
+        Return the highlight style as a dictionary.
         """
-        def to_ass_color(qcolor: QColor) -> str:
-            rgb = qcolor.rgb() & 0xFFFFFF
-            bgr_hex = f'{(rgb & 0xFF):02X}{(rgb >> 8 & 0xFF):02X}{(rgb >> 16 & 0xFF):02X}'
-            return f"&H{bgr_hex}"
-
-        text_color = to_ass_color(self.highlight_color)
-        border_color = to_ass_color(self.highlight_border_color)
-        highlight_style = rf"{{\1c{text_color}\3c{border_color}}}"
-
-        if self.fade_highlight_checkbox.isChecked():
-            highlight_style = highlight_style[:-1] + r"\fad(50,50)}"
-
         return {
-            "highlight_style": highlight_style
+            "highlight_style": {
+                "text_color": qcolor_to_ass(self.highlight_color),
+                "border_color": qcolor_to_ass(self.highlight_border_color),
+                "fade": self.fade_highlight_checkbox.isChecked()
+            }
         }
 
     def set_settings(self, settings: dict):
         """
-        Parse and apply settings from a highlight style dictionary.
-
-        Args:
-            settings (dict): Dictionary containing 'highlight_style' key.
+        Apply highlight style from dictionary managers.
         """
-        def from_ass_color(ass_color: str) -> QColor:
-            # Convert &HBBGGRR to QColor(R, G, B)
-            hex_part = ass_color[2:] if ass_color.startswith("&H") else ass_color
-            r = int(hex_part[4:6], 16)
-            g = int(hex_part[2:4], 16)
-            b = int(hex_part[0:2], 16)
-            return QColor(r, g, b)
+        style = settings.get("highlight_style", {})
 
-        highlight_style = settings.get("highlight_style", "")
-        if not highlight_style:
-            return
-
-        # Extract \1c&HXXXXXX for text color
-        if r"\1c&H" in highlight_style:
-            start = highlight_style.find(r"\1c&H") + 5
-            end = highlight_style.find(r"\3c", start)
-            if end == -1:
-                end = highlight_style.find("}", start)
-            color_str = highlight_style[start:end].strip("\\")
-            self.highlight_color = from_ass_color(f"&H{color_str}")
+        # Set text color
+        if "text_color" in style:
+            self.highlight_color = ass_to_qcolor(style["text_color"])
             self.highlight_color_button.setStyleSheet(f"background-color: {self.highlight_color.name()}")
 
-        # Extract \3c&HXXXXXX for border color
-        if r"\3c&H" in highlight_style:
-            start = highlight_style.find(r"\3c&H") + 5
-            end = highlight_style.find(r"\\", start)
-            if end == -1:
-                end = highlight_style.find("}", start)
-            color_str = highlight_style[start:end].strip("\\")
-            self.highlight_border_color = from_ass_color(f"&H{color_str}")
+        # Set border color
+        if "border_color" in style:
+            self.highlight_border_color = ass_to_qcolor(style["border_color"])
             self.highlight_border_button.setStyleSheet(f"background-color: {self.highlight_border_color.name()}")
 
-        # Determine if fading is used
-        self.fade_highlight_checkbox.setChecked(r"\fad(" in highlight_style)
+        # Set fade
+        if "fade" in style:
+            self.fade_highlight_checkbox.setChecked(bool(style["fade"]))

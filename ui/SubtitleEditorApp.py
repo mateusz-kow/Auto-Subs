@@ -1,8 +1,13 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+
+from src.managers.StyleManager import StyleManager
+from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.TranscriptionManager import TranscriptionManager
+from src.managers.VideoManager import VideoManager
 from ui.VideoLayout import VideoLayout
 from ui.SubtitlesLayout import SubtitlesLayout
 from ui.style_layout.StyleLayout import StyleLayout
-from ui.TopBar import TopBar  # Zakładam, że zapisałeś go jako osobny plik
+from ui.TopBar import TopBar
 
 
 class SubtitleEditorApp(QWidget):
@@ -10,16 +15,18 @@ class SubtitleEditorApp(QWidget):
         super().__init__()
         self.setWindowTitle("Subtitle Editor")
 
-        self.video_layout = VideoLayout()
-        self.style_layout = StyleLayout()
-        self.subtitles_layout = SubtitlesLayout()
+        self.style_manager = StyleManager()
+        self.subtitles_manager = SubtitlesManager()
+        self.video_manager = VideoManager()
+        self.transcription_manager = TranscriptionManager()
 
-        # Top bar z akcjami
-        self.top_bar = TopBar()
+        self.video_manager.add_video_listener(self.transcription_manager.on_video_changed)
+        self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
 
-        # Połączenia
-        self.video_layout.addVideoListener(self.subtitles_layout.on_video_changed)
-        self.subtitles_layout.add_subtitles_listener(self.video_layout.on_subtitles_changed)
+        self.video_layout = VideoLayout(self.style_manager, self.subtitles_manager, self.video_manager)
+        self.style_layout = StyleLayout(self.style_manager)
+        self.subtitles_layout = SubtitlesLayout(self.subtitles_manager, self.video_manager)
+        self.top_bar = TopBar(self.style_manager, self.subtitles_manager, self.video_manager)
 
         # Układ główny - pionowy
         main_layout = QVBoxLayout(self)

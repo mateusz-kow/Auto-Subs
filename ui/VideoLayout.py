@@ -2,11 +2,13 @@ import logging
 import os
 from threading import Thread, Timer
 
-from PySide6.QtWidgets import QVBoxLayout, QPushButton, QFileDialog, QLabel, QSlider, QSizePolicy
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QSlider, QSizePolicy
+from PySide6.QtCore import Qt, Signal
 
-from src.ffmpeg_manager import get_preview_image
-from src.settings.StyleManager import StyleManager
+from src.utils.ffmpeg_utils import get_preview_image
+from src.managers.StyleManager import StyleManager
+from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.VideoManager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
 from PySide6.QtGui import QPixmap
@@ -21,13 +23,17 @@ logger = logging.getLogger(__name__)
 
 
 class VideoLayout(QVBoxLayout):
-    def __init__(self):
-        super().__init__()
+    ass_path_changed_signal = Signal(str)  # Define the signal
 
-        # Load video button
-        load_btn = QPushButton("📂 Load Video")
-        load_btn.clicked.connect(self.change_video)
-        self.addWidget(load_btn)
+    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, video_manager: VideoManager):
+        super().__init__()
+        style_manager.add_style_listener(self.on_style_changed)
+        subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
+        self.style_manager = style_manager
+        self.video_manager = video_manager
+        self.subtitles_manager = subtitles_manager
+        self.ass_path_changed_signal.connect(self.on_ass_path_changed)
+        self.video_manager.add_video_listener(self.on_video_changed)
 
         # Preview image label
         self.image_label = QLabel("Video Frame Preview")
@@ -47,58 +53,13 @@ class VideoLayout(QVBoxLayout):
         self.slider.valueChanged.connect(self.on_slider_moved)
         self.addWidget(self.slider)
 
-        self.video_path = None
-        self.video_listeners: list = []
-        self.subtitles = None
         self.ass_path: str = ""
-
-        self.style = {
-            "title": "Whisper Subtitles",
-            "font": "Arial",
-            "font_size": 55,
-            "primary_color": "&H00FFFFFF",
-            "alignment": 2,
-            "margin_l": 10,
-            "margin_r": 10,
-            "margin_v": 500,
-            "bold": -1,
-            "italic": 0,
-            "border_style": 1,
-            "outline": 8,
-            "shadow": 0,
-            "encoding": 0
-        }
 
         self._debounce_timer = None
         self._debounce_delay = 0.05
 
-        StyleManager().add_style_listener(self.on_style_changed)
-
-    def change_video(self):
-        logger.info("Opening video selection dialog...")
-        file_path, _ = QFileDialog.getOpenFileName(
-            None, "Select Video", "", "Video files (*.mp4 *.avi *.mkv)"
-        )
-
-        if not file_path:
-            logger.warning("No video selected.")
-            return
-
-        if file_path == self.video_path:
-            logger.info(f"Video '{file_path}' is already loaded.")
-            return
-
-        logger.info(f"Video selected: {file_path}")
-        self.video_path = file_path
-
-        for listener in self.video_listeners:
-            listener(file_path)
-
-    def addVideoListener(self, listener):
-        self.video_listeners.append(listener)
-
     def initialize_slider(self, subtitles: Subtitles):
-        if not self.video_path:
+        if not self.video_manager.video_path:
             logger.error("No video path set. Cannot initialize slider.")
             return
 
@@ -118,8 +79,8 @@ class VideoLayout(QVBoxLayout):
         logger.info(f"Slider initialized with {len(timestamps)} positions.")
 
     def on_slider_moved(self, pos: int):
-        if self.video_path and pos < len(self.subtitles.timestamps):
-            timestamp = self.subtitles.timestamps[pos]
+        if self.video_manager.video_path and pos < len(self.subtitles_manager.subtitles.timestamps):
+            timestamp = self.subtitles_manager.subtitles.timestamps[pos]
             logger.debug(f"Slider moved to {timestamp:.2f}s")
             self.generate_preview_image(timestamp)
 
@@ -132,9 +93,9 @@ class VideoLayout(QVBoxLayout):
 
             def worker():
                 try:
-                    ass_path = SubtitleGenerator.to_ass(self.subtitles, self.style)
+                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style)
                     preview_image_path = get_preview_image(
-                        self.video_path, ass_path, timestamp=timestamp
+                        self.video_manager.video_path, ass_path, timestamp=timestamp
                     )
 
                     if preview_image_path and os.path.exists(preview_image_path):
@@ -155,19 +116,40 @@ class VideoLayout(QVBoxLayout):
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing preview...")
-        self.subtitles = subtitles
-        self.ass_path = SubtitleGenerator.to_ass(subtitles, self.style)
-        self.initialize_slider(subtitles)
-
-        if len(subtitles.timestamps) > self.slider.value():
-            self.generate_preview_image(self.subtitles.timestamps[self.slider.value()])
-        else:
-            self.generate_preview_image(self.subtitles.timestamps[0])
+        self.ass_path = SubtitleGenerator.to_ass(subtitles, self.style_manager.style)
+        self.ass_path_changed_signal.emit(self.ass_path)  # Emit the signal
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing preview...")
-        self.style = style
-        if self.subtitles:
-            self.ass_path = SubtitleGenerator.to_ass(self.subtitles, style)
-            self.initialize_slider(self.subtitles)
-            self.generate_preview_image(self.subtitles.timestamps[self.slider.value()])
+        if self.subtitles_manager.subtitles:
+            self.ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, style)
+            self.ass_path_changed_signal.emit(self.ass_path)  # Emit the signal
+
+    def on_ass_path_changed(self, ass_path: str):
+        subtitles = self.subtitles_manager.subtitles
+        self.initialize_slider(subtitles)
+
+        if len(subtitles.timestamps) > self.slider.value():
+            self.generate_preview_image(subtitles.timestamps[self.slider.value()])
+        elif len(subtitles.timestamps) > 0:
+            self.generate_preview_image(subtitles.timestamps[0])
+        else:
+            self.image_label = QLabel("Video Frame Preview")
+
+    def on_video_changed(self, video_path: str):
+        self.slider.setEnabled(False)
+
+        # Temporarily disconnect the valueChanged signal
+        try:
+            self.slider.valueChanged.disconnect(self.on_slider_moved)
+        except TypeError:
+            # Signal might not be connected yet, ignore the error
+            pass
+
+        # Perform operations
+        self.slider.setValue(0)
+        self.slider.setMaximum(1)
+
+        # Reconnect the valueChanged signal
+        self.slider.valueChanged.connect(self.on_slider_moved)
+
