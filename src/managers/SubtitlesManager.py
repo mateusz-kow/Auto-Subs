@@ -72,3 +72,7 @@ class SubtitlesManager:
         """Notify all registered listeners of subtitle changes."""
         for listener in self._subtitles_listeners:
             listener(self._subtitles)
+
+    @property
+    def subtitles(self):
+        return self._subtitles

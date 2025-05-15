@@ -156,3 +156,7 @@ class StyleManager:
             logger.debug(f"Added style loaded listener: {listener}")
         else:
             logger.warning("Listener already exists")
+
+    @property
+    def style(self):
+        return self._style
