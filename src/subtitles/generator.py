@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Dict
 
 from src.subtitles.models import Subtitles
@@ -57,7 +58,7 @@ class SubtitleGenerator:
         lines.append("")
 
         if not output_path:
-            output_path = os.path.join(TEMP_DIR, "temp.ass")
+            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.ass")
 
         with open(output_path, "w", encoding="utf-8") as file:
             file.write("\n".join(lines))
@@ -74,7 +75,7 @@ class SubtitleGenerator:
             return f"{hrs:02}:{mins:02}:{secs:02},{millis:03}"
 
         if not output_path:
-            output_path = os.path.join(TEMP_DIR, "subtitles.srt")
+            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.srt")
 
         with open(output_path, "w", encoding="utf-8") as file:
             srt_lines = []

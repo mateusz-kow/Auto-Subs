@@ -33,6 +33,7 @@ class VideoLayout(QVBoxLayout):
         self.video_manager = video_manager
         self.subtitles_manager = subtitles_manager
         self.ass_path_changed_signal.connect(self.on_ass_path_changed)
+        self.video_manager.add_video_listener(self.on_video_changed)
 
         # Preview image label
         self.image_label = QLabel("Video Frame Preview")
@@ -134,3 +135,21 @@ class VideoLayout(QVBoxLayout):
             self.generate_preview_image(subtitles.timestamps[0])
         else:
             self.image_label = QLabel("Video Frame Preview")
+
+    def on_video_changed(self, video_path: str):
+        self.slider.setEnabled(False)
+
+        # Temporarily disconnect the valueChanged signal
+        try:
+            self.slider.valueChanged.disconnect(self.on_slider_moved)
+        except TypeError:
+            # Signal might not be connected yet, ignore the error
+            pass
+
+        # Perform operations
+        self.slider.setValue(0)
+        self.slider.setMaximum(1)
+
+        # Reconnect the valueChanged signal
+        self.slider.valueChanged.connect(self.on_slider_moved)
+
