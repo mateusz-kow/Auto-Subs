@@ -1,125 +1,74 @@
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
-from src.subtitles.generator import SubtitleGenerator
 
 
 class SubtitlesManager:
+    """Manages subtitle operations and notifies listeners of changes."""
+
     def __init__(self, subtitles: Subtitles = None):
-        self.subtitles = subtitles
-        self.subtitles_listeners = []
-
-    def export_ass(self, ass_settings: dict, path: str = None):
-        return SubtitleGenerator.to_ass(self.subtitles, ass_settings, output_path=path)
-
-    def export_srt(self, path: str = None):
-        return SubtitleGenerator.to_srt(self.subtitles, output_path=path)
+        self._subtitles = subtitles
+        self._subtitles_listeners = []
 
     def set_subtitles(self, subtitles: Subtitles):
-        self.subtitles = subtitles
-
-        for listener in self.subtitles_listeners:
-            listener(subtitles)
+        """Set the current subtitles and notify listeners."""
+        self._subtitles = subtitles
+        self._notify_listeners()
 
     def add_subtitles_listener(self, listener):
-        self.subtitles_listeners.append(listener)
+        """Register a listener to be notified of subtitle changes."""
+        self._subtitles_listeners.append(listener)
 
     def delete_word(self, segment_index, word_index):
-        # Get the segment by index
-        segment = self.subtitles.segments[segment_index]
-
-        # Remove the word at the specified index
-        del segment.words[word_index]
-
-        # Refresh the segment to update its state
-        segment.refresh()
-
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Delete a word from a specific segment."""
+        del self._subtitles.segments[segment_index].words[word_index]
+        self._refresh_segment(segment_index)
 
     def delete_segments(self, segments_indexes):
-        # Sort the indexes in descending order to avoid index shifting
-        sorted_indexes = sorted(segments_indexes, reverse=True)
-
-        # Remove segments at the specified indexes
-        for index in sorted_indexes:
-            del self.subtitles.segments[index]
-
-        # Refresh the subtitles to update their state
-        self.subtitles.refresh()
-
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Delete multiple segments by their indexes."""
+        for index in sorted(segments_indexes, reverse=True):
+            del self._subtitles.segments[index]
+        self._refresh_subtitles()
 
     def add_empty_segment(self):
-        segment = SubtitleSegment.empty()
-
-        if self.subtitles.segments and self.subtitles.segments[0] == segment:
-            return
-
-        self.subtitles.segments.append(segment)
-        self.subtitles.refresh()
-
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Add an empty segment if it doesn't already exist."""
+        if not self._subtitles.segments or self._subtitles.segments[0] != SubtitleSegment.empty():
+            self._subtitles.segments.append(SubtitleSegment.empty())
+            self._refresh_subtitles()
 
     def add_word_to_segment(self, segment_index: int, word: SubtitleWord):
-        # Get the segment by index
-        segment = self.subtitles.segments[segment_index]
-
-        # Add the word to the segment
-        segment.words.append(word)
-
-        # Refresh the segment to update its state
-        segment.refresh()
-
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Add a word to a specific segment."""
+        self._subtitles.segments[segment_index].words.append(word)
+        self._refresh_segment(segment_index)
 
     def set_word(self, segment_index: int, word_index: int, word: SubtitleWord):
-        # Get the segment by index
-        segment = self.subtitles.segments[segment_index]
-
-        # Update the word at the specified index
-        if segment.words[word_index] == word:
-            return
-
-        segment.words[word_index] = word
-
-        # Refresh the segment to update its state
-        segment.refresh()
-        self.subtitles.refresh()
-
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Update a word in a specific segment."""
+        segment = self._subtitles.segments[segment_index]
+        if segment.words[word_index] != word:
+            segment.words[word_index] = word
+            self._refresh_segment(segment_index)
 
     def add_empty_word(self, segment_index: int):
-        # Get the segment by index
-        segment = self.subtitles.segments[segment_index]
-
-        # Add an empty word to the segment
-        empty_word = SubtitleWord("", 0, 0)
-        if len(segment.words) > 0 and segment.words[0] == empty_word:
-            return
-        segment.words.append(empty_word)
-
-        # Refresh the segment to update its state
-        segment.refresh()
-
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+        """Add an empty word to a specific segment."""
+        segment = self._subtitles.segments[segment_index]
+        if not segment.words or segment.words[0] != SubtitleWord("", 0, 0):
+            segment.words.append(SubtitleWord("", 0, 0))
+            self._refresh_segment(segment_index)
 
     def on_transcription_changed(self, transcription):
-        """
-        Called when the transcription changes. Can be used to update the subtitles.
-        """
-        self.subtitles = Subtitles.from_transcription(transcription)
+        """Update subtitles based on transcription changes."""
+        self._subtitles = Subtitles.from_transcription(transcription)
+        self._notify_listeners()
 
-        # Notify all listeners about the updated subtitles
-        for listener in self.subtitles_listeners:
-            listener(self.subtitles)
+    def _refresh_segment(self, segment_index: int):
+        """Refresh a specific segment and notify listeners."""
+        self._subtitles.segments[segment_index].refresh()
+        self._notify_listeners()
 
+    def _refresh_subtitles(self):
+        """Refresh all subtitles and notify listeners."""
+        self._subtitles.refresh()
+        self._notify_listeners()
 
+    def _notify_listeners(self):
+        """Notify all registered listeners of subtitle changes."""
+        for listener in self._subtitles_listeners:
+            listener(self._subtitles)

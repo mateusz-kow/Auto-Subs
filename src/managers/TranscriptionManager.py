@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 class TranscriptionManager:
     def __init__(self, whisper_model: str = WHISPER_MODEL):
-        self.model = None
-        self.model_loading_thread = None
-        self.transcription_listeners = []
-        self.model_loaded_event = threading.Event()  # Event to signal model loading completion
+        self._model = None
+        self._model_loading_thread = None
+        self._transcription_listeners = []
+        self._model_loaded_event = threading.Event()  # Event to signal model loading completion
         self.load_model(whisper_model)
 
     def load_model(self, whisper_model: str):
@@ -25,17 +25,17 @@ class TranscriptionManager:
         def worker():
             try:
                 logger.info("Loading Whisper model...")
-                self.model = whisper.load_model(whisper_model)
+                self._model = whisper.load_model(whisper_model)
                 logger.info("Whisper model loaded successfully.")
-                self.model_loaded_event.set()  # Signal that the model is loaded
+                self._model_loaded_event.set()  # Signal that the model is loaded
             except Exception as e:
                 logger.exception("Failed to load Whisper model")
-                self.model_loaded_event.set()  # Ensure the event is set even on failure
+                self._model_loaded_event.set()  # Ensure the event is set even on failure
                 raise RuntimeError(f"Failed to load model: {e}") from e
 
         # Start the worker in a separate thread
-        self.model_loading_thread = threading.Thread(target=worker, daemon=True)
-        self.model_loading_thread.start()
+        self._model_loading_thread = threading.Thread(target=worker, daemon=True)
+        self._model_loading_thread.start()
 
     async def transcribe(self, audio_path: str, word_timestamps: bool = True):
         """
@@ -49,15 +49,15 @@ class TranscriptionManager:
             dict: Transcription result.
         """
         # Wait for the model to load
-        await asyncio.to_thread(self.model_loaded_event.wait)
+        await asyncio.to_thread(self._model_loaded_event.wait)
 
-        if not self.model:
+        if not self._model:
             raise RuntimeError("Model is not loaded. Cannot transcribe.")
 
         try:
             logger.info(f"Starting transcription for {audio_path}...")
             transcription = await asyncio.to_thread(
-                self.model.transcribe, audio_path, word_timestamps=word_timestamps
+                self._model.transcribe, audio_path, word_timestamps=word_timestamps
             )
             logger.info("Transcription completed successfully.")
             await self.notify_listeners(transcription)
@@ -73,7 +73,7 @@ class TranscriptionManager:
         Args:
             transcription (dict): Transcription result from the Whisper model.
         """
-        for listener in self.transcription_listeners:
+        for listener in self._transcription_listeners:
             await listener(transcription)
 
     def add_transcription_listener(self, listener):
@@ -83,7 +83,7 @@ class TranscriptionManager:
         Args:
             listener (callable): A coroutine function to call with the transcription result.
         """
-        self.transcription_listeners.append(listener)
+        self._transcription_listeners.append(listener)
 
     def on_video_changed(self, video_path: str):
         """

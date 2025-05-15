@@ -59,7 +59,7 @@ class VideoLayout(QVBoxLayout):
         self._debounce_delay = 0.05
 
     def initialize_slider(self, subtitles: Subtitles):
-        if not self.video_manager.video_path:
+        if not self.video_manager._video_path:
             logger.error("No video path set. Cannot initialize slider.")
             return
 
@@ -79,8 +79,8 @@ class VideoLayout(QVBoxLayout):
         logger.info(f"Slider initialized with {len(timestamps)} positions.")
 
     def on_slider_moved(self, pos: int):
-        if self.video_manager.video_path and pos < len(self.subtitles_manager.subtitles.timestamps):
-            timestamp = self.subtitles_manager.subtitles.timestamps[pos]
+        if self.video_manager._video_path and pos < len(self.subtitles_manager._subtitles.timestamps):
+            timestamp = self.subtitles_manager._subtitles.timestamps[pos]
             logger.debug(f"Slider moved to {timestamp:.2f}s")
             self.generate_preview_image(timestamp)
 
@@ -93,9 +93,9 @@ class VideoLayout(QVBoxLayout):
 
             def worker():
                 try:
-                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style)
+                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager._subtitles, self.style_manager._style)
                     preview_image_path = get_preview_image(
-                        self.video_manager.video_path, ass_path, timestamp=timestamp
+                        self.video_manager._video_path, ass_path, timestamp=timestamp
                     )
 
                     if preview_image_path and os.path.exists(preview_image_path):
@@ -116,17 +116,17 @@ class VideoLayout(QVBoxLayout):
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing preview...")
-        self.ass_path = SubtitleGenerator.to_ass(subtitles, self.style_manager.style)
+        self.ass_path = SubtitleGenerator.to_ass(subtitles, self.style_manager._style)
         self.ass_path_changed_signal.emit(self.ass_path)  # Emit the signal
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing preview...")
-        if self.subtitles_manager.subtitles:
-            self.ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, style)
+        if self.subtitles_manager._subtitles:
+            self.ass_path = SubtitleGenerator.to_ass(self.subtitles_manager._subtitles, style)
             self.ass_path_changed_signal.emit(self.ass_path)  # Emit the signal
 
     def on_ass_path_changed(self, ass_path: str):
-        subtitles = self.subtitles_manager.subtitles
+        subtitles = self.subtitles_manager._subtitles
         self.initialize_slider(subtitles)
 
         if len(subtitles.timestamps) > self.slider.value():

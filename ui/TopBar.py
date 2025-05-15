@@ -88,19 +88,19 @@ class TopBar(QWidget):
     def export_srt(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if path:
-            SubtitleGenerator.to_srt(self.subtitles_manager.subtitles, output_path=path)
+            SubtitleGenerator.to_srt(self.subtitles_manager._subtitles, output_path=path)
 
     def export_ass(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if path:
-            SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style, output_path=path)
+            SubtitleGenerator.to_ass(self.subtitles_manager._subtitles, self.style_manager._style, output_path=path)
 
     def export_txt(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "Text files (*.txt)")
         if path:
             try:
                 with open(path, "w", encoding="utf-8") as file:
-                    for segment in self.subtitles_manager.subtitles.segments:
+                    for segment in self.subtitles_manager._subtitles.segments:
                         file.write(f"{str(segment)}\n")
                 QMessageBox.information(self, "Export", f"Exported TXT to:\n{path}")
             except Exception as e:
@@ -112,13 +112,13 @@ class TopBar(QWidget):
             try:
                 # Generate subtitles in ASS format
                 ass_subtitles = SubtitleGenerator.to_ass(
-                    self.subtitles_manager.subtitles,
-                    self.style_manager.style
+                    self.subtitles_manager._subtitles,
+                    self.style_manager._style
                 )
 
                 # Export video with subtitles
                 get_video_with_subtitles(
-                    self.video_manager.video_path,  # Input video path
+                    self.video_manager._video_path,  # Input video path
                     ass_subtitles,  # Subtitles in ASS format
                     output_path=path  # Output MP4 path
                 )

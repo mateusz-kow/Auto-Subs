@@ -21,7 +21,7 @@ def main():
 
     # Initialize the main application window
     window = SubtitleEditorApp()
-    window.resize(1100, 700)
+    window.resize(900, 600)
     window.show()
 
     try:
