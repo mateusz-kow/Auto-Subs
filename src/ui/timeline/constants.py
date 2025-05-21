@@ -21,3 +21,4 @@ MINOR_MARKER_HEIGHT = 2
 MARKER_COLOR = Qt.GlobalColor.black
 SPECIAL_MARKER_COLOR = Qt.GlobalColor.red  # For special markers
 FRAME_RATE = 60
+SELECTED_SEGMENT_COLOR = Qt.GlobalColor.green
