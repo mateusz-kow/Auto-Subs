@@ -13,7 +13,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class VideoBar(QGraphicsRectItem):
+class VideoSegmentBar(QGraphicsRectItem):
     """Represents the video bar with an interactive progress indicator."""
 
     def __init__(self, video_duration: float, parent_controller):
