@@ -4,3 +4,4 @@ git+https://github.com/FFmpeg/FFmpeg
 PySide6
 qasync
 appdirs
+python-vlc

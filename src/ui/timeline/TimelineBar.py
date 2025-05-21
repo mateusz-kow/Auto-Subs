@@ -1,8 +1,9 @@
-from PySide6.QtGui import QAction, QPen, QMouseEvent, QWheelEvent
+from PySide6.QtGui import QAction, QPen, QWheelEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsTextItem, QMenu
 from PySide6.QtCore import QPointF
 
-from src.ui.timeline.Models import VideoGraphic, SegmentGraphic
+from src.ui.timeline.VideoBar import VideoBar
+from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.constants import *
 
 
@@ -24,6 +25,8 @@ class TimelineBar(QGraphicsView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setFixedHeight(SUBTITLE_BAR_Y + SUBTITLE_BAR_HEIGHT + BAR_HEIGHT)
 
+        self.preview_time_listeners = []
+
     def update_timeline(self, subtitles, video_duration):
         """Update the timeline with video, subtitle segments, and markers."""
         self.scene.clear()
@@ -41,7 +44,7 @@ class TimelineBar(QGraphicsView):
 
     def _add_video_bar(self, video_duration):
         """Add the video bar to the timeline."""
-        video_bar = VideoGraphic(video_duration)
+        video_bar = VideoBar(video_duration, self)
         self.scene.addItem(video_bar)
 
     def _add_time_markers(self, video_duration):
@@ -62,74 +65,61 @@ class TimelineBar(QGraphicsView):
     def _add_subtitle_segments(self, subtitles):
         """Add subtitle segments to the timeline."""
         for i, segment in enumerate(subtitles.segments):
-            segment_item = SegmentGraphic(segment, i)
+            segment_item = SubtitleSegmentBar(segment, i, self)
             self.scene.addItem(segment_item)
 
-    def mousePressEvent(self, event: QMouseEvent):
-        """Handle mouse clicks for selection and context menu."""
-        scene_pos = self.mapToScene(event.pos())
-        clicked_item = self.scene.itemAt(scene_pos, self.transform())
-
-        if event.button() == Qt.MouseButton.LeftButton:
-            if isinstance(clicked_item, SegmentGraphic):
-                modifiers = event.modifiers()
-                if modifiers == Qt.KeyboardModifier.ControlModifier:
-                    # Toggle selection with Ctrl
-                    self._toggle_segment_selection(clicked_item)
-                elif modifiers == Qt.KeyboardModifier.ShiftModifier:
-                    # Select range with Shift
-                    self._select_range(clicked_item)
-                else:
-                    # Single selection
-                    self.clear_selection()
-                    self._select_segment(clicked_item)
-            elif isinstance(clicked_item, VideoGraphic):
-                # Update video progress on click
-                clicked_item.mousePressEvent(event)
-            else:
-                self.clear_selection()
-        elif event.button() == Qt.MouseButton.RightButton:
-            self.show_context_menu(event)
-
-    def _select_segment(self, clicked_item):
-        """Select a subtitle segment."""
-        self.selected_segments.add(clicked_item.index)
-        clicked_item.select()
-
-    def _toggle_segment_selection(self, clicked_item):
-        """Toggle the selection of a segment."""
-        if clicked_item.index in self.selected_segments:
-            self.selected_segments.remove(clicked_item.index)
-            clicked_item.deselect()
+    def handle_segment_click(self, segment_item, modifiers):
+        """Handle segment selection with Shift or Ctrl."""
+        if modifiers == Qt.KeyboardModifier.ControlModifier:
+            # Toggle selection with Ctrl
+            self._toggle_segment_selection(segment_item)
+        elif modifiers == Qt.KeyboardModifier.ShiftModifier:
+            # Select range with Shift
+            self._select_range(segment_item)
         else:
-            self.selected_segments.add(clicked_item.index)
-            clicked_item.select()
+            # Single selection
+            self.clear_selection()
+            self._select_segment(segment_item)
 
-    def _select_range(self, clicked_item):
+    def _select_segment(self, segment_item):
+        """Select a single segment."""
+        self.selected_segments.add(segment_item.index)
+        segment_item.select()
+
+    def _toggle_segment_selection(self, segment_item):
+        """Toggle the selection of a segment."""
+        if segment_item.index in self.selected_segments:
+            self.selected_segments.remove(segment_item.index)
+            segment_item.deselect()
+        else:
+            self.selected_segments.add(segment_item.index)
+            segment_item.select()
+
+    def _select_range(self, segment_item):
         """Select a range of segments."""
         if not self.selected_segments:
-            self._select_segment(clicked_item)
+            self._select_segment(segment_item)
             return
 
         # Determine the range
         last_selected = max(self.selected_segments)
-        start = min(last_selected, clicked_item.index)
-        end = max(last_selected, clicked_item.index)
+        start = min(last_selected, segment_item.index)
+        end = max(last_selected, segment_item.index)
 
         # Select all segments in the range
         for item in self.scene.items():
-            if isinstance(item, SegmentGraphic) and start <= item.index <= end:
+            if isinstance(item, SubtitleSegmentBar) and start <= item.index <= end:
                 self.selected_segments.add(item.index)
                 item.select()
 
     def clear_selection(self):
         """Clear all selected segments."""
         for item in self.scene.items():
-            if isinstance(item, SegmentGraphic):
+            if isinstance(item, SubtitleSegmentBar):
                 item.deselect()
         self.selected_segments.clear()
 
-    def show_context_menu(self, event: QMouseEvent):
+    def show_context_menu(self, position):
         """Show context menu for selected segments."""
         if self.selected_segments:
             menu = QMenu(self)
@@ -141,7 +131,8 @@ class TimelineBar(QGraphicsView):
 
             menu.addAction(delete_action)
             menu.addAction(merge_action)
-            menu.exec(event.globalPos())
+            # Show the menu at the position of the mouse click
+            menu.exec(position)
 
     def delete_segments(self):
         """Delete selected segments."""
@@ -155,6 +146,19 @@ class TimelineBar(QGraphicsView):
         """Ensure scrolling is horizontal."""
         delta = event.angleDelta().y()
         self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta)
+
+    def notify_preview_time_change(self, timestamp: float):
+        """Notify the video manager or player about the time change."""
+        print(f"Timestamp updated to: {timestamp:.2f} seconds")  # Replace with actual video update logic
+        for listener in self.preview_time_listeners:
+            listener(timestamp)
+
+    def add_preview_time_listener(self, listener):
+        """Add a listener for preview time changes."""
+        if listener not in self.preview_time_listeners:
+            self.preview_time_listeners.append(listener)
+        else:
+            raise ValueError("The listener is already registered.")
 
     def on_subtitles_changed(self, subtitles):
         """Handle changes in subtitles."""
