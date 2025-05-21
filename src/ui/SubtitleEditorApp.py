@@ -46,6 +46,8 @@ class SubtitleEditorApp(QWidget):
         self.top_bar = TopBar(self.style_manager, self.subtitles_manager, self.video_manager)
         self.timeline_bar = TimelineBar(self.subtitles_manager, self.video_manager)
 
+        self.timeline_bar.add_preview_time_listener(self.video_layout.on_preview_time_changed)
+
     def _setup_layout(self):
         """Set up the main layout of the application."""
         # Main vertical layout
@@ -56,9 +58,8 @@ class SubtitleEditorApp(QWidget):
 
         # Center layout with editors
         center_layout = QHBoxLayout()
-        center_layout.addLayout(self.style_layout, 2)
+        center_layout.addWidget(self.style_layout, 2)
         center_layout.addLayout(self.video_layout, 4)
-        # center_layout.addLayout(self.subtitles_layout, 2)
 
         # Add center layout to the main layout
         main_layout.addLayout(center_layout)

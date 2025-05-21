@@ -3,6 +3,9 @@ from src.ui.timeline.constants import *
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QBrush, QMouseEvent
 
+SELECTED_SEGMENT_COLOR = Qt.GlobalColor.green
+FRAME_RATE = 60
+
 
 class SubtitleSegmentBar(QGraphicsRectItem):
     """Represents a single subtitle segment."""
@@ -34,3 +37,5 @@ class SubtitleSegmentBar(QGraphicsRectItem):
             self.parent_controller.handle_segment_click(self, modifiers)
         else:
             self.parent_controller.show_context_menu(event.screenPos())
+
+
