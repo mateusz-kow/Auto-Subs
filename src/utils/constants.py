@@ -11,11 +11,11 @@ logging.basicConfig(level=logging.INFO)
 # Application metadata
 APP_NAME = "AutoSubs"
 COMPANY_NAME = "GithubOzzy420"
-WHISPER_MODEL = "turbo"
+WHISPER_MODEL = "tiny"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
-LOCAL_DIR: Path = Path(user_data_dir(APP_NAME))
+LOCAL_DIR: Path = Path(user_data_dir(APP_NAME, COMPANY_NAME))
 STYLES_DIR: Path = LOCAL_DIR / "Styles"
 PROJECTS_DIR: Path = LOCAL_DIR / "Projects"
 SETTINGS_DIR: Path = LOCAL_DIR / "Settings"

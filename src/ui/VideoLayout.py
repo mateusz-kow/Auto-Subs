@@ -39,7 +39,6 @@ class VideoLayout(QVBoxLayout):
         self.image_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
         self.image_label.setScaledContents(True)
         self.image_label.setStyleSheet("background-color: black;")
-        self.image_label.setScaledContents(True)
         self.addWidget(self.image_label)
 
         # Slider to seek video

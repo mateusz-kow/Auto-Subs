@@ -1,3 +1,6 @@
+from src.utils.ffmpeg_utils import get_video_duration
+
+
 class VideoManager:
     """
     Manages video-related operations, including setting the video path
@@ -11,6 +14,7 @@ class VideoManager:
         Args:
             video_path (str, optional): The initial path to the video. Defaults to None.
         """
+        self._video_duration: float = 0.0
         self._video_path: str = video_path
         self._video_changed_listeners: list[callable] = []
 
@@ -25,6 +29,7 @@ class VideoManager:
             raise ValueError("The video path must be a string.")
 
         self._video_path = path
+        self._video_duration = get_video_duration(path)
         for listener in self._video_changed_listeners:
             listener(path)
 

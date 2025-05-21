@@ -22,7 +22,7 @@ class SubtitlesManager:
         del self._subtitles.segments[segment_index].words[word_index]
         self._refresh_segment(segment_index)
 
-    def delete_segments(self, segments_indexes):
+    def delete_segments(self, segments_indexes: list[int]):
         """Delete multiple segments by their indexes."""
         for index in sorted(segments_indexes, reverse=True):
             del self._subtitles.segments[index]
@@ -38,6 +38,26 @@ class SubtitlesManager:
         """Add a word to a specific segment."""
         self._subtitles.segments[segment_index].words.append(word)
         self._refresh_segment(segment_index)
+
+    def merge_segments(self, segment_indices: list[int]):
+        """Merge multiple segments into one."""
+        if not segment_indices:
+            return
+
+        first_index = min(segment_indices)
+        last_index = max(segment_indices)
+
+        if first_index == last_index:
+            return
+
+        words = []
+        for index in sorted(segment_indices, reverse=True):
+            words.extend(self._subtitles.segments[index].words)
+            del self._subtitles.segments[index]
+
+        merged_segment = SubtitleSegment(words=words)
+        self.subtitles.add_segment(merged_segment)
+        self._notify_listeners()
 
     def set_word(self, segment_index: int, word_index: int, word: SubtitleWord):
         """Update a word in a specific segment."""
