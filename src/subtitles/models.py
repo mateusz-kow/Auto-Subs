@@ -41,8 +41,7 @@ class SubtitleSegment:
             words (List[SubtitleWord]): A list of SubtitleWord instances.
         """
         self.words = words
-        self.start = self.words[0].start if self.words else 0
-        self.end = self.words[-1].end if self.words else 0
+        self.refresh()
 
     @classmethod
     def empty(cls) -> "SubtitleSegment":

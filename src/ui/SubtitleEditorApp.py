@@ -4,6 +4,7 @@ from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.TranscriptionManager import TranscriptionManager
 from src.managers.VideoManager import VideoManager
+from src.ui.timeline.TimelineBar import TimelineBar
 from src.ui.VideoLayout import VideoLayout
 from src.ui.SubtitlesLayout import SubtitlesLayout
 from src.ui.style_layout.StyleLayout import StyleLayout
@@ -43,6 +44,7 @@ class SubtitleEditorApp(QWidget):
         self.style_layout = StyleLayout(self.style_manager)
         self.subtitles_layout = SubtitlesLayout(self.subtitles_manager, self.video_manager)
         self.top_bar = TopBar(self.style_manager, self.subtitles_manager, self.video_manager)
+        self.timeline_bar = TimelineBar(self.subtitles_manager, self.video_manager)
 
     def _setup_layout(self):
         """Set up the main layout of the application."""
@@ -56,7 +58,10 @@ class SubtitleEditorApp(QWidget):
         center_layout = QHBoxLayout()
         center_layout.addLayout(self.style_layout, 2)
         center_layout.addLayout(self.video_layout, 4)
-        center_layout.addLayout(self.subtitles_layout, 2)
+        # center_layout.addLayout(self.subtitles_layout, 2)
 
         # Add center layout to the main layout
         main_layout.addLayout(center_layout)
+
+        # Add TimelineBar
+        main_layout.addWidget(self.timeline_bar)

@@ -1,3 +1,4 @@
+import json
 import subprocess
 import os
 import uuid
@@ -74,6 +75,33 @@ def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str]
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to generate preview image: {e}")
         raise RuntimeError(f"FFmpeg preview image generation failed: {e}") from e
+
+
+def get_video_duration(video_path: str) -> float:
+    """
+    Retrieves the duration of a video file using ffmpeg.
+
+    Args:
+        video_path (str): Path to the video file.
+
+    Returns:
+        float: Duration of the video in seconds.
+
+    Raises:
+        RuntimeError: If ffmpeg fails to retrieve the video duration.
+    """
+    try:
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "json",
+            adjust_path(video_path)
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True, cwd=TEMP_DIR)
+        duration_info = json.loads(result.stdout)
+        return float(duration_info["format"]["duration"])
+    except (subprocess.CalledProcessError, KeyError, ValueError) as e:
+        raise RuntimeError(f"Failed to retrieve video duration: {e}")
 
 
 def adjust_path(path: str, cwd: str = TEMP_DIR) -> str:
