@@ -22,7 +22,7 @@ class StyleLayout(QScrollArea):
 
         self.style_manager = style_manager
 
-        style = style_manager.to_dict()
+        style = style_manager.style
         self.font_layout = FontStyleLayout(style)
         self.highlight_layout = HighlightStyleLayout(style)
 

@@ -4,17 +4,25 @@ import whisper
 import logging
 from src.utils.constants import WHISPER_MODEL
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure logging with timestamp and level
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger = logging.getLogger()
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 class TranscriptionManager:
     def __init__(self, whisper_model: str = WHISPER_MODEL):
         self._model = None
         self._model_loading_thread = None
+        self._model_lock = asyncio.Lock()
         self._transcription_listeners = []
         self._model_loaded_event = threading.Event()  # Event to signal model loading completion
+        self._transcription_process = None
+        self._current_audio_path = None
         self.load_model(whisper_model)
 
     def load_model(self, whisper_model: str):
@@ -54,16 +62,21 @@ class TranscriptionManager:
         if not self._model:
             raise RuntimeError("Model is not loaded. Cannot transcribe.")
 
-        try:
-            logger.info(f"Starting transcription for {audio_path}...")
-            transcription = await asyncio.to_thread(
-                self._model.transcribe, audio_path, word_timestamps=word_timestamps
-            )
-            logger.info("Transcription completed successfully.")
-            self.notify_listeners(transcription)
-        except Exception as e:
-            logger.exception("Transcription failed")
-            raise RuntimeError(f"Transcription failed: {e}") from e
+        async with self._model_lock:
+            if self._current_audio_path != audio_path:
+                return
+            try:
+                logger.info(f"Starting transcription for {audio_path}...")
+                transcription = await asyncio.to_thread(
+                    self._model.transcribe, audio_path, word_timestamps=word_timestamps
+                )
+                if self._current_audio_path != audio_path:
+                    return
+                logger.info("Transcription completed successfully.")
+                self.notify_listeners(transcription)
+            except Exception as e:
+                logger.exception("Transcription failed")
+                raise RuntimeError(f"Transcription failed: {e}") from e
 
     def notify_listeners(self, transcription):
         """
@@ -74,7 +87,6 @@ class TranscriptionManager:
         """
         for listener in self._transcription_listeners:
             listener(transcription)
-
 
     def add_transcription_listener(self, listener):
         """
@@ -92,4 +104,5 @@ class TranscriptionManager:
         Args:
             video_path (str): Path to the new video file.
         """
+        self._current_audio_path = video_path
         asyncio.create_task(self.transcribe(video_path))

@@ -1,3 +1,4 @@
+import asyncio
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 
 
@@ -75,8 +76,15 @@ class SubtitlesManager:
 
     def on_transcription_changed(self, transcription):
         """Update subtitles based on transcription changes."""
-        self._subtitles = Subtitles.from_transcription(transcription)
-        self._notify_listeners()
+
+        async def task():
+            self._subtitles = await asyncio.to_thread(Subtitles.from_transcription, transcription)
+            self._notify_listeners()
+
+        asyncio.create_task(task())
+
+    def on_video_changed(self, video_path):
+        self._subtitles = Subtitles.empty()
 
     def _refresh_segment(self, segment_index: int):
         """Refresh a specific segment and notify listeners."""

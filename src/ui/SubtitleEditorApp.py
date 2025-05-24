@@ -8,7 +8,7 @@ from src.ui.MediaPlayer import MediaPlayer
 from src.ui.timeline.SegmentsBar import SegmentsBar
 from src.ui.VideoLayout import VideoLayout
 from src.ui.SubtitlesLayout import SubtitlesLayout
-from src.ui.style_layout.StyleLayout import StyleLayout
+from src.ui.style.StyleLayout import StyleLayout
 from src.ui.TopBar import TopBar
 from src.ui.timeline.TimelineBar import TimelineBar
 
@@ -18,7 +18,7 @@ class SubtitleEditorApp(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Subtitle Editor")
+        self.setWindowTitle("Auto Subs")
 
         # Initialize managers
         self._initialize_managers()
@@ -38,6 +38,7 @@ class SubtitleEditorApp(QWidget):
 
         # Connect managers
         self.video_manager.add_video_listener(self.transcription_manager.on_video_changed)
+        self.video_manager.add_video_listener(self.subtitles_manager.on_video_changed)
         self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
 
     def _initialize_ui(self):

@@ -1,10 +1,8 @@
+import asyncio
 import logging
-import os
-from threading import Thread, Timer
 
 from PySide6.QtWidgets import QVBoxLayout
 
-from src.utils.ffmpeg_utils import get_video_with_subtitles
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
@@ -22,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class VideoLayout(QVBoxLayout):
-    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, video_manager: VideoManager, media_player: MediaPlayer):
+    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, video_manager: VideoManager,
+                 media_player: MediaPlayer):
         super().__init__()
         style_manager.add_style_listener(self.on_style_changed)
         subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
@@ -41,39 +40,25 @@ class VideoLayout(QVBoxLayout):
         if self.video_manager._video_path and time >= 0:
             self.media_player.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
 
-    def generate_preview_video(self, timestamp: float):
-        if self._debounce_timer:
-            self._debounce_timer.cancel()  # Cancel previous timer
+    def generate_preview_video(self):
+        logger.info("Generating preview video...")
 
-        def delayed_worker():
-            logger.info(f"Generating preview at {timestamp:.2f} seconds...")
+        async def task():
+            ass_path = await asyncio.to_thread(
+                SubtitleGenerator.to_ass,
+                self.subtitles_manager.subtitles,
+                self.style_manager.style,
+                None
+            )
+            self.media_player.set_media(self.video_manager._video_path, ass_path)
 
-            def worker():
-                try:
-                    ass_path = SubtitleGenerator.to_ass(self.subtitles_manager.subtitles, self.style_manager.style, timestamp=timestamp)
-                    preview_video_path = get_video_with_subtitles(
-                        self.video_manager._video_path, ass_path
-                    )
-
-                    if preview_video_path and os.path.exists(preview_video_path):
-                        self.media_player.set_media(preview_video_path)  # Set the preview image in the media player
-                        logger.info("Preview video loaded.")
-                    else:
-                        logger.error("Preview video file not found or generation failed.")
-
-                except Exception as e:
-                    logger.exception("Error generating preview video.")
-
-            Thread(target=worker).start()
-
-        self._debounce_timer = Timer(self._debounce_delay, delayed_worker)
-        self._debounce_timer.start()
+        asyncio.create_task(task())
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing preview...")
-        self.generate_preview_video(0)
+        self.generate_preview_video()
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing preview...")
         if self.subtitles_manager._subtitles:
-            self.generate_preview_video(0)
+            self.generate_preview_video()
