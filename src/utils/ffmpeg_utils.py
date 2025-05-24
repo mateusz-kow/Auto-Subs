@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-async def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
+def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
     """
     Adds ASS subtitles to a video and saves the output.
 
