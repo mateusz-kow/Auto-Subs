@@ -1,7 +1,6 @@
 import json
 import subprocess
 import os
-import threading
 import uuid
 import logging
 from typing import Optional
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
+async def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
     """
     Adds ASS subtitles to a video and saves the output.
 
@@ -31,10 +30,10 @@ def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = 
             output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_preview.mp4")
 
         cmd = [
-            "ffmpeg", "-y", "-i", adjust_path(video_path),
-            "-vf", f"ass={adjust_path(ass_path)}",
+            "ffmpeg", "-y", "-i", _adjust_path(video_path),
+            "-vf", f"ass={_adjust_path(ass_path)}",
             "-c:a", "copy",
-            adjust_path(output_path)
+            _adjust_path(output_path)
         ]
         logger.info(f"Running command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
@@ -64,11 +63,11 @@ def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str]
         cmd = [
             "ffmpeg", "-y",
             "-ss", str(timestamp),
-            "-i", adjust_path(video_path),
-            "-vf", f"ass={adjust_path(ass_path)}",
+            "-i", _adjust_path(video_path),
+            "-vf", f"ass={_adjust_path(ass_path)}",
             "-vframes", "1",
             "-q:v", "2",
-            adjust_path(output_path)
+            _adjust_path(output_path)
         ]
         logger.info(f"Generating preview image with command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
@@ -96,7 +95,7 @@ def get_video_duration(video_path: str) -> float:
             "ffprobe", "-v", "error",
             "-show_entries", "format=duration",
             "-of", "json",
-            adjust_path(video_path)
+            _adjust_path(video_path)
         ]
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True, cwd=TEMP_DIR)
         duration_info = json.loads(result.stdout)
@@ -105,7 +104,7 @@ def get_video_duration(video_path: str) -> float:
         raise RuntimeError(f"Failed to retrieve video duration: {e}")
 
 
-def adjust_path(path: str, cwd: str = TEMP_DIR) -> str:
+def _adjust_path(path: str, cwd: str = TEMP_DIR) -> str:
     """
     Adjusts the provided path relative to the given `cwd` directory and normalizes path separators.
 

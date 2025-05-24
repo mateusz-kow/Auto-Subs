@@ -1,5 +1,7 @@
 import sys
 import asyncio
+from asyncio import all_tasks
+
 from PySide6.QtWidgets import QApplication
 from qasync import QEventLoop
 from src.utils.constants import clean_temp_dir
@@ -33,7 +35,9 @@ def main() -> None:
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
     finally:
-        # Ensure the event loop is closed and temporary files are cleaned up
+        tasks = [t for t in all_tasks(loop) if not t.done()]
+        if tasks:
+            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         loop.close()
         clean_temp_dir()
 

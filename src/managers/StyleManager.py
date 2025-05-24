@@ -52,15 +52,6 @@ class StyleManager:
         self._style_listeners = []
         self._style_loaded_listeners = []
 
-    def to_dict(self) -> dict:
-        """
-        Get the current style as a dictionary.
-
-        Returns:
-            dict: The current style configuration.
-        """
-        return self._style
-
     def from_dict(self, new_style: dict):
         """
         Update the current style with a new style dictionary and notify listeners.
