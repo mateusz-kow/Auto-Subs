@@ -90,6 +90,7 @@ class SubtitleGenerator:
         with open(output_path, "w", encoding="utf-8") as file:
             file.write("\n".join(lines))
 
+        print("to_ass called with output_path =", output_path)
         return output_path
 
     @staticmethod
@@ -130,6 +131,7 @@ class SubtitleGenerator:
 
             file.write("\n".join(srt_lines))
 
+        print("to_srt called with output_path =", output_path)
         return output_path
 
     @staticmethod
