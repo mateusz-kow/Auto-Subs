@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QSizePolicy
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
@@ -30,15 +30,16 @@ class VideoLayout(QVBoxLayout):
         self.subtitles_manager = subtitles_manager
 
         # Media player widget
-        self.media_player = media_player
-        self.addWidget(self.media_player)
+        self.media_player_widget = media_player
+        self.media_player_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.addWidget(self.media_player_widget)
 
         self._debounce_timer = None
         self._debounce_delay = 0.05
 
     def on_preview_time_changed(self, time: float):
         if self.video_manager._video_path and time >= 0:
-            self.media_player.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
+            self.media_player_widget.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
 
     def generate_preview_video(self):
         logger.info("Generating preview video...")
@@ -50,7 +51,7 @@ class VideoLayout(QVBoxLayout):
                 self.style_manager.style,
                 None
             )
-            self.media_player.set_media(self.video_manager._video_path, ass_path)
+            self.media_player_widget.set_media(self.video_manager._video_path, ass_path)
 
         asyncio.create_task(task())
 
