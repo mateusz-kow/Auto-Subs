@@ -5,6 +5,8 @@ from typing import Dict
 from src.subtitles.models import Subtitles
 from src.utils.file_operations import generate_ass_header
 from src.utils.constants import TEMP_DIR
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 HIGHLIGHT_END = r"{\\r}"
 
@@ -14,8 +16,8 @@ class SubtitleGenerator:
 
     @staticmethod
     def to_ass(subtitles: Subtitles,
-                     ass_settings: Dict[str, any],
-                     output_path: str = None) -> str:
+               ass_settings: Dict[str, any],
+               output_path: str = None) -> str:
         """
     Generate an ASS subtitle file from the given subtitles and settings.
 
@@ -90,7 +92,7 @@ class SubtitleGenerator:
         with open(output_path, "w", encoding="utf-8") as file:
             file.write("\n".join(lines))
 
-        print("to_ass called with output_path =", output_path)
+        logger.info(f"Generated subtitles in {output_path}")
         return output_path
 
     @staticmethod
@@ -131,7 +133,7 @@ class SubtitleGenerator:
 
             file.write("\n".join(srt_lines))
 
-        print("to_srt called with output_path =", output_path)
+        logger.info(f"Generated subtitles in {output_path}")
         return output_path
 
     @staticmethod
@@ -142,4 +144,5 @@ class SubtitleGenerator:
         with open(output_path, "w", encoding="utf-8") as file:
             file.write(str(subtitles))
 
+        logger.info(f"Generated subtitles in {output_path}")
         return output_path

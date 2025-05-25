@@ -4,13 +4,8 @@ from PySide6.QtCore import QRectF
 from PySide6.QtGui import QBrush, QMouseEvent, QPen
 from src.ui.timeline.constants import *
 
-# Configure the logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)  # Set the logging level
-handler = logging.StreamHandler()  # Log to the console
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 class VideoSegmentBar(QGraphicsRectItem):

@@ -10,13 +10,8 @@ from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
 from src.ui.MediaPlayer import MediaPlayer
 
-# Setup logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 class VideoLayout(QVBoxLayout):

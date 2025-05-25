@@ -8,15 +8,8 @@ from PySide6.QtCore import QPointF, QTimer, Qt
 from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.constants import *
-
-
-# Setup logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 class SegmentsBar(QGraphicsView):

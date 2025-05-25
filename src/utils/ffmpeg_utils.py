@@ -2,12 +2,10 @@ import json
 import subprocess
 import os
 import uuid
-import logging
 from typing import Optional
 from src.utils.constants import TEMP_DIR
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
