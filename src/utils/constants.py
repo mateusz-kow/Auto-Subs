@@ -1,12 +1,9 @@
-import logging
 import tempfile
 from pathlib import Path
 from appdirs import user_data_dir
 from typing import List
-
-# Configure logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 # Application metadata
 APP_NAME = "AutoSubs"

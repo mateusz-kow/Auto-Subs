@@ -3,15 +3,8 @@ import threading
 import whisper
 import logging
 from src.utils.constants import WHISPER_MODEL
-
-# Configure logging with timestamp and level
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logger = logging.getLogger()
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 class TranscriptionManager:
@@ -25,7 +18,7 @@ class TranscriptionManager:
         self._current_audio_path = None
         self.load_model(whisper_model)
 
-    def load_model(self, whisper_model: str):
+    def load_model(self, whisper_model: str) -> None:
         """
         Loads the Whisper model in a separate thread.
         """
@@ -45,7 +38,7 @@ class TranscriptionManager:
         self._model_loading_thread = threading.Thread(target=worker, daemon=True)
         self._model_loading_thread.start()
 
-    async def transcribe(self, audio_path: str, word_timestamps: bool = True):
+    async def transcribe(self, audio_path: str, word_timestamps: bool = True, language: str = None) -> dict | None:
         """
         Asynchronously transcribes an audio file to text using the Whisper model.
 
@@ -68,7 +61,7 @@ class TranscriptionManager:
             try:
                 logger.info(f"Starting transcription for {audio_path}...")
                 transcription = await asyncio.to_thread(
-                    self._model.transcribe, audio_path, word_timestamps=word_timestamps
+                    self._model.transcribe, audio_path, word_timestamps=word_timestamps, verbose=True, language=language
                 )
                 if self._current_audio_path != audio_path:
                     return
@@ -78,7 +71,7 @@ class TranscriptionManager:
                 logger.exception("Transcription failed")
                 raise RuntimeError(f"Transcription failed: {e}") from e
 
-    def notify_listeners(self, transcription):
+    def notify_listeners(self, transcription: dict) -> None:
         """
         Notify all registered listeners with the transcription result.
 

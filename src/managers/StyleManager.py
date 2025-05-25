@@ -1,11 +1,8 @@
 import json
 import os
-import logging
 from typing import Callable, Optional
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 DEFAULT_STYLE = {
     "title": "Default",

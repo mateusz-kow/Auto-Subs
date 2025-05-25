@@ -1,4 +1,6 @@
 from src.utils.ffmpeg_utils import get_video_duration
+from src.utils.logger_config import get_logger
+logger = get_logger(__name__)
 
 
 class VideoManager:
@@ -17,6 +19,7 @@ class VideoManager:
         self._video_duration: float = 0.0
         self._video_path: str = video_path
         self._video_changed_listeners: list[callable] = []
+        logger.info("VideoManager initialized with video path: %s", video_path)
 
     def set_video_path(self, path: str) -> None:
         """
@@ -30,6 +33,7 @@ class VideoManager:
 
         self._video_path = path
         self._video_duration = get_video_duration(path)
+        logger.info(f"Video path set to: {path}, Duration: {self._video_duration} seconds")
         for listener in self._video_changed_listeners:
             listener(path)
 
