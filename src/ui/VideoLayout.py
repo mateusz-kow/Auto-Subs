@@ -10,8 +10,8 @@ from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
 from src.ui.MediaPlayer import MediaPlayer
 
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class VideoLayout(QVBoxLayout):
@@ -36,25 +36,52 @@ class VideoLayout(QVBoxLayout):
         if self.video_manager._video_path and time >= 0:
             self.media_player_widget.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
 
-    def generate_preview_video(self):
-        logger.info("Generating preview video...")
+    def set_subtitles_only(self, subtitles: Subtitles):
+        """
+        Update only the subtitles in the media player.
+
+        Args:
+            subtitles (Subtitles): The updated subtitles object.
+        """
+        logger.info("Updating subtitles only...")
 
         async def task():
             ass_path = await asyncio.to_thread(
                 SubtitleGenerator.to_ass,
-                self.subtitles_manager.subtitles,
+                subtitles,
                 self.style_manager.style,
                 None
             )
-            self.media_player_widget.set_media(self.video_manager._video_path, ass_path)
+            self.media_player_widget.set_subtitles_only(ass_path)
+
+        asyncio.create_task(task())
+
+    def set_media_with_subtitles(self, video_path: str, subtitles: Subtitles):
+        """
+        Update the video and subtitles in the media player.
+
+        Args:
+            video_path (str): Path to the video file.
+            subtitles (Subtitles): The updated subtitles object.
+        """
+        logger.info("Updating video and subtitles...")
+
+        async def task():
+            ass_path = await asyncio.to_thread(
+                SubtitleGenerator.to_ass,
+                subtitles,
+                self.style_manager.style,
+                None
+            )
+            self.media_player_widget.set_media(video_path, ass_path)
 
         asyncio.create_task(task())
 
     def on_subtitles_changed(self, subtitles: Subtitles):
-        logger.info("Subtitles updated. Refreshing preview...")
-        self.generate_preview_video()
+        logger.info("Subtitles updated. Refreshing subtitles...")
+        self.set_subtitles_only(subtitles)
 
     def on_style_changed(self, style: dict):
-        logger.info("Style updated. Refreshing preview...")
+        logger.info("Style updated. Refreshing video and subtitles...")
         if self.subtitles_manager._subtitles:
-            self.generate_preview_video()
+            self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)

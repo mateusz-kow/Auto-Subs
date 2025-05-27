@@ -1,8 +1,12 @@
 import json
 import os
+
 from typing import Callable, Optional
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+
+from src.utils.QThrottler import QThrottler
+
+from logging import getLogger
+logger = getLogger(__name__)
 
 DEFAULT_STYLE = {
     "title": "Default",
@@ -48,6 +52,8 @@ class StyleManager:
         self._style = DEFAULT_STYLE.copy()
         self._style_listeners = []
         self._style_loaded_listeners = []
+        self._style_throttler = QThrottler(1000)
+        self._style_loaded_throttler = QThrottler(1000)
 
     def from_dict(self, new_style: dict):
         """
@@ -62,6 +68,15 @@ class StyleManager:
         logger.debug(f"Updating style: {new_style}")
         self._style.update(new_style)
 
+        self._style_throttler.call(self._notify_style_listeners, self._style)
+
+    def _notify_style_listeners(self, new_style: dict):
+        """
+        Notify all registered style listeners with the new style.
+
+        Args:
+            new_style (dict): The new style to notify listeners with.
+        """
         for listener in self._style_listeners:
             listener(new_style)
 
@@ -113,11 +128,20 @@ class StyleManager:
             logger.debug(f"Loaded style from {path}: {data}")
             self.from_dict(data)
 
-            for listener in self._style_loaded_listeners:
-                listener(data)
+            self._style_loaded_throttler.call(self._notify_style_loaded_listeners, data)
         except (IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load style from {path}: {e}")
             raise
+
+    def _notify_style_loaded_listeners(self, new_style: dict):
+        """
+        Notify all registered style loaded listeners with the new style.
+
+        Args:
+            new_style (dict): The new style to notify listeners with.
+        """
+        for listener in self._style_loaded_listeners:
+            listener(new_style)
 
     def add_style_listener(self, listener: Callable):
         """

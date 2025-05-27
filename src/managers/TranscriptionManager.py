@@ -1,10 +1,9 @@
 import asyncio
 import threading
 import whisper
-import logging
 from src.utils.constants import WHISPER_MODEL
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class TranscriptionManager:
@@ -61,7 +60,7 @@ class TranscriptionManager:
             try:
                 logger.info(f"Starting transcription for {audio_path}...")
                 transcription = await asyncio.to_thread(
-                    self._model.transcribe, audio_path, word_timestamps=word_timestamps, verbose=True, language=language
+                    self._model.transcribe, audio_path, word_timestamps=word_timestamps, language=language
                 )
                 if self._current_audio_path != audio_path:
                     return

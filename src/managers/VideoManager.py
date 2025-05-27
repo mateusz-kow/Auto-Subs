@@ -1,6 +1,6 @@
 from src.utils.ffmpeg_utils import get_video_duration
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class VideoManager:

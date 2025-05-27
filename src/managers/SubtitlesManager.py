@@ -1,7 +1,7 @@
 import asyncio
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class SubtitlesManager:
@@ -102,7 +102,7 @@ class SubtitlesManager:
 
     def _notify_listeners(self):
         """Notify all registered listeners of subtitle changes."""
-        logger.info("Subtitles changed: %s", self._subtitles)
+        logger.info("Subtitles changed.")
         for listener in self._subtitles_listeners:
             listener(self._subtitles)
 

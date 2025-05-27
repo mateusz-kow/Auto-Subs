@@ -5,8 +5,8 @@ from typing import Dict
 from src.subtitles.models import Subtitles
 from src.utils.file_operations import generate_ass_header
 from src.utils.constants import TEMP_DIR
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 HIGHLIGHT_END = r"{\\r}"
 
