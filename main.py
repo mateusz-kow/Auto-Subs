@@ -1,18 +1,26 @@
+import os
 import sys
 import asyncio
+from asyncio import all_tasks
+from logging import getLogger
+
 from PySide6.QtWidgets import QApplication
 from qasync import QEventLoop
 from src.utils.constants import clean_temp_dir
-from ui.SubtitleEditorApp import SubtitleEditorApp
+from src.ui.SubtitleEditorApp import SubtitleEditorApp
+import src.utils.logger_config
+
+logger = getLogger(__name__)
 
 
-def main():
+def main() -> None:
     """
     Entry point for the Subtitle Editor application.
     Sets up the QApplication, integrates the asyncio event loop with Qt,
     and starts the main application window.
     """
     # Create the Qt application
+    logger.debug("Initializing application")
     app = QApplication(sys.argv)
 
     # Integrate the asyncio event loop with Qt
@@ -21,21 +29,25 @@ def main():
 
     # Initialize the main application window
     window = SubtitleEditorApp()
-    window.resize(1100, 700)
+    window.resize(900, 600)
     window.show()
+    logger.debug("Application initialized.")
 
     try:
         # Run the event loop
         with loop:
             loop.run_forever()
     except KeyboardInterrupt:
-        print("Application interrupted by user.")
+        logger.info("Application interrupted by user.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        logger.error(f"An unexpected error occurred: {e}")
     finally:
-        # Ensure the event loop is closed and temporary files are cleaned up
+        tasks = [t for t in all_tasks(loop) if not t.done()]
+        if tasks:
+            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         loop.close()
         clean_temp_dir()
+        logger.info("Application closed.")
 
 
 if __name__ == "__main__":

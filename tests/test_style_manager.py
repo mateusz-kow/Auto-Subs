@@ -1,7 +1,6 @@
 import os
-import json
 import unittest
-from tests.utils import OUTPUT_DIR, INPUT_DIR
+from tests.utils import OUTPUT_DIR
 
 from src.managers.StyleManager import StyleManager, DEFAULT_STYLE
 
@@ -14,11 +13,11 @@ class TestStyleManager(unittest.TestCase):
 
     def test_default_style(self):
         self.manager.reset_to_default()
-        self.assertEqual(self.manager.to_dict(), DEFAULT_STYLE)
+        self.assertEqual(self.manager.style, DEFAULT_STYLE)
 
     def test_from_dict_merging(self):
         self.manager.from_dict({"font": "Courier", "font_size": 40})
-        style = self.manager.to_dict()
+        style = self.manager.style
         self.assertEqual(style["font"], "Courier")
         self.assertEqual(style["font_size"], 40)
         self.assertEqual(style["title"], "Whisper Subtitles")  # unchanged
@@ -37,7 +36,7 @@ class TestStyleManager(unittest.TestCase):
         other_instance.reset_to_default()  # Clear current changes
         other_instance.load_from_file(saved_path)
 
-        reloaded_style = other_instance.to_dict()
+        reloaded_style = other_instance.style
         self.assertEqual(reloaded_style["font"], "Verdana")
         self.assertEqual(reloaded_style["bold"], 0)
 

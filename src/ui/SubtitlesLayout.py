@@ -41,23 +41,23 @@ class SubtitlesLayout(QVBoxLayout):
             row.addWidget(widget)
             return row
 
-        save_button = QPushButton("Save word")
-        save_button.clicked.connect(self.save_word_edit)
+        self.save_button = QPushButton("Save word")
+        self.save_button.clicked.connect(self.save_word_edit)
 
         self.addWidget(self.segment_list)
-        add_segment_button = QPushButton("Add new segment")
-        add_segment_button.clicked.connect(self.add_segment)
-        self.addWidget(add_segment_button)
+        self.add_segment_button = QPushButton("Add new segment")
+        self.add_segment_button.clicked.connect(self.add_segment)
+        self.addWidget(self.add_segment_button)
 
         self.addWidget(self.word_tree)
-        add_word_button = QPushButton("Add word")
-        add_word_button.clicked.connect(self.add_word)
-        self.addWidget(add_word_button)
+        self.add_word_button = QPushButton("Add word")
+        self.add_word_button.clicked.connect(self.add_word)
+        self.addWidget(self.add_word_button)
 
         self.addLayout(labeled("Word:", self.word_input))
         self.addLayout(labeled("Start:", self.start_input))
         self.addLayout(labeled("End:", self.end_input))
-        self.addWidget(save_button)
+        self.addWidget(self.save_button)
 
         self.subtitles_generating_thread = None
         self.selected_word_index = 0
@@ -91,13 +91,13 @@ class SubtitlesLayout(QVBoxLayout):
         self.subtitles_manager.delete_segments(selected)
 
     def add_segment(self):
-        if not self.subtitles_manager.subtitles:
-            self.subtitles_manager.subtitles = Subtitles([])
+        if not self.subtitles_manager._subtitles:
+            self.subtitles_manager._subtitles = Subtitles([])
 
         self.subtitles_manager.add_empty_segment()
 
     def add_word(self):
-        if self.subtitles_manager.subtitles is None or self.selected_segment_index is None:
+        if self.subtitles_manager._subtitles is None or self.selected_segment_index is None:
             return
 
         self.subtitles_manager.add_empty_word(self.selected_segment_index)
@@ -107,7 +107,7 @@ class SubtitlesLayout(QVBoxLayout):
         if sel < 0:
             return
         self.selected_segment_index = sel
-        segment = self.subtitles_manager.subtitles.segments[sel]
+        segment = self.subtitles_manager._subtitles.segments[sel]
         self.word_tree.clear()
         for i, word in enumerate(segment.words):
             item = QTreeWidgetItem([word.text, f"{word.start:.2f}", f"{word.end:.2f}"])
@@ -120,7 +120,7 @@ class SubtitlesLayout(QVBoxLayout):
             return
         item = selected[0]
         self.selected_word_index = item.data(0, 32)
-        word = self.subtitles_manager.subtitles.segments[self.selected_segment_index].words[self.selected_word_index]
+        word = self.subtitles_manager._subtitles.segments[self.selected_segment_index].words[self.selected_word_index]
         self.word_input.setText(word.text)
         self.start_input.setText(f"{word.start:.2f}")
         self.end_input.setText(f"{word.end:.2f}")
@@ -142,6 +142,10 @@ class SubtitlesLayout(QVBoxLayout):
         self.segment_list.clear()
         self.word_tree.clear()
 
+        self.save_button.setDisabled(True)
+        self.add_segment_button.setDisabled(True)
+        self.add_word_button.setDisabled(True)
+
     def update_segment_list(self, subtitles: Subtitles):
         self.segment_list.clear()
 
@@ -152,3 +156,7 @@ class SubtitlesLayout(QVBoxLayout):
     def on_subtitles_changed(self, subtitles: Subtitles):
         self.update_segment_list(subtitles)
         self.load_words_for_segment()
+
+        self.save_button.setDisabled(False)
+        self.add_segment_button.setDisabled(False)
+        self.add_word_button.setDisabled(False)
