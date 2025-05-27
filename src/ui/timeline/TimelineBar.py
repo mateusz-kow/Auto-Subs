@@ -50,12 +50,12 @@ class TimelineBar(QWidget):
 
     def _toggle_play_pause(self):
         """Toggle between play and pause states."""
-        if self.media_player.media_player.is_playing():
-            self.media_player.pause()
-            self.play_pause_button.setText("▶")  # Change to play symbol
-        else:
+        if self.media_player.pause:  # Check if the media player is paused
             self.media_player.play()
             self.play_pause_button.setText("⏸")  # Change to pause symbol
+        else:
+            self.media_player.pause()
+            self.play_pause_button.setText("▶")  # Change to play symbol
 
     def _reset_to_start(self):
         """Reset the video to the start (timestamp = 0)."""

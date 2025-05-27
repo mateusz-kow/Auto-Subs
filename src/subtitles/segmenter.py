@@ -1,6 +1,6 @@
-from src.utils.logger_config import get_logger
 from typing import List, Dict
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def segment_words(

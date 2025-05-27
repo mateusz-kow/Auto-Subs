@@ -4,8 +4,8 @@ import os
 import uuid
 from typing import Optional
 from src.utils.constants import TEMP_DIR
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:

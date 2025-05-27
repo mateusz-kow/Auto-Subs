@@ -4,8 +4,8 @@ from PySide6.QtCore import QRectF
 from PySide6.QtGui import QBrush, QMouseEvent, QPen
 from src.ui.timeline.constants import *
 
-from src.utils.logger_config import get_logger
-logger = get_logger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class VideoSegmentBar(QGraphicsRectItem):
