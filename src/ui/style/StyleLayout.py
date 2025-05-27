@@ -43,7 +43,6 @@ class StyleLayout(QScrollArea):
         """
         Collects current managers and applies them via StyleManager.
         """
-        warnings.warn("TODO: Consider adding debounce or throttling here.")
 
         style_data = self.get_current_settings()
         self.style_manager.from_dict(style_data)
