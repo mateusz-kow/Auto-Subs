@@ -79,9 +79,9 @@ class VideoLayout(QVBoxLayout):
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing subtitles...")
-        self.set_subtitles_only(subtitles)
+        self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing video and subtitles...")
         if self.subtitles_manager._subtitles:
-            self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)
+            self.set_subtitles_only(self.subtitles_manager._subtitles)

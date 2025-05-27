@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 # Application metadata
 APP_NAME = "AutoSubs"
 COMPANY_NAME = "GithubOzzy420"
-WHISPER_MODEL = "tiny"
+WHISPER_MODEL = "turbo"
 
 # Define paths
 TEMP_DIR: Path = Path(tempfile.gettempdir()) / APP_NAME
