@@ -1,16 +1,16 @@
 import os
 
 # Add the directory containing libmpv-2.dll to the PATH
-dll_directory = r"C:\Users\mw-ko\PycharmProjects\Auto-Subs\mpv-dev-x86_64-20250527-git-1d1535f"  # Replace with the actual directory
+dll_directory = (
+    r"C:\Users\mw-ko\PycharmProjects\Auto-Subs\mpv-dev-x86_64-20250527-git-1d1535f"  # Replace with the actual directory
+)
 os.environ["PATH"] = dll_directory + os.pathsep + os.environ["PATH"]
 
 from mpv import MPV
 
 
 def test_mpv():
-    """
-    Test the MPV library by initializing an instance and playing a sample video.
-    """
+    """Test the MPV library by initializing an instance and playing a sample video."""
     try:
         # Initialize MPV instance
         player = MPV(loglevel="debug")

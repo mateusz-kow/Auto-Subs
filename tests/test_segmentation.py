@@ -1,8 +1,9 @@
+import json
 import os
 import unittest
+
 from src.subtitles.segmenter import segment_words
 from tests.utils import INPUT_DIR, OUTPUT_DIR
-import json
 
 
 class TestSegmentation(unittest.TestCase):
@@ -14,7 +15,7 @@ class TestSegmentation(unittest.TestCase):
             raise FileNotFoundError(f"Input test file not found: {self.input_path}")
 
     def test_segmentation(self):
-        with open(self.input_path, "r") as file:
+        with open(self.input_path) as file:
             transcription = json.load(file)
 
         result = segment_words(transcription)

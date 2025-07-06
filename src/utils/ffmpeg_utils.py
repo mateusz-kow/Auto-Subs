@@ -1,17 +1,16 @@
 import json
-import subprocess
 import os
+import subprocess
 import uuid
-from typing import Optional
-from src.utils.constants import TEMP_DIR
 from logging import getLogger
+from typing import Optional
+
+from src.utils.constants import TEMP_DIR
 
 logger = getLogger(__name__)
 
 
-def get_video_with_subtitles(
-    video_path: str, ass_path: str, output_path: str = None
-) -> str:
+def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
     """
     Adds ASS subtitles to a video and saves the output.
 
@@ -120,8 +119,8 @@ def get_video_duration(video_path: str) -> float:
         ]
         result = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            # capture_output=True
+            capture_output=True,
             text=True,
             check=True,
             cwd=TEMP_DIR,
@@ -129,7 +128,7 @@ def get_video_duration(video_path: str) -> float:
         duration_info = json.loads(result.stdout)
         return float(duration_info["format"]["duration"])
     except (subprocess.CalledProcessError, KeyError, ValueError) as e:
-        raise RuntimeError(f"Failed to retrieve video duration: {e}")
+        raise RuntimeError(f"Failed to retrieve video duration: {e}") from e
 
 
 def _adjust_path(path: str, cwd: str = TEMP_DIR) -> str:

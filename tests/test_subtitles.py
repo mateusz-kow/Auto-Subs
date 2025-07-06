@@ -1,6 +1,6 @@
+import json
 import os
 import unittest
-import json
 
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 from tests.utils import INPUT_DIR, OUTPUT_DIR
@@ -13,7 +13,7 @@ class TestSubtitleGeneration(unittest.TestCase):
         self.word_timestamps = True
 
     def test_subtitles_structure_and_export(self):
-        with open(self.input_json_path, "r") as file:
+        with open(self.input_json_path) as file:
             transcription = json.load(file)
 
         subtitles = Subtitles.from_transcription(transcription)

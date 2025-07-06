@@ -1,12 +1,14 @@
+import sys
+
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
+    QApplication,
+    QFileDialog,
     QMainWindow,
     QPushButton,
-    QFileDialog,
+    QVBoxLayout,
+    QWidget,
 )
-import sys
-from PySide6.QtWidgets import QApplication
+
 from src.ui.MediaPlayer import MediaPlayer
 
 
@@ -46,9 +48,7 @@ class VLCPlayer(QMainWindow):
 
     def open_file(self):
         """Open a video file and set it to the VLC media player."""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Video File", "", "Video Files (*.mp4 *.avi *.mkv)"
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Video File", "", "Video Files (*.mp4 *.avi *.mkv)")
         if file_path:
             self.video_widget.set_media(file_path)
             self.video_widget.play()

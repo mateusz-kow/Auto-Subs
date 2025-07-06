@@ -1,11 +1,12 @@
-from PySide6.QtGui import QAction, QPen, QWheelEvent
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsTextItem, QMenu
-from PySide6.QtCore import QPointF, QTimer, Qt
-
-from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
-from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
-from src.ui.timeline.constants import *
 from logging import getLogger
+
+from PySide6.QtCore import QPointF, Qt, QTimer
+from PySide6.QtGui import QAction, QPen, QWheelEvent
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView, QMenu
+
+from src.ui.timeline.constants import *
+from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
+from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
 
 logger = getLogger(__name__)
 
@@ -68,15 +69,9 @@ class SegmentsBar(QGraphicsView):
                 logger.debug("Step 3: Adjusting scene rect and enabling updates")
                 total_duration = max(
                     self._video_duration,
-                    (
-                        self._subtitles.segments[-1].end
-                        if self._subtitles and self._subtitles.segments
-                        else 0
-                    ),
+                    (self._subtitles.segments[-1].end if self._subtitles and self._subtitles.segments else 0),
                 )
-                scene_width = max(
-                    SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR)
-                )
+                scene_width = max(SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR))
                 self.scene.setSceneRect(0, 0, scene_width, self.height())
                 self.setUpdatesEnabled(True)
                 logger.info("Timeline update complete")
@@ -102,15 +97,11 @@ class SegmentsBar(QGraphicsView):
             if is_major:
                 marker_text = QGraphicsTextItem(f"{sec}s")
                 marker_text.setDefaultTextColor(Qt.GlobalColor.white)
-                marker_text.setPos(
-                    QPointF(x_pos - MARKER_TEXT_OFFSET / 2, MARKER_Y + line_height + 2)
-                )
+                marker_text.setPos(QPointF(x_pos - MARKER_TEXT_OFFSET / 2, MARKER_Y + line_height + 2))
                 self.scene.addItem(marker_text)
 
     def handle_segment_click(self, segment_item, modifiers):
-        logger.debug(
-            "Segment clicked (index=%d, modifiers=%s)", segment_item.index, modifiers
-        )
+        logger.debug("Segment clicked (index=%d, modifiers=%s)", segment_item.index, modifiers)
         if modifiers == Qt.KeyboardModifier.ControlModifier:
             self._toggle_segment_selection(segment_item)
         elif modifiers == Qt.KeyboardModifier.ShiftModifier:

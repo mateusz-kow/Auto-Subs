@@ -1,6 +1,5 @@
 import os
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(BASE_DIR, "tests", "output")
 INPUT_DIR = os.path.join(BASE_DIR, "tests", "input")

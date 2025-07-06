@@ -1,14 +1,13 @@
-from typing import List, Dict
 from logging import getLogger
 
 logger = getLogger(__name__)
 
 
 def segment_words(
-    transcription: Dict[str, List[Dict[str, float]]],
+    transcription: dict[str, list[dict[str, float]]],
     max_chars: int = 10,
     break_chars: tuple = (".", ",", "!", "?"),
-) -> List[Dict[str, any]]:
+) -> list[dict[str, any]]:
     """
     Segments a transcription into subtitle chunks based on character limits
     and punctuation.
@@ -28,7 +27,7 @@ def segment_words(
                 words.append(word)
     except KeyError as e:
         logger.error(f"Invalid transcription format: missing key {e}")
-        raise ValueError(f"Invalid transcription format: missing key {e}")
+        raise ValueError(f"Invalid transcription format: missing key {e}") from e
 
     segments = []
     buffer = []

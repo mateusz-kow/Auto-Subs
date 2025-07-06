@@ -1,4 +1,4 @@
-from typing import List
+
 from src.subtitles.segmenter import segment_words
 
 
@@ -27,17 +27,13 @@ class SubtitleWord:
         """Check equality between two SubtitleWord instances."""
         if not isinstance(other, SubtitleWord):
             return False
-        return (
-            self.text == other.text
-            and self.start == other.start
-            and self.end == other.end
-        )
+        return self.text == other.text and self.start == other.start and self.end == other.end
 
 
 class SubtitleSegment:
     """Represents a segment of subtitles containing multiple words."""
 
-    def __init__(self, words: List[SubtitleWord]):
+    def __init__(self, words: list[SubtitleWord]):
         """
         Initialize a SubtitleSegment instance.
 
@@ -89,7 +85,7 @@ class SubtitleSegment:
 class Subtitles:
     """Represents a collection of subtitle segments."""
 
-    def __init__(self, segments: List[SubtitleSegment]):
+    def __init__(self, segments: list[SubtitleSegment]):
         """
         Initialize a Subtitles instance.
 
@@ -116,12 +112,7 @@ class Subtitles:
         """
         dict_segments = segment_words(transcription)
         segments = [
-            SubtitleSegment(
-                [
-                    SubtitleWord(w["word"], w["start"], w["end"])
-                    for w in dict_segment["words"]
-                ]
-            )
+            SubtitleSegment([SubtitleWord(w["word"], w["start"], w["end"]) for w in dict_segment["words"]])
             for dict_segment in dict_segments
         ]
         return cls(segments)

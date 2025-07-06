@@ -1,10 +1,10 @@
 import os
-
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout
-from PySide6.QtMultimediaWidgets import QVideoWidget
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-import vlc
 import sys
+
+import vlc
+from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
+from PySide6.QtMultimediaWidgets import QVideoWidget
+from PySide6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 vlc_path = r"C:\Users\mw-ko\PycharmProjects\Auto-Subs\.venv\Lib\site-packages\vlc.py"
 os.add_dll_directory(vlc_path)

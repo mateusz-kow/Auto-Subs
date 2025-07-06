@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QGraphicsRectItem
+from logging import getLogger
+
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QBrush, QMouseEvent, QPen
-from src.ui.timeline.constants import *
+from PySide6.QtWidgets import QGraphicsRectItem
 
-from logging import getLogger
+from src.ui.timeline.constants import *
 
 logger = getLogger(__name__)
 
@@ -48,14 +49,10 @@ class VideoSegmentBar(QGraphicsRectItem):
         Args:
             frame (int): The current frame to update the progress to.
         """
-        self.current_frame = max(
-            0, min(frame, self.total_frames)
-        )  # Clamp frame within valid range
+        self.current_frame = max(0, min(frame, self.total_frames))  # Clamp frame within valid range
         progress_width = (self.current_frame / self.total_frames) * self.rect().width()
         self.fill_item.setRect(QRectF(0, 0, progress_width, BAR_HEIGHT))
-        logger.debug(
-            "Progress updated to frame: %d (%.2f seconds)", frame, frame / FRAME_RATE
-        )
+        logger.debug("Progress updated to frame: %d (%.2f seconds)", frame, frame / FRAME_RATE)
 
     def keyPressEvent(self, event) -> None:
         """
@@ -79,9 +76,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = True
-            self._update_progress_from_position(
-                event.pos().x()
-            )  # Update progress immediately on click
+            self._update_progress_from_position(event.pos().x())  # Update progress immediately on click
             logger.info("Mouse press detected. Dragging started.")
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -113,14 +108,10 @@ class VideoSegmentBar(QGraphicsRectItem):
         Args:
             x_pos (float): The x-coordinate of the mouse position relative to the bar.
         """
-        relative_x = max(
-            0, min(x_pos, self.rect().width())
-        )  # Clamp x within the bar width
+        relative_x = max(0, min(x_pos, self.rect().width()))  # Clamp x within the bar width
         frame = int((relative_x / self.rect().width()) * self.total_frames)
         self.update_progress(frame)
-        self._notify_preview_time_change(
-            frame / FRAME_RATE
-        )  # Notify about the time change
+        self._notify_preview_time_change(frame / FRAME_RATE)  # Notify about the time change
 
     def _notify_preview_time_change(self, timestamp: float) -> None:
         """

@@ -1,8 +1,8 @@
 import os
 import unittest
-from tests.utils import OUTPUT_DIR
 
-from src.managers.StyleManager import StyleManager, DEFAULT_STYLE
+from src.managers.StyleManager import DEFAULT_STYLE, StyleManager
+from tests.utils import OUTPUT_DIR
 
 
 class TestStyleManager(unittest.TestCase):

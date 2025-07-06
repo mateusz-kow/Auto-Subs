@@ -1,8 +1,8 @@
 import tempfile
-from pathlib import Path
-from appdirs import user_data_dir
-from typing import List
 from logging import getLogger
+from pathlib import Path
+
+from appdirs import user_data_dir
 
 logger = getLogger(__name__)
 
@@ -20,7 +20,7 @@ SETTINGS_DIR: Path = LOCAL_DIR / "Settings"
 LOGS_DIR: Path = LOCAL_DIR / "Logs"
 
 # Ensure required directories exist
-REQUIRED_DIRS: List[Path] = [
+REQUIRED_DIRS: list[Path] = [
     TEMP_DIR,
     LOCAL_DIR,
     STYLES_DIR,
@@ -30,7 +30,7 @@ REQUIRED_DIRS: List[Path] = [
 ]
 
 
-def create_directories(dirs: List[Path]) -> None:
+def create_directories(dirs: list[Path]) -> None:
     """
     Ensure all specified directories exist. Create them if necessary.
 

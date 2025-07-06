@@ -1,7 +1,8 @@
-import unittest
 import os
+import unittest
+
 from src.utils.ffmpeg_utils import get_video_with_subtitles
-from tests.utils import OUTPUT_DIR, INPUT_DIR
+from tests.utils import INPUT_DIR, OUTPUT_DIR
 
 
 class TestSubtitlesGenerator(unittest.TestCase):

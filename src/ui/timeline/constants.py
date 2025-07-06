@@ -1,6 +1,6 @@
 # Constants for customization
-from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 
 BAR_HEIGHT = 25
 SUBTITLE_BAR_HEIGHT = 20

@@ -1,11 +1,9 @@
 import json
 import os
-
+from logging import getLogger
 from typing import Callable, Optional
 
 from src.utils.QThrottler import QThrottler
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -104,7 +102,7 @@ class StyleManager:
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(self._style, f, indent=2)
             logger.info(f"Style saved to {path}")
-        except IOError as e:
+        except OSError as e:
             logger.error(f"Failed to save style to {path}: {e}")
             raise
 
@@ -119,7 +117,7 @@ class StyleManager:
         """
         path = os.path.abspath(path)
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
 
             data = DEFAULT_STYLE | data  # Merge with default style
@@ -130,7 +128,7 @@ class StyleManager:
             self.from_dict(data)
 
             self._style_loaded_throttler.call(self._notify_style_loaded_listeners, data)
-        except (IOError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load style from {path}: {e}")
             raise
 

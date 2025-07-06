@@ -1,6 +1,7 @@
 import asyncio
-from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 from logging import getLogger
+
+from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 
 logger = getLogger(__name__)
 
@@ -36,10 +37,7 @@ class SubtitlesManager:
 
     def add_empty_segment(self):
         """Add an empty segment if it doesn't already exist."""
-        if (
-            not self._subtitles.segments
-            or self._subtitles.segments[0] != SubtitleSegment.empty()
-        ):
+        if not self._subtitles.segments or self._subtitles.segments[0] != SubtitleSegment.empty():
             self._subtitles.segments.append(SubtitleSegment.empty())
             self._refresh_subtitles()
 
@@ -86,9 +84,7 @@ class SubtitlesManager:
         """Update subtitles based on transcription changes."""
 
         async def task():
-            self._subtitles = await asyncio.to_thread(
-                Subtitles.from_transcription, transcription
-            )
+            self._subtitles = await asyncio.to_thread(Subtitles.from_transcription, transcription)
             self._notify_listeners()
 
         asyncio.create_task(task())

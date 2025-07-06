@@ -1,25 +1,23 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QVBoxLayout,
-    QListWidget,
-    QTreeWidget,
-    QLineEdit,
-    QPushButton,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QListWidget,
+    QMenu,
+    QPushButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
 )
 
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.models import Subtitles, SubtitleWord
-from PySide6.QtWidgets import QTreeWidgetItem
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMenu
 
 
 class SubtitlesLayout(QVBoxLayout):
-    def __init__(
-        self, subtitles_manager: SubtitlesManager, video_manager: VideoManager
-    ):
+    def __init__(self, subtitles_manager: SubtitlesManager, video_manager: VideoManager):
         super().__init__()
         self.subtitles_manager = subtitles_manager
         video_manager.add_video_listener(self.on_video_changed)
@@ -39,9 +37,7 @@ class SubtitlesLayout(QVBoxLayout):
         self.word_tree.customContextMenuRequested.connect(self.show_word_context_menu)
 
         self.segment_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.segment_list.customContextMenuRequested.connect(
-            self.show_segment_context_menu
-        )
+        self.segment_list.customContextMenuRequested.connect(self.show_segment_context_menu)
 
         self.word_input = QLineEdit()
         self.start_input = QLineEdit()
@@ -109,10 +105,7 @@ class SubtitlesLayout(QVBoxLayout):
         self.subtitles_manager.add_empty_segment()
 
     def add_word(self):
-        if (
-            self.subtitles_manager._subtitles is None
-            or self.selected_segment_index is None
-        ):
+        if self.subtitles_manager._subtitles is None or self.selected_segment_index is None:
             return
 
         self.subtitles_manager.add_empty_word(self.selected_segment_index)
@@ -135,9 +128,7 @@ class SubtitlesLayout(QVBoxLayout):
             return
         item = selected[0]
         self.selected_word_index = item.data(0, 32)
-        word = self.subtitles_manager._subtitles.segments[
-            self.selected_segment_index
-        ].words[self.selected_word_index]
+        word = self.subtitles_manager._subtitles.segments[self.selected_segment_index].words[self.selected_word_index]
         self.word_input.setText(word.text)
         self.start_input.setText(f"{word.start:.2f}")
         self.end_input.setText(f"{word.end:.2f}")
@@ -153,9 +144,7 @@ class SubtitlesLayout(QVBoxLayout):
             return
 
         word = SubtitleWord(text, start, end)
-        self.subtitles_manager.set_word(
-            self.selected_segment_index, self.selected_word_index, word
-        )
+        self.subtitles_manager.set_word(self.selected_segment_index, self.selected_word_index, word)
 
     def on_video_changed(self, video_path: str):
         self.segment_list.clear()

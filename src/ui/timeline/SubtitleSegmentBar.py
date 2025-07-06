@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QGraphicsRectItem
-from src.ui.timeline.constants import *
-from PySide6.QtCore import Qt, QRectF
+from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QMouseEvent
+from PySide6.QtWidgets import QGraphicsRectItem
+
+from src.ui.timeline.constants import *
 
 
 class SubtitleSegmentBar(QGraphicsRectItem):
