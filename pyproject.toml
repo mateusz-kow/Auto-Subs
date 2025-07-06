@@ -1,0 +1,125 @@
+[tool.poetry]
+name = "auto-subs"
+version = "0.1.0"
+description = "A desktop application to automatically generate, edit, and style subtitles for videos using OpenAI's Whisper."
+authors = ["mateusz_kow <ytsum+kowalski.mateusz.1lo1@gmail.com>"]
+
+license = "MIT"
+readme = "README.md"
+#requires-python = ">=3.9, <3.12"  # Whisper/Torch mają lepsze wsparcie dla starszych wersji Pythona
+packages = [{include = "src"}]
+
+[tool.poetry.scripts]
+# Pozwala uruchomić aplikację komendą: poetry run start
+start = "main:main"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <3.13"
+
+# Core Application & GUI
+PySide6 = "~=6.7.0"  # Zmieniono z 6.9 na 6.7 dla szerszej kompatybilności, można dostosować
+qasync = "~=0.27.1"
+appdirs = "~=1.4.4"
+
+# AI & Transcription
+# Whisper jest teraz oficjalnie na PyPI jako openai-whisper
+openai-whisper = "^20231117"
+# Torch jest zależnością Whisper, ale warto go jawnie zdefiniować dla przejrzystości
+torch = ">=2.0.0"
+numpy = "<2.0.0"  # Niezbędne dla Whisper i Torch
+
+# Video & Media
+# Zgodnie z kodem używasz python-mpv
+python-mpv = "^1.0.5"
+
+# Utilities
+python-dotenv = "~=1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+# Code Quality & Formatting
+ruff = "^0.4.8"
+black = "^24.4.2"
+
+# Static Type Checking
+mypy = "^1.10.0"
+
+# Testing Framework
+pytest = "^8.2.2"
+pytest-qt = "^4.4.0" # Niezbędne do testowania widżetów Qt
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# --- Tool Configurations ---
+
+[tool.ruff]
+line-length = 120
+# Wybór reguł do sprawdzania
+lint.select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes (błędy logiczne)
+#    "W",    # pycodestyle warnings
+    "I",    # isort (sortowanie importów)
+#    "N",    # pep8-naming
+    "D",    # pydocstyle (konwencje docstringów)
+    "B",    # flake8-bugbear (potencjalne błędy)
+    "UP",   # pyupgrade (sugestie modernizacji składni)
+#    "C4",   # flake8-comprehensions
+#    "SIM",  # flake8-simplify
+]
+# Reguły do ignorowania
+lint.ignore = [
+    "D100",
+    "D104",
+    "D415",
+    "D401",
+    "D400",
+    "D212",
+    "D205",
+    "D413",
+    "D203",
+    # These will be supported in the future
+    "D101",
+    "D102",
+    "D107",
+    "D105",
+    "F405",
+    "F403",
+    "E501",
+    "E402"
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google" # lub "numpy"
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.mypy]
+# Konfiguracja bazująca na twoim poprzednim, bardzo dobrym projekcie
+python_version = "3.11"
+ignore_missing_imports = true
+strict = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_return_any = true
+check_untyped_defs = true
+no_implicit_optional = true
+show_error_codes = true
+
+# Dodatkowe ustawienia dla bibliotek trzecich
+[[tool.mypy.overrides]]
+module = [
+    "mpv.*",
+    "whisper.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]

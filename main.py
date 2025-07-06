@@ -1,12 +1,13 @@
-import sys
 import asyncio
+import sys
 from asyncio import all_tasks
 from logging import getLogger
 
 from PySide6.QtWidgets import QApplication
 from qasync import QEventLoop
-from src.utils.constants import clean_temp_dir
+
 from src.ui.SubtitleEditorApp import SubtitleEditorApp
+from src.utils.constants import clean_temp_dir
 
 logger = getLogger(__name__)
 

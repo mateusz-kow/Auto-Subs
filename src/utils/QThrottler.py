@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, QDateTime, QTimer
+from PySide6.QtCore import QDateTime, QObject, QTimer
 
 
 class QThrottler(QObject):
@@ -54,9 +54,7 @@ class QThrottler(QObject):
                 self._trailing_timer.start(remaining)
 
     def _trigger_pending(self) -> None:
-        """
-        Trigger the pending function call, if any, and reset the pending state.
-        """
+        """Trigger the pending function call, if any, and reset the pending state."""
         if self._pending_func:
             self._last_call_time = QDateTime.currentMSecsSinceEpoch()
             self._pending_func(*self._pending_args, **self._pending_kwargs)

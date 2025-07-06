@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel
 import sys
+from datetime import datetime
+
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from src.utils.QDebouncer import QDebouncer
 from src.utils.QThrottler import QThrottler
-from datetime import datetime
 
 
 class MainWindow(QWidget):

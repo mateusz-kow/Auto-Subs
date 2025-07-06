@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication, QMainWindow
 
 from src.ui.timeline.TimelineBar import TimelineBar
 
@@ -55,9 +55,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.timeline_bar)
 
         # Initialize the timeline with mock data
-        self.timeline_bar.segments_bar.update_timeline(
-            subtitles_manager._subtitles, video_manager._video_duration
-        )
+        self.timeline_bar.segments_bar.update_timeline(subtitles_manager._subtitles, video_manager._video_duration)
 
 
 # Test script to display the TimelineBar

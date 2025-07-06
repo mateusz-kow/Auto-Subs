@@ -1,14 +1,14 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
-    QWidget,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QStackedWidget,
-    QLineEdit,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt
 
 
 class MainWindow(QWidget):
@@ -32,9 +32,7 @@ class MainWindow(QWidget):
         self.label.setObjectName("editableLabel")
         self.label.setStyleSheet("font-size: 18px;")
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.mousePressEvent = (
-            self.label_clicked
-        )  # "podpięcie" zdarzenia kliknięcia
+        self.label.mousePressEvent = self.label_clicked  # "podpięcie" zdarzenia kliknięcia
 
         self.content_area.addWidget(self.label)
 

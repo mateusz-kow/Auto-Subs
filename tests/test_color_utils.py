@@ -1,5 +1,7 @@
 import unittest
+
 from PySide6.QtGui import QColor
+
 from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
 
 

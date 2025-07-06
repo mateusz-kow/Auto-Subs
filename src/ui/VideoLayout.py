@@ -1,6 +1,7 @@
 import asyncio
+from logging import getLogger
 
-from PySide6.QtWidgets import QVBoxLayout, QSizePolicy
+from PySide6.QtWidgets import QSizePolicy, QVBoxLayout
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
@@ -8,8 +9,6 @@ from src.managers.VideoManager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
 from src.ui.MediaPlayer import MediaPlayer
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -31,9 +30,7 @@ class VideoLayout(QVBoxLayout):
 
         # Media player widget
         self.media_player_widget = media_player
-        self.media_player_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.media_player_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.addWidget(self.media_player_widget)
 
         self._debounce_timer = None
@@ -41,9 +38,7 @@ class VideoLayout(QVBoxLayout):
 
     def on_preview_time_changed(self, time: float):
         if self.video_manager._video_path and time >= 0:
-            self.media_player_widget.set_timestamp(
-                int(time * 1000)
-            )  # Set video to the specified timestamp
+            self.media_player_widget.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
 
     def set_subtitles_only(self, subtitles: Subtitles):
         """
@@ -55,9 +50,7 @@ class VideoLayout(QVBoxLayout):
         logger.info("Updating subtitles only...")
 
         async def task():
-            ass_path = await asyncio.to_thread(
-                SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None
-            )
+            ass_path = await asyncio.to_thread(SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None)
             self.media_player_widget.set_subtitles_only(ass_path)
 
         asyncio.create_task(task())
@@ -73,18 +66,14 @@ class VideoLayout(QVBoxLayout):
         logger.info("Updating video and subtitles...")
 
         async def task():
-            ass_path = await asyncio.to_thread(
-                SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None
-            )
+            ass_path = await asyncio.to_thread(SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None)
             self.media_player_widget.set_media(video_path, ass_path)
 
         asyncio.create_task(task())
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing subtitles...")
-        self.set_media_with_subtitles(
-            self.video_manager._video_path, self.subtitles_manager.subtitles
-        )
+        self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing video and subtitles...")

@@ -1,15 +1,15 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.TranscriptionManager import TranscriptionManager
 from src.managers.VideoManager import VideoManager
 from src.ui.MediaPlayer import MediaPlayer
-from src.ui.VideoLayout import VideoLayout
-from src.ui.SubtitlesLayout import SubtitlesLayout
 from src.ui.style.StyleLayout import StyleLayout
-from src.ui.TopBar import TopBar
+from src.ui.SubtitlesLayout import SubtitlesLayout
 from src.ui.timeline.TimelineBar import TimelineBar
+from src.ui.TopBar import TopBar
+from src.ui.VideoLayout import VideoLayout
 
 
 class SubtitleEditorApp(QWidget):
@@ -36,13 +36,9 @@ class SubtitleEditorApp(QWidget):
         self.transcription_manager = TranscriptionManager()
 
         # Connect managers
-        self.video_manager.add_video_listener(
-            self.transcription_manager.on_video_changed
-        )
+        self.video_manager.add_video_listener(self.transcription_manager.on_video_changed)
         self.video_manager.add_video_listener(self.subtitles_manager.on_video_changed)
-        self.transcription_manager.add_transcription_listener(
-            self.subtitles_manager.on_transcription_changed
-        )
+        self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
 
     def _initialize_ui(self):
         """Initialize the UI components."""
@@ -54,19 +50,11 @@ class SubtitleEditorApp(QWidget):
             self.media_player,
         )
         self.style_layout = StyleLayout(self.style_manager)
-        self.subtitles_layout = SubtitlesLayout(
-            self.subtitles_manager, self.video_manager
-        )
-        self.top_bar = TopBar(
-            self.style_manager, self.subtitles_manager, self.video_manager
-        )
-        self.timeline_bar = TimelineBar(
-            self.subtitles_manager, self.video_manager, self.media_player
-        )
+        self.subtitles_layout = SubtitlesLayout(self.subtitles_manager, self.video_manager)
+        self.top_bar = TopBar(self.style_manager, self.subtitles_manager, self.video_manager)
+        self.timeline_bar = TimelineBar(self.subtitles_manager, self.video_manager, self.media_player)
 
-        self.timeline_bar.segments_bar.add_preview_time_listener(
-            self.video_layout.on_preview_time_changed
-        )
+        self.timeline_bar.segments_bar.add_preview_time_listener(self.video_layout.on_preview_time_changed)
 
     def _setup_layout(self):
         """Set up the main layout of the application."""
