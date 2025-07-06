@@ -13,7 +13,9 @@ if os.path.isdir(dll_directory):
     os.environ["PATH"] = dll_directory + os.pathsep + os.environ["PATH"]
 else:
     # Using print here as logger might not be configured this early.
-    print(f"WARNING: MPV DLL directory not found: {dll_directory}. MPV initialization may fail.")
+    print(
+        f"WARNING: MPV DLL directory not found: {dll_directory}. MPV initialization may fail."
+    )
 from mpv import MPV
 
 logger = getLogger(__name__)
@@ -57,11 +59,7 @@ class MediaPlayer(QWidget):
 
         try:
             logger.debug(f"Initializing MPV with wid: {wid_val}")
-            self.player = MPV(
-                wid=str(wid_val),
-                loglevel="debug",
-                keep_open='yes'
-            )
+            self.player = MPV(wid=str(wid_val), loglevel="debug", keep_open="yes")
             self.mpv_initialized = True
             logger.info("MPV player initialized successfully.")
             return True
@@ -112,7 +110,7 @@ class MediaPlayer(QWidget):
             self.pause()
             self.player.sub_add(subtitle_path)
             self.player.sub_visibility = True
-            self.player.command('sub_reload')
+            self.player.command("sub_reload")
             logger.info("Subtitles set and reloaded.")
         except Exception as e:
             logger.error(f"Failed to set subtitles: {e}", exc_info=True)
@@ -135,7 +133,7 @@ class MediaPlayer(QWidget):
         logger.info(f"Setting media: {video_path}, subtitles: {subtitle_path}")
         try:
             self.pause()
-            self.player.loadfile(video_path, mode='replace')
+            self.player.loadfile(video_path, mode="replace")
 
             if subtitle_path:
                 self.set_subtitles_only(subtitle_path)
@@ -210,7 +208,7 @@ class MediaPlayer(QWidget):
                 return
 
             seconds = timestamp / 1000.0
-            self.player.seek(seconds, reference='absolute', precision='exact')
+            self.player.seek(seconds, reference="absolute", precision="exact")
             logger.info(f"Playback position set to {seconds:.3f}s.")
         except Exception as e:
             logger.error(f"Failed to set timestamp: {e}", exc_info=True)

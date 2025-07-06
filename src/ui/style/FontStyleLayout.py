@@ -1,6 +1,14 @@
 from PySide6.QtWidgets import (
-    QVBoxLayout, QFontComboBox, QSpinBox, QCheckBox, QPushButton,
-    QComboBox, QHBoxLayout, QLabel, QColorDialog, QDoubleSpinBox
+    QVBoxLayout,
+    QFontComboBox,
+    QSpinBox,
+    QCheckBox,
+    QPushButton,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QColorDialog,
+    QDoubleSpinBox,
 )
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
@@ -129,7 +137,9 @@ class FontStyleLayout(QVBoxLayout):
 
     def _update_color_button_style(self, name):
         color = self.color_buttons[name]["color"]
-        self.color_buttons[name]["button"].setStyleSheet(f"background-color: {color.name()}")
+        self.color_buttons[name]["button"].setStyleSheet(
+            f"background-color: {color.name()}"
+        )
 
     def select_color(self, name):
         color = QColorDialog.getColor(self.color_buttons[name]["color"])
@@ -146,9 +156,15 @@ class FontStyleLayout(QVBoxLayout):
             "italic": 1 if self.italic_checkbox.isChecked() else 0,
             "underline": 1 if self.underline_checkbox.isChecked() else 0,
             "strikeout": 1 if self.strikeout_checkbox.isChecked() else 0,
-            "primary_color": qcolor_to_ass(self.color_buttons["primary_color"]["color"]),
-            "secondary_color": qcolor_to_ass(self.color_buttons["secondary_color"]["color"]),
-            "outline_color": qcolor_to_ass(self.color_buttons["outline_color"]["color"]),
+            "primary_color": qcolor_to_ass(
+                self.color_buttons["primary_color"]["color"]
+            ),
+            "secondary_color": qcolor_to_ass(
+                self.color_buttons["secondary_color"]["color"]
+            ),
+            "outline_color": qcolor_to_ass(
+                self.color_buttons["outline_color"]["color"]
+            ),
             "back_color": qcolor_to_ass(self.color_buttons["back_color"]["color"]),
             "alignment": self.alignment.currentIndex() + 1,
             "margin_l": self.margin_l.value(),

@@ -1,6 +1,3 @@
-import asyncio
-import logging
-
 from PySide6.QtGui import QAction, QPen, QWheelEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsTextItem, QMenu
 from PySide6.QtCore import QPointF, QTimer, Qt
@@ -9,6 +6,7 @@ from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.constants import *
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
@@ -37,9 +35,11 @@ class SegmentsBar(QGraphicsView):
         logger.debug("SegmentsBar initialized")
 
     def update_timeline(self, subtitles, video_duration):
-        logger.info("Updating timeline (subtitles=%d segments, duration=%.2f)",
-                         len(subtitles.segments) if subtitles and subtitles.segments else 0,
-                         video_duration)
+        logger.info(
+            "Updating timeline (subtitles=%d segments, duration=%.2f)",
+            len(subtitles.segments) if subtitles and subtitles.segments else 0,
+            video_duration,
+        )
 
         self.scene.clear()
         self.setUpdatesEnabled(False)
@@ -68,9 +68,15 @@ class SegmentsBar(QGraphicsView):
                 logger.debug("Step 3: Adjusting scene rect and enabling updates")
                 total_duration = max(
                     self._video_duration,
-                    self._subtitles.segments[-1].end if self._subtitles and self._subtitles.segments else 0
+                    (
+                        self._subtitles.segments[-1].end
+                        if self._subtitles and self._subtitles.segments
+                        else 0
+                    ),
                 )
-                scene_width = max(SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR))
+                scene_width = max(
+                    SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR)
+                )
                 self.scene.setSceneRect(0, 0, scene_width, self.height())
                 self.setUpdatesEnabled(True)
                 logger.info("Timeline update complete")
@@ -88,7 +94,7 @@ class SegmentsBar(QGraphicsView):
     def _add_time_markers(self, video_duration):
         for sec in range(0, int(video_duration) + 1, MINOR_MARKER_INTERVAL):
             x_pos = sec * TIME_SCALE_FACTOR
-            is_major = (sec % MAJOR_MARKER_INTERVAL == 0)
+            is_major = sec % MAJOR_MARKER_INTERVAL == 0
             line_height = MAJOR_MARKER_HEIGHT if is_major else MINOR_MARKER_HEIGHT
             pen = QPen(Qt.GlobalColor.white, 1)
             self.scene.addLine(x_pos, MARKER_Y, x_pos, MARKER_Y + line_height, pen)
@@ -96,11 +102,15 @@ class SegmentsBar(QGraphicsView):
             if is_major:
                 marker_text = QGraphicsTextItem(f"{sec}s")
                 marker_text.setDefaultTextColor(Qt.GlobalColor.white)
-                marker_text.setPos(QPointF(x_pos - MARKER_TEXT_OFFSET / 2, MARKER_Y + line_height + 2))
+                marker_text.setPos(
+                    QPointF(x_pos - MARKER_TEXT_OFFSET / 2, MARKER_Y + line_height + 2)
+                )
                 self.scene.addItem(marker_text)
 
     def handle_segment_click(self, segment_item, modifiers):
-        logger.debug("Segment clicked (index=%d, modifiers=%s)", segment_item.index, modifiers)
+        logger.debug(
+            "Segment clicked (index=%d, modifiers=%s)", segment_item.index, modifiers
+        )
         if modifiers == Qt.KeyboardModifier.ControlModifier:
             self._toggle_segment_selection(segment_item)
         elif modifiers == Qt.KeyboardModifier.ShiftModifier:
@@ -186,7 +196,10 @@ class SegmentsBar(QGraphicsView):
             logger.warning("Listener already registered: %s", listener)
 
     def on_subtitles_changed(self, subtitles):
-        logger.info("Subtitles changed (%d segments)", len(subtitles.segments) if subtitles else 0)
+        logger.info(
+            "Subtitles changed (%d segments)",
+            len(subtitles.segments) if subtitles else 0,
+        )
         self.clear_selection()
         video_duration = self.video_manager._video_duration
         self.update_timeline(subtitles, video_duration)

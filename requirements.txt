@@ -5,5 +5,4 @@ PySide6~=6.9.0
 qasync~=0.27.1
 appdirs~=1.4.4
 python-mpv
-
 python-dotenv~=1.1.0

@@ -16,7 +16,9 @@ class TestSubtitlePreviewGenerator(unittest.TestCase):
             raise FileNotFoundError(f"ASS file not found: {self.ass_path}")
 
     def test_generate_preview_jpg(self):
-        result_path = get_preview_image(self.video_path, self.ass_path, self.output_path)
+        result_path = get_preview_image(
+            self.video_path, self.ass_path, self.output_path
+        )
         self.assertTrue(os.path.exists(result_path), "Preview image was not generated.")
 
 

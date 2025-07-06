@@ -1,8 +1,15 @@
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QTextEdit, QPushButton, QStackedWidget, QLineEdit
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QStackedWidget,
+    QLineEdit,
 )
 from PySide6.QtCore import Qt
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -25,7 +32,9 @@ class MainWindow(QWidget):
         self.label.setObjectName("editableLabel")
         self.label.setStyleSheet("font-size: 18px;")
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.mousePressEvent = self.label_clicked  # "podpięcie" zdarzenia kliknięcia
+        self.label.mousePressEvent = (
+            self.label_clicked
+        )  # "podpięcie" zdarzenia kliknięcia
 
         self.content_area.addWidget(self.label)
 
@@ -46,8 +55,8 @@ class MainWindow(QWidget):
         edit_layout.addWidget(save_button)
 
         # --- Dodaj oba widoki do panelu bocznego ---
-        self.side_panel.addWidget(self.style_widget)       # index 0
-        self.side_panel.addWidget(self.text_edit_widget)   # index 1
+        self.side_panel.addWidget(self.style_widget)  # index 0
+        self.side_panel.addWidget(self.text_edit_widget)  # index 1
 
         # Startujemy z widokiem do stylizacji
         self.side_panel.setCurrentIndex(0)

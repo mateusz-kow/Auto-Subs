@@ -36,5 +36,5 @@ class TestSubtitleGeneration(unittest.TestCase):
         subtitles.to_ass(output_path=ass_output_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
