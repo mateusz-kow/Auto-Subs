@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from PySide6.QtWidgets import QVBoxLayout, QSizePolicy
 
@@ -11,12 +10,18 @@ from src.subtitles.models import Subtitles
 from src.ui.MediaPlayer import MediaPlayer
 
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
 class VideoLayout(QVBoxLayout):
-    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, video_manager: VideoManager,
-                 media_player: MediaPlayer):
+    def __init__(
+        self,
+        style_manager: StyleManager,
+        subtitles_manager: SubtitlesManager,
+        video_manager: VideoManager,
+        media_player: MediaPlayer,
+    ):
         super().__init__()
         style_manager.add_style_listener(self.on_style_changed)
         subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
@@ -26,7 +31,9 @@ class VideoLayout(QVBoxLayout):
 
         # Media player widget
         self.media_player_widget = media_player
-        self.media_player_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.media_player_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.addWidget(self.media_player_widget)
 
         self._debounce_timer = None
@@ -34,7 +41,9 @@ class VideoLayout(QVBoxLayout):
 
     def on_preview_time_changed(self, time: float):
         if self.video_manager._video_path and time >= 0:
-            self.media_player_widget.set_timestamp(int(time * 1000))  # Set video to the specified timestamp
+            self.media_player_widget.set_timestamp(
+                int(time * 1000)
+            )  # Set video to the specified timestamp
 
     def set_subtitles_only(self, subtitles: Subtitles):
         """
@@ -47,10 +56,7 @@ class VideoLayout(QVBoxLayout):
 
         async def task():
             ass_path = await asyncio.to_thread(
-                SubtitleGenerator.to_ass,
-                subtitles,
-                self.style_manager.style,
-                None
+                SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None
             )
             self.media_player_widget.set_subtitles_only(ass_path)
 
@@ -68,10 +74,7 @@ class VideoLayout(QVBoxLayout):
 
         async def task():
             ass_path = await asyncio.to_thread(
-                SubtitleGenerator.to_ass,
-                subtitles,
-                self.style_manager.style,
-                None
+                SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None
             )
             self.media_player_widget.set_media(video_path, ass_path)
 
@@ -79,7 +82,9 @@ class VideoLayout(QVBoxLayout):
 
     def on_subtitles_changed(self, subtitles: Subtitles):
         logger.info("Subtitles updated. Refreshing subtitles...")
-        self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)
+        self.set_media_with_subtitles(
+            self.video_manager._video_path, self.subtitles_manager.subtitles
+        )
 
     def on_style_changed(self, style: dict):
         logger.info("Style updated. Refreshing video and subtitles...")

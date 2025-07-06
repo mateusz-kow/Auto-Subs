@@ -12,8 +12,14 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         self.segment = segment
         self.index = index
         self.parent_controller = parent_controller  # Reference to the parent controller
-        self.setRect(QRectF(segment.start * TIME_SCALE_FACTOR, SUBTITLE_BAR_Y,
-                            (segment.end - segment.start) * TIME_SCALE_FACTOR, SUBTITLE_BAR_HEIGHT))
+        self.setRect(
+            QRectF(
+                segment.start * TIME_SCALE_FACTOR,
+                SUBTITLE_BAR_Y,
+                (segment.end - segment.start) * TIME_SCALE_FACTOR,
+                SUBTITLE_BAR_HEIGHT,
+            )
+        )
         self.setBrush(QBrush(SUBTITLE_BAR_COLOR))
         self.setToolTip(f"{segment.start:.2f}s - {segment.end:.2f}s: {str(segment)}")
         self.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsSelectable, True)

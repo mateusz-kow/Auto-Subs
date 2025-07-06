@@ -15,10 +15,12 @@ class TestWhisperTranscriber(unittest.TestCase):
             raise FileNotFoundError(f"Input test file not found: {self.input_path}")
 
     def test_transcription_and_ass_generation(self):
-        result = self.transcriber.transcribe(self.input_path, word_timestamps=self.word_timestamps)
-        with open(os.path.join(OUTPUT_DIR, "transcription1.json"), 'w') as file:
-            json.dump(result, file, indent='\t')
+        result = self.transcriber.transcribe(
+            self.input_path, word_timestamps=self.word_timestamps
+        )
+        with open(os.path.join(OUTPUT_DIR, "transcription1.json"), "w") as file:
+            json.dump(result, file, indent="\t")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

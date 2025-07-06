@@ -6,6 +6,7 @@ from typing import Callable, Optional
 from src.utils.QThrottler import QThrottler
 
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 DEFAULT_STYLE = {
@@ -39,8 +40,8 @@ DEFAULT_STYLE = {
     "highlight_style": {
         "text_color": "&H00FFFF55",
         "border_color": "&H00353512",
-        "fade": False
-    }
+        "fade": False,
+    },
 }
 
 

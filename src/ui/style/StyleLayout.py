@@ -1,6 +1,4 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QSlider, QScrollArea, QWidget
-from PySide6.QtCore import Qt
-import warnings
+from PySide6.QtWidgets import QVBoxLayout, QScrollArea, QWidget
 
 from src.managers.StyleManager import StyleManager
 from .FontStyleLayout import FontStyleLayout

@@ -27,7 +27,11 @@ class SubtitleWord:
         """Check equality between two SubtitleWord instances."""
         if not isinstance(other, SubtitleWord):
             return False
-        return self.text == other.text and self.start == other.start and self.end == other.end
+        return (
+            self.text == other.text
+            and self.start == other.start
+            and self.end == other.end
+        )
 
 
 class SubtitleSegment:
@@ -113,7 +117,10 @@ class Subtitles:
         dict_segments = segment_words(transcription)
         segments = [
             SubtitleSegment(
-                [SubtitleWord(w["word"], w["start"], w["end"]) for w in dict_segment["words"]]
+                [
+                    SubtitleWord(w["word"], w["start"], w["end"])
+                    for w in dict_segment["words"]
+                ]
             )
             for dict_segment in dict_segments
         ]

@@ -5,10 +5,13 @@ import uuid
 from typing import Optional
 from src.utils.constants import TEMP_DIR
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
-def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = None) -> str:
+def get_video_with_subtitles(
+    video_path: str, ass_path: str, output_path: str = None
+) -> str:
     """
     Adds ASS subtitles to a video and saves the output.
 
@@ -28,10 +31,15 @@ def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = 
             output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_preview.mp4")
 
         cmd = [
-            "ffmpeg", "-y", "-i", _adjust_path(video_path),
-            "-vf", f"ass={_adjust_path(ass_path)}",
-            "-c:a", "copy",
-            _adjust_path(output_path)
+            "ffmpeg",
+            "-y",
+            "-i",
+            _adjust_path(video_path),
+            "-vf",
+            f"ass={_adjust_path(ass_path)}",
+            "-c:a",
+            "copy",
+            _adjust_path(output_path),
         ]
         logger.info(f"Running command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
@@ -41,7 +49,12 @@ def get_video_with_subtitles(video_path: str, ass_path: str, output_path: str = 
         raise RuntimeError(f"FFmpeg subtitle processing failed: {e}") from e
 
 
-def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str] = None, timestamp: float = 0.0) -> str:
+def get_preview_image(
+    video_path: str,
+    ass_path: str,
+    output_path: Optional[str] = None,
+    timestamp: float = 0.0,
+) -> str:
     """
     Generates a preview image from a video at a given timestamp with ASS subtitles.
 
@@ -59,13 +72,19 @@ def get_preview_image(video_path: str, ass_path: str, output_path: Optional[str]
             output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_preview.jpg")
 
         cmd = [
-            "ffmpeg", "-y",
-            "-ss", str(timestamp),
-            "-i", _adjust_path(video_path),
-            "-vf", f"ass={_adjust_path(ass_path)}",
-            "-vframes", "1",
-            "-q:v", "2",
-            _adjust_path(output_path)
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(timestamp),
+            "-i",
+            _adjust_path(video_path),
+            "-vf",
+            f"ass={_adjust_path(ass_path)}",
+            "-vframes",
+            "1",
+            "-q:v",
+            "2",
+            _adjust_path(output_path),
         ]
         logger.info(f"Generating preview image with command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
@@ -90,12 +109,23 @@ def get_video_duration(video_path: str) -> float:
     """
     try:
         cmd = [
-            "ffprobe", "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "json",
-            _adjust_path(video_path)
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            _adjust_path(video_path),
         ]
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True, cwd=TEMP_DIR)
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+            cwd=TEMP_DIR,
+        )
         duration_info = json.loads(result.stdout)
         return float(duration_info["format"]["duration"])
     except (subprocess.CalledProcessError, KeyError, ValueError) as e:
@@ -116,4 +146,4 @@ def _adjust_path(path: str, cwd: str = TEMP_DIR) -> str:
     """
     abs_path = os.path.abspath(path)
     relative_path = os.path.relpath(abs_path, cwd)
-    return relative_path.replace('\\', '/')
+    return relative_path.replace("\\", "/")

@@ -3,6 +3,7 @@ import threading
 import whisper
 from src.utils.constants import WHISPER_MODEL
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
@@ -12,7 +13,9 @@ class TranscriptionManager:
         self._model_loading_thread = None
         self._model_lock = asyncio.Lock()
         self._transcription_listeners = []
-        self._model_loaded_event = threading.Event()  # Event to signal model loading completion
+        self._model_loaded_event = (
+            threading.Event()
+        )  # Event to signal model loading completion
         self._transcription_process = None
         self._current_audio_path = None
         self.load_model(whisper_model)
@@ -37,7 +40,9 @@ class TranscriptionManager:
         self._model_loading_thread = threading.Thread(target=worker, daemon=True)
         self._model_loading_thread.start()
 
-    async def transcribe(self, audio_path: str, word_timestamps: bool = True, language: str = None) -> dict | None:
+    async def transcribe(
+        self, audio_path: str, word_timestamps: bool = True, language: str = None
+    ) -> dict | None:
         """
         Asynchronously transcribes an audio file to text using the Whisper model.
 
@@ -60,7 +65,10 @@ class TranscriptionManager:
             try:
                 logger.info(f"Starting transcription for {audio_path}...")
                 transcription = await asyncio.to_thread(
-                    self._model.transcribe, audio_path, word_timestamps=word_timestamps, language=language
+                    self._model.transcribe,
+                    audio_path,
+                    word_timestamps=word_timestamps,
+                    language=language,
                 )
                 if self._current_audio_path != audio_path:
                     return
