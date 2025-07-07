@@ -80,10 +80,8 @@ lint.ignore = [
     "D413",
     "D203",
     # These will be supported in the future
-    "D101",
     "D102",
     "D107",
-    "D105",
     "E501",
 ]
 
