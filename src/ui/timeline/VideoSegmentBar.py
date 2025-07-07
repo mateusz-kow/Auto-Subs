@@ -4,118 +4,137 @@ from PySide6.QtCore import QRectF
 from PySide6.QtGui import QBrush, QMouseEvent, QPen, Qt
 from PySide6.QtWidgets import QGraphicsRectItem
 
-from src.ui.timeline.constants import BAR_HEIGHT, FRAME_RATE, TIME_SCALE_FACTOR, VIDEO_BAR_COLOR, VIDEO_BAR_Y
+from src.ui.timeline.constants import (
+    BAR_HEIGHT,
+    FRAME_RATE,
+    TIME_SCALE_FACTOR,
+    VIDEO_BAR_COLOR,
+    VIDEO_BAR_Y,
+)
 
 logger = getLogger(__name__)
 
 
 class VideoSegmentBar(QGraphicsRectItem):
-    """Represents the video bar with an interactive progress indicator."""
+    """
+    Represents the video timeline bar with an interactive progress indicator.
+
+    This class handles visual representation of video progress,
+    mouse-based seeking, and keyboard interaction for frame-wise navigation.
+
+    Attributes:
+        total_frames (int): Total number of frames in the video.
+        video_duration (float): Duration of the video in seconds.
+        current_frame (int): The current frame displayed in the progress bar.
+        is_dragging (bool): Indicates whether the user is currently dragging the progress bar.
+        parent_controller: Reference to the controller handling playback logic.
+        fill_item (QGraphicsRectItem): The graphical fill representing playback progress.
+    """
 
     def __init__(self, video_duration: float, parent_controller):
         """
-        Initialize the VideoBar.
+        Initialize the VideoSegmentBar.
 
         Args:
-            video_duration (float): The total duration of the video in seconds.
-            parent_controller: The parent controller managing this VideoBar.
+            video_duration (float): Total duration of the video in seconds.
+            parent_controller: Controller managing interactions and time updates.
         """
         super().__init__()
-        self.total_frames = int(video_duration * FRAME_RATE)
+
         self.video_duration = video_duration
+        self.total_frames = int(video_duration * FRAME_RATE)
         self.current_frame = 0
         self.is_dragging = False
-        self.parent_controller = parent_controller  # Reference to the parent controller
+        self.parent_controller = parent_controller
 
-        # Configure the background rectangle
+        # Set up the video bar background
         self.setRect(QRectF(0, 0, video_duration * TIME_SCALE_FACTOR, BAR_HEIGHT))
         self.setBrush(QBrush(VIDEO_BAR_COLOR))
-        self.setPen(QPen(Qt.PenStyle.NoPen))  # No border
-
-        # Configure the progress fill rectangle
-        self.fill_item = QGraphicsRectItem(self)
-        self.fill_item.setRect(QRectF(0, 0, 0, BAR_HEIGHT))  # Initially empty
-        self.fill_item.setBrush(QBrush(Qt.GlobalColor.green))
-
-        # Set the position of the video bar
+        self.setPen(QPen(Qt.PenStyle.NoPen))
         self.setPos(0, VIDEO_BAR_Y)
 
-        logger.info("VideoBar initialized with duration: %.2f seconds", video_duration)
+        # Progress fill item
+        self.fill_item = QGraphicsRectItem(self)
+        self.fill_item.setRect(QRectF(0, 0, 0, BAR_HEIGHT))
+        self.fill_item.setBrush(QBrush(Qt.GlobalColor.green))
+
+        logger.info("VideoSegmentBar initialized with duration: %.2f seconds", video_duration)
 
     def update_progress(self, frame: int) -> None:
         """
-        Update the progress bar based on the current frame.
+        Update the visual progress of the bar to the specified frame.
 
         Args:
-            frame (int): The current frame to update the progress to.
+            frame (int): The current frame to represent.
         """
-        self.current_frame = max(0, min(frame, self.total_frames))  # Clamp frame within valid range
-        progress_width = (self.current_frame / self.total_frames) * self.rect().width()
-        self.fill_item.setRect(QRectF(0, 0, progress_width, BAR_HEIGHT))
-        logger.debug("Progress updated to frame: %d (%.2f seconds)", frame, frame / FRAME_RATE)
+        self.current_frame = max(0, min(frame, self.total_frames))  # Clamp to valid range
+        width = (self.current_frame / self.total_frames) * self.rect().width()
+        self.fill_item.setRect(QRectF(0, 0, width, BAR_HEIGHT))
+        logger.debug("Progress updated to frame %d (%.2f seconds)", frame, frame / FRAME_RATE)
 
     def keyPressEvent(self, event) -> None:
         """
-        Handle key press events to move the progress bar.
+        Handle keyboard events to navigate frames.
 
         Args:
-            event: The key press event.
+            event: The key press event (e.g., left/right arrow).
         """
         if event.key() == Qt.Key.Key_Left:
-            self.update_progress(self.current_frame - 1)  # Move one frame left
+            self.update_progress(self.current_frame - 1)
         elif event.key() == Qt.Key.Key_Right:
-            self.update_progress(self.current_frame + 1)  # Move one frame right
+            self.update_progress(self.current_frame + 1)
         super().keyPressEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """
-        Handle mouse press events to start dragging or update progress.
+        Start dragging and update progress on mouse press.
 
         Args:
             event (QMouseEvent): The mouse press event.
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = True
-            self._update_progress_from_position(event.pos().x())  # Update progress immediately on click
+            self._update_progress_from_position(event.pos().x())
             logger.info("Mouse press detected. Dragging started.")
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """
-        Handle mouse move events to update the progress bar while dragging.
+        Update progress while dragging the mouse.
 
         Args:
             event (QMouseEvent): The mouse move event.
         """
         if self.is_dragging:
             self._update_progress_from_position(event.pos().x())
-            logger.debug("Mouse moved. Dragging in progress.")
+            logger.debug("Dragging... Updated progress from mouse move.")
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         """
-        Handle mouse release events to stop dragging.
+        Stop dragging on mouse release.
 
         Args:
             event (QMouseEvent): The mouse release event.
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = False
-            logger.info("Mouse released. Dragging stopped.")
+            logger.info("Mouse released. Dragging ended.")
 
     def _update_progress_from_position(self, x_pos: float) -> None:
         """
-        Calculate and update the progress based on the x position.
+        Convert x-coordinate to frame number and update progress.
 
         Args:
-            x_pos (float): The x-coordinate of the mouse position relative to the bar.
+            x_pos (float): The horizontal position of the cursor within the bar.
         """
-        relative_x = max(0, min(x_pos, self.rect().width()))  # Clamp x within the bar width
-        frame = int((relative_x / self.rect().width()) * self.total_frames)
+        bar_width = self.rect().width()
+        clamped_x = max(0.0, min(x_pos, bar_width))
+        frame = int((clamped_x / bar_width) * self.total_frames)
         self.update_progress(frame)
-        self._notify_preview_time_change(frame / FRAME_RATE)  # Notify about the time change
+        self._notify_preview_time_change(frame / FRAME_RATE)
 
     def _notify_preview_time_change(self, timestamp: float) -> None:
         """
-        Notify the parent controller about the time change.
+        Notify the parent controller that the preview time has changed.
 
         Args:
             timestamp (float): The current timestamp in seconds.
