@@ -5,7 +5,7 @@ from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.TranscriptionManager import TranscriptionManager
 from src.managers.VideoManager import VideoManager
 from src.ui.MediaPlayer import MediaPlayer
-from src.ui.style.StyleLayout import StyleLayout
+from src.ui.customizations.style import StyleLayout
 from src.ui.SubtitlesLayout import SubtitlesLayout
 from src.ui.timeline.TimelineBar import TimelineBar
 from src.ui.TopBar import TopBar
