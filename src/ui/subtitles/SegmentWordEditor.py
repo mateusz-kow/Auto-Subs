@@ -22,11 +22,8 @@ class SegmentWordEditor(QWidget):
     of a single subtitle segment.
     """
 
-    # Signal -> emits (word_index, new_word_object)
     word_changed = Signal(int, SubtitleWord)
-    # Signal -> emits word_index to be deleted
     word_deleted = Signal(int)
-    # Signal -> requests a new empty word to be added
     add_new_word_requested = Signal()
 
     def __init__(self, parent=None):
@@ -116,7 +113,7 @@ class SegmentWordEditor(QWidget):
 
         except (ValueError, AttributeError) as e:
             logger.warning(f"Invalid data entered in word editor row {row}: {e}")
-            # Consider adding user feedback here (e.g., cell turns red)
+            # TODO: Consider adding user feedback here (e.g., cell turns red)
 
     def _on_delete_word(self) -> None:
         """Handle the delete word button click."""

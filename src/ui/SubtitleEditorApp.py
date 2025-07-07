@@ -83,23 +83,3 @@ class SubtitleEditorApp(QWidget):
         if self.subtitles_manager.subtitles:
             segment = self.subtitles_manager.subtitles.segments[segment_index]
             self.media_player.set_timestamp(int(segment.start * 1000))
-
-    # def _setup_layout(self):
-    #     """Set up the main layout of the application."""
-    #     # Main vertical layout
-    #     main_layout = QVBoxLayout(self)
-    #
-    #     # Add top bar
-    #     main_layout.addWidget(self.top_bar)
-    #
-    #     # Center layout with editors
-    #     center_layout = QHBoxLayout()
-    #     # The left side is now the new LeftPanel widget
-    #     center_layout.addWidget(self.left_panel, 2)
-    #     center_layout.addLayout(self.video_layout, 4)
-    #
-    #     # Add center layout to the main layout
-    #     main_layout.addLayout(center_layout)
-    #
-    #     # Add TimelineBar
-    #     main_layout.addWidget(self.timeline_bar)
