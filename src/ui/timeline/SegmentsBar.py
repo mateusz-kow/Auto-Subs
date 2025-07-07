@@ -4,7 +4,19 @@ from PySide6.QtCore import QPointF, Qt, QTimer
 from PySide6.QtGui import QAction, QPen, QWheelEvent
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView, QMenu
 
-from src.ui.timeline.constants import *
+from src.ui.timeline.constants import (
+    BAR_HEIGHT,
+    MAJOR_MARKER_HEIGHT,
+    MAJOR_MARKER_INTERVAL,
+    MARKER_TEXT_OFFSET,
+    MARKER_Y,
+    MINOR_MARKER_HEIGHT,
+    MINOR_MARKER_INTERVAL,
+    SCENE_MIN_WIDTH,
+    SUBTITLE_BAR_HEIGHT,
+    TIME_SCALE_FACTOR,
+    VIDEO_BAR_Y,
+)
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
 

@@ -27,17 +27,17 @@ jobs:
 
       # Step 3: Install Poetry
       - name: Install Poetry
-        run: pip install poetry==1.8.2  # Pin version for reproducibility
+        run: pip install poetry==1.8.2
 
       # Step 4: Configure Poetry
       - name: Configure Poetry
         run: poetry config virtualenvs.in-project true
 
-      # Step 5: Install Dependencies (with lock file)
+      # Step 5: Install Dependencies
       - name: Install project dependencies
         run: poetry install --no-interaction --no-root
 
-      # Step 6: Install project package (if needed)
+      # Step 6: Install project package
       - name: Install project itself
         run: poetry install --no-interaction
 

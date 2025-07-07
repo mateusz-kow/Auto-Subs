@@ -1,10 +1,10 @@
 from logging import getLogger
 
 from PySide6.QtCore import QRectF
-from PySide6.QtGui import QBrush, QMouseEvent, QPen
+from PySide6.QtGui import QBrush, QMouseEvent, QPen, Qt
 from PySide6.QtWidgets import QGraphicsRectItem
 
-from src.ui.timeline.constants import *
+from src.ui.timeline.constants import BAR_HEIGHT, FRAME_RATE, TIME_SCALE_FACTOR, VIDEO_BAR_COLOR, VIDEO_BAR_Y
 
 logger = getLogger(__name__)
 
