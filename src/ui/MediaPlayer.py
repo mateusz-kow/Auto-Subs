@@ -1,21 +1,9 @@
 import os
 from logging import getLogger
 
-from dotenv import load_dotenv
+from mpv import MPV
 from PySide6.QtGui import QCloseEvent, QShowEvent
 from PySide6.QtWidgets import QVBoxLayout, QWidget
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Retrieve the MPV DLL directory from the environment variable
-dll_directory = os.getenv("MPV_DLL_DIR")
-if os.path.isdir(dll_directory):
-    os.environ["PATH"] = dll_directory + os.pathsep + os.environ["PATH"]
-else:
-    # Using print here as logger might not be configured this early.
-    print(f"WARNING: MPV DLL directory not found: {dll_directory}. MPV initialization may fail.")
-from mpv import MPV
 
 logger = getLogger(__name__)
 
@@ -67,9 +55,8 @@ class MediaPlayer(QWidget):
     def showEvent(self, event: QShowEvent):
         """Handle widget show event to initialize MPV when the widget becomes visible."""
         super().showEvent(event)
-        if not self.mpv_initialized and self.isVisible():
-            if not self._initialize_mpv():
-                logger.error("MPV initialization failed during showEvent.")
+        if not self.mpv_initialized and self.isVisible() and not self._initialize_mpv():
+            logger.error("MPV initialization failed during showEvent.")
 
     def _ensure_player_ready(self):
         """Check if the MPV player is initialized and ready for commands."""

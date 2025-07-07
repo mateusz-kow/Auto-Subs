@@ -59,14 +59,14 @@ line-length = 120
 lint.select = [
     "E",    # pycodestyle errors
     "F",    # pyflakes (błędy logiczne)
-#    "W",    # pycodestyle warnings
+    "W",    # pycodestyle warnings
     "I",    # isort (sortowanie importów)
 #    "N",    # pep8-naming
     "D",    # pydocstyle (konwencje docstringów)
     "B",    # flake8-bugbear (potencjalne błędy)
     "UP",   # pyupgrade (sugestie modernizacji składni)
-#    "C4",   # flake8-comprehensions
-#    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
 ]
 # Reguły do ignorowania
 lint.ignore = [
@@ -84,10 +84,7 @@ lint.ignore = [
     "D102",
     "D107",
     "D105",
-    "F405",
-    "F403",
     "E501",
-    "E402"
 ]
 
 [tool.ruff.lint.pydocstyle]

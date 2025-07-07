@@ -2,7 +2,13 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QMouseEvent
 from PySide6.QtWidgets import QGraphicsRectItem
 
-from src.ui.timeline.constants import *
+from src.ui.timeline.constants import (
+    SELECTED_SEGMENT_COLOR,
+    SUBTITLE_BAR_COLOR,
+    SUBTITLE_BAR_HEIGHT,
+    SUBTITLE_BAR_Y,
+    TIME_SCALE_FACTOR,
+)
 
 
 class SubtitleSegmentBar(QGraphicsRectItem):
