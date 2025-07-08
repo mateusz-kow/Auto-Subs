@@ -28,6 +28,10 @@ class SubtitleWord:
             return False
         return self.text == other.text and self.start == other.start and self.end == other.end
 
+    def __repr__(self):
+        """Return a string representation of the SubtitleWord."""
+        return f"SubtitleWord(text='{self.text}', start={self.start}, end={self.end})"
+
 
 class SubtitleSegment:
     """Represents a segment of subtitles containing multiple words."""
@@ -58,6 +62,10 @@ class SubtitleSegment:
         if not isinstance(other, SubtitleSegment):
             return False
         return self.words == other.words
+
+    def __repr__(self):
+        """Return a string representation of the SubtitleSegment."""
+        return f"SubtitleSegment(start={self.start}, end={self.end}, words={self.words})"
 
     def add_word(self, word: SubtitleWord = None) -> None:
         """
@@ -92,6 +100,7 @@ class Subtitles:
             segments (List[SubtitleSegment]): A list of SubtitleSegment instances.
         """
         self.segments = segments
+        self.refresh()
 
     @classmethod
     def empty(cls) -> "Subtitles":
