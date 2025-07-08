@@ -58,5 +58,5 @@ jobs:
 #        run: poetry run mypy .
 
       # Step 11: Run tests with pytest
-#      - name: Run test suite with pytest
-#        run: poetry run pytest
+      - name: Run test suite with pytest
+        run: poetry run pytest

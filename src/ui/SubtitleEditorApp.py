@@ -28,7 +28,7 @@ class SubtitleEditorApp(QWidget):
         # Set up layout
         self._setup_layout()
 
-    def _initialize_managers(self):
+    def _initialize_managers(self) -> None:
         """Initialize the managers and set up their interactions."""
         self.style_manager = StyleManager()
         self.subtitles_manager = SubtitlesManager()
@@ -40,7 +40,7 @@ class SubtitleEditorApp(QWidget):
         self.video_manager.add_video_listener(self.subtitles_manager.on_video_changed)
         self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
 
-    def _initialize_ui(self):
+    def _initialize_ui(self) -> None:
         """Initialize the UI components."""
         self.media_player = MediaPlayer()
         self.video_layout = VideoLayout(
@@ -66,7 +66,7 @@ class SubtitleEditorApp(QWidget):
 
         self.timeline_bar.segments_bar.add_preview_time_listener(self.video_layout.on_preview_time_changed)
 
-    def _setup_layout(self):
+    def _setup_layout(self) -> None:
         # This method remains largely the same, ensuring self.left_panel is added
         # to the center_layout.
         main_layout = QVBoxLayout(self)
@@ -78,7 +78,7 @@ class SubtitleEditorApp(QWidget):
         main_layout.addWidget(self.timeline_bar)
 
     @Slot(int)
-    def _seek_player_to_segment(self, segment_index: int):
+    def _seek_player_to_segment(self, segment_index: int) -> None:
         """Seeks the media player to the start of the selected segment."""
         if self.subtitles_manager.subtitles:
             segment = self.subtitles_manager.subtitles.segments[segment_index]
