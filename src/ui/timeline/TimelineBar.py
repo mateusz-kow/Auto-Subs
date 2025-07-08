@@ -1,9 +1,6 @@
-from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
-    QSizePolicy,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -40,43 +37,50 @@ class TimelineBar(QWidget):
         # Configure main layout
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        main_layout.setSpacing(5)
         self.setFixedHeight(VIDEO_BAR_Y + SUBTITLE_BAR_HEIGHT + BAR_HEIGHT)
 
-        # Add control buttons and segments bar
-        self._add_control_buttons(main_layout)
+        # Create components
+        button_container = self._create_control_buttons()
         self.segments_bar = SegmentsBar(subtitles_manager, video_manager)
-        main_layout.addWidget(self.segments_bar)
 
-    def _add_control_buttons(self, main_layout):
+        main_layout.addWidget(button_container, 0)
+        main_layout.addWidget(self.segments_bar, 1)
+
+    def _create_control_buttons(self) -> QWidget:
         """
-        Create and add the playback control buttons (play/pause, reset) to the layout.
+        Create and return a widget containing the playback control buttons.
 
-        Args:
-            main_layout (QHBoxLayout): The parent layout to which the controls are added.
+        Returns:
+            QWidget: The container widget with the buttons.
         """
         button_container = QWidget()
-        button_layout = QVBoxLayout(button_container)
-        button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        button_layout.setContentsMargins(0, 0, 0, 0)
 
-        button_size = VIDEO_BAR_Y + SUBTITLE_BAR_HEIGHT + BAR_HEIGHT
+        # Buttons should be square, with size matching the timeline bar's height
+        button_size = self.height()
 
         # Play/Pause button
         self.play_pause_button = QPushButton("⏯")  # Unicode for play/pause symbol
-        self.play_pause_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.play_pause_button.setFixedWidth(button_size)
+        self.play_pause_button.setFixedSize(button_size, button_size)
         self.play_pause_button.clicked.connect(self._toggle_play_pause)
-        button_layout.addWidget(self.play_pause_button)
+
+        button_layout = QHBoxLayout(button_container)
+        button_layout.setContentsMargins(2, 2, 2, 2)
+        button_layout.setSpacing(2)
+
+        square_button_size = self.height() - 4  # Account for margins
+
+        self.play_pause_button.setFixedSize(square_button_size, square_button_size)
 
         # Reset button
         self.reset_button = QPushButton("⏮")  # Unicode for reset symbol
-        self.reset_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.reset_button.setFixedWidth(button_size)
+        self.reset_button.setFixedSize(square_button_size, square_button_size)
         self.reset_button.clicked.connect(self._reset_to_start)
+
+        button_layout.addWidget(self.play_pause_button)
         button_layout.addWidget(self.reset_button)
 
-        main_layout.addWidget(button_container)
+        return button_container
 
     def _toggle_play_pause(self):
         """Toggle the playback state of the media player."""

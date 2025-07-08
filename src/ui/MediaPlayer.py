@@ -86,6 +86,7 @@ class MediaPlayer(QWidget):
                 return
 
             self.pause()
+            # TODO: Add throttling here in a try catch loop with maximum of 3 attempts
             self.player.sub_add(subtitle_path)
             self.player.sub_visibility = True
             self.player.command("sub_reload")
