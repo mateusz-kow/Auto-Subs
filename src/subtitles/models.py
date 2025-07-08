@@ -1,4 +1,3 @@
-from typing import List
 from src.subtitles.segmenter import segment_words
 
 
@@ -29,11 +28,15 @@ class SubtitleWord:
             return False
         return self.text == other.text and self.start == other.start and self.end == other.end
 
+    def __repr__(self):
+        """Return a string representation of the SubtitleWord."""
+        return f"SubtitleWord(text='{self.text}', start={self.start}, end={self.end})"
+
 
 class SubtitleSegment:
     """Represents a segment of subtitles containing multiple words."""
 
-    def __init__(self, words: List[SubtitleWord]):
+    def __init__(self, words: list[SubtitleWord]):
         """
         Initialize a SubtitleSegment instance.
 
@@ -60,6 +63,10 @@ class SubtitleSegment:
             return False
         return self.words == other.words
 
+    def __repr__(self):
+        """Return a string representation of the SubtitleSegment."""
+        return f"SubtitleSegment(start={self.start}, end={self.end}, words={self.words})"
+
     def add_word(self, word: SubtitleWord = None) -> None:
         """
         Add a word to the segment.
@@ -85,7 +92,7 @@ class SubtitleSegment:
 class Subtitles:
     """Represents a collection of subtitle segments."""
 
-    def __init__(self, segments: List[SubtitleSegment]):
+    def __init__(self, segments: list[SubtitleSegment]):
         """
         Initialize a Subtitles instance.
 
@@ -93,6 +100,7 @@ class Subtitles:
             segments (List[SubtitleSegment]): A list of SubtitleSegment instances.
         """
         self.segments = segments
+        self.refresh()
 
     @classmethod
     def empty(cls) -> "Subtitles":
@@ -112,9 +120,7 @@ class Subtitles:
         """
         dict_segments = segment_words(transcription)
         segments = [
-            SubtitleSegment(
-                [SubtitleWord(w["word"], w["start"], w["end"]) for w in dict_segment["words"]]
-            )
+            SubtitleSegment([SubtitleWord(w["word"], w["start"], w["end"]) for w in dict_segment["words"]])
             for dict_segment in dict_segments
         ]
         return cls(segments)

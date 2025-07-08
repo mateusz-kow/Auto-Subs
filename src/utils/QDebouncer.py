@@ -1,4 +1,4 @@
-from PySide6.QtCore import QTimer, QObject
+from PySide6.QtCore import QObject, QTimer
 
 
 class QDebouncer(QObject):
@@ -45,8 +45,6 @@ class QDebouncer(QObject):
         self.timer.start(self.delay)
 
     def _trigger(self) -> None:
-        """
-        Execute the debounced function with the stored arguments.
-        """
+        """Execute the debounced function with the stored arguments."""
         if self._func:
             self._func(*self._args, **self._kwargs)

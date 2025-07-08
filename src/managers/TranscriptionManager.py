@@ -1,25 +1,46 @@
 import asyncio
 import threading
-import whisper
-from src.utils.constants import WHISPER_MODEL
 from logging import getLogger
+from typing import Callable, Optional
+
+import whisper
+
+from src.utils.constants import WHISPER_MODEL
+
 logger = getLogger(__name__)
 
 
 class TranscriptionManager:
-    def __init__(self, whisper_model: str = WHISPER_MODEL):
-        self._model = None
-        self._model_loading_thread = None
-        self._model_lock = asyncio.Lock()
-        self._transcription_listeners = []
-        self._model_loaded_event = threading.Event()  # Event to signal model loading completion
-        self._transcription_process = None
-        self._current_audio_path = None
-        self.load_model(whisper_model)
+    """
+    Manages asynchronous transcription using OpenAI's Whisper model.
 
-    def load_model(self, whisper_model: str) -> None:
+    This class loads the Whisper model in a background thread and provides
+    an asynchronous interface to transcribe audio files. It also supports
+    listener registration to notify external components when transcription completes.
+    """
+
+    def __init__(self, whisper_model: str = WHISPER_MODEL):
         """
-        Loads the Whisper model in a separate thread.
+        Initialize the TranscriptionManager and begin loading the Whisper model.
+
+        Args:
+            whisper_model (str): Name or path of the Whisper model to load.
+        """
+        self._model = None
+        self._model_lock = asyncio.Lock()
+        self._transcription_listeners: list[Callable[[dict], None]] = []
+        self._model_loaded_event = threading.Event()
+        self._model_loading_thread: Optional[threading.Thread] = None
+        self._current_audio_path: Optional[str] = None
+
+        self._load_model(whisper_model)
+
+    def _load_model(self, whisper_model: str) -> None:
+        """
+        Load the Whisper model in a separate thread to avoid blocking the main thread.
+
+        Args:
+            whisper_model (str): The model name (e.g., 'base', 'small') or file path.
         """
 
         def worker():
@@ -27,74 +48,88 @@ class TranscriptionManager:
                 logger.info("Loading Whisper model...")
                 self._model = whisper.load_model(whisper_model)
                 logger.info("Whisper model loaded successfully.")
-                self._model_loaded_event.set()  # Signal that the model is loaded
             except Exception as e:
                 logger.exception("Failed to load Whisper model")
-                self._model_loaded_event.set()  # Ensure the event is set even on failure
-                raise RuntimeError(f"Failed to load model: {e}") from e
+                raise RuntimeError(f"Model loading failed: {e}") from e
+            finally:
+                self._model_loaded_event.set()
 
-        # Start the worker in a separate thread
         self._model_loading_thread = threading.Thread(target=worker, daemon=True)
         self._model_loading_thread.start()
 
-    async def transcribe(self, audio_path: str, word_timestamps: bool = True, language: str = None) -> dict | None:
+    async def transcribe(
+        self, audio_path: str, word_timestamps: bool = True, language: Optional[str] = None
+    ) -> Optional[dict]:
         """
-        Asynchronously transcribes an audio file to text using the Whisper model.
+        Asynchronously transcribe an audio file using the loaded Whisper model.
 
         Args:
             audio_path (str): Path to the input audio file.
             word_timestamps (bool): Whether to include word-level timestamps.
+            language (Optional[str]): Optional language code to assist transcription.
 
         Returns:
-            dict: Transcription result.
+            dict | None: Transcription result dictionary if successful, else None.
         """
-        # Wait for the model to load
         await asyncio.to_thread(self._model_loaded_event.wait)
 
-        if not self._model:
-            raise RuntimeError("Model is not loaded. Cannot transcribe.")
+        if self._model is None:
+            raise RuntimeError("Whisper model failed to load or is unavailable.")
 
         async with self._model_lock:
             if self._current_audio_path != audio_path:
-                return
+                logger.debug(f"Ignoring outdated transcription request for: {audio_path}")
+                return None
+
             try:
-                logger.info(f"Starting transcription for {audio_path}...")
-                transcription = await asyncio.to_thread(
-                    self._model.transcribe, audio_path, word_timestamps=word_timestamps, language=language
+                logger.info(f"Starting transcription for: {audio_path}")
+                result = await asyncio.to_thread(
+                    self._model.transcribe,
+                    audio_path,
+                    word_timestamps=word_timestamps,
+                    language=language,
                 )
                 if self._current_audio_path != audio_path:
-                    return
+                    logger.debug("Transcription result discarded due to source change.")
+                    return None
+
                 logger.info("Transcription completed successfully.")
-                self.notify_listeners(transcription)
+                self._notify_listeners(result)
+                return result
+
             except Exception as e:
-                logger.exception("Transcription failed")
+                logger.exception("Error during transcription")
                 raise RuntimeError(f"Transcription failed: {e}") from e
 
-    def notify_listeners(self, transcription: dict) -> None:
+    def add_transcription_listener(self, listener: Callable[[dict], None]) -> None:
+        """
+        Register a listener to be called when transcription completes.
+
+        Args:
+            listener (Callable[[dict], None]): A callback function that takes
+                the transcription result as an argument.
+        """
+        self._transcription_listeners.append(listener)
+
+    def _notify_listeners(self, transcription: dict) -> None:
         """
         Notify all registered listeners with the transcription result.
 
         Args:
-            transcription: The transcription result to pass to listeners.
+            transcription (dict): The completed transcription result.
         """
         for listener in self._transcription_listeners:
-            listener(transcription)
+            try:
+                listener(transcription)
+            except Exception as e:
+                logger.warning(f"Listener raised an exception: {e}")
 
-    def add_transcription_listener(self, listener):
+    def on_video_changed(self, video_path: str) -> None:
         """
-        Adds a listener to be notified when transcription is complete.
+        Trigger transcription for a new video or audio source.
 
         Args:
-            listener (callable): A coroutine function to call with the transcription result.
-        """
-        self._transcription_listeners.append(listener)
-
-    def on_video_changed(self, video_path: str):
-        """
-        Called when the video changes. Can be used to reset or update the transcription manager.
-
-        Args:
-            video_path (str): Path to the new video file.
+            video_path (str): Path to the new video/audio file.
         """
         self._current_audio_path = video_path
         asyncio.create_task(self.transcribe(video_path))

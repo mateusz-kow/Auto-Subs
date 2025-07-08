@@ -1,5 +1,7 @@
-from src.utils.ffmpeg_utils import get_video_duration
 from logging import getLogger
+
+from src.utils.ffmpeg_utils import get_video_duration
+
 logger = getLogger(__name__)
 
 
@@ -51,3 +53,7 @@ class VideoManager:
             self._video_changed_listeners.append(listener)
         else:
             raise ValueError("The listener is already registered.")
+
+    @property
+    def video_path(self):
+        return self._video_path

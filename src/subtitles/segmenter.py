@@ -1,13 +1,13 @@
-from typing import List, Dict
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
 def segment_words(
-        transcription: Dict[str, List[Dict[str, float]]],
-        max_chars: int = 10,
-        break_chars: tuple = ('.', ',', '!', '?')
-) -> List[Dict[str, any]]:
+    transcription: dict[str, list[dict[str, float]]],
+    max_chars: int = 10,
+    break_chars: tuple = (".", ",", "!", "?"),
+) -> list[dict[str, any]]:
     """
     Segments a transcription into subtitle chunks based on character limits
     and punctuation.
@@ -27,7 +27,7 @@ def segment_words(
                 words.append(word)
     except KeyError as e:
         logger.error(f"Invalid transcription format: missing key {e}")
-        raise ValueError(f"Invalid transcription format: missing key {e}")
+        raise ValueError(f"Invalid transcription format: missing key {e}") from e
 
     segments = []
     buffer = []
@@ -48,22 +48,26 @@ def segment_words(
         is_break_char = word_text[-1] in break_chars
 
         if is_long or is_break_char:
-            segments.append({
-                "start": segment_start,
-                "end": word["end"],
-                "text": combined_text.strip(),
-                "words": buffer.copy()
-            })
+            segments.append(
+                {
+                    "start": segment_start,
+                    "end": word["end"],
+                    "text": combined_text.strip(),
+                    "words": buffer.copy(),
+                }
+            )
             buffer.clear()
             segment_start = None
 
     if buffer and segment_start is not None:
-        segments.append({
-            "start": segment_start,
-            "end": buffer[-1]["end"],
-            "text": " ".join(w["word"].strip() for w in buffer),
-            "words": buffer.copy()
-        })
+        segments.append(
+            {
+                "start": segment_start,
+                "end": buffer[-1]["end"],
+                "text": " ".join(w["word"].strip() for w in buffer),
+                "words": buffer.copy(),
+            }
+        )
 
     logger.info(f"Segmentation complete: {len(segments)} subtitle chunks created.")
     return segments

@@ -1,8 +1,7 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QSlider, QScrollArea, QWidget
-from PySide6.QtCore import Qt
-import warnings
+from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from src.managers.StyleManager import StyleManager
+
 from .FontStyleLayout import FontStyleLayout
 from .HighlightStyleLayout import HighlightStyleLayout
 
@@ -40,10 +39,7 @@ class StyleLayout(QScrollArea):
         self.setWidgetResizable(True)
 
     def apply_current_style(self):
-        """
-        Collects current managers and applies them via StyleManager.
-        """
-
+        """Collects current managers and applies them via StyleManager."""
         style_data = self.get_current_settings()
         self.style_manager.from_dict(style_data)
 

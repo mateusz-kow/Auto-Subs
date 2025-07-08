@@ -1,6 +1,8 @@
 import asyncio
-from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 from logging import getLogger
+
+from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
+
 logger = getLogger(__name__)
 
 

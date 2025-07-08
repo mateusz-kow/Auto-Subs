@@ -1,26 +1,33 @@
 import asyncio
-import os.path
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QPushButton, QFileDialog, QMessageBox, QMenu
+    QFileDialog,
+    QHBoxLayout,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QWidget,
 )
-
 from qasync import asyncSlot
 
-from src.utils.ffmpeg_utils import get_video_with_subtitles
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
 from src.utils.constants import STYLES_DIR
+from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 
 class TopBar(QWidget):
-    """
-    TopBar widget containing the File and Style menus for the Subtitle Editor.
-    """
-    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, video_manager: VideoManager):
+    """TopBar widget containing the File and Style menus for the Subtitle Editor."""
+
+    def __init__(
+        self,
+        style_manager: StyleManager,
+        subtitles_manager: SubtitlesManager,
+        video_manager: VideoManager,
+    ):
         super().__init__()
 
         self.style_manager = style_manager
@@ -87,51 +94,37 @@ class TopBar(QWidget):
 
     @asyncSlot()
     async def export_txt(self):
-        """
-        Export subtitles as a plain text (.txt) file.
-        """
+        """Export subtitles as a plain text (.txt) file."""
         path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "Text files (*.txt)")
         if path:
             try:
-                await asyncio.to_thread(
-                    SubtitleGenerator.to_txt,
-                    self.subtitles_manager._subtitles,
-                    path
-                )
+                await asyncio.to_thread(SubtitleGenerator.to_txt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as TXT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{str(e)}")
 
     @asyncSlot()
     async def export_srt(self):
-        """
-        Export subtitles in SubRip (.srt) format.
-        """
+        """Export subtitles in SubRip (.srt) format."""
         path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if path:
             try:
-                await asyncio.to_thread(
-                    SubtitleGenerator.to_srt,
-                    self.subtitles_manager._subtitles,
-                    path
-                )
+                await asyncio.to_thread(SubtitleGenerator.to_srt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as SRT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export SRT:\n{str(e)}")
 
     @asyncSlot()
     async def export_ass(self):
-        """
-        Export subtitles in Advanced SubStation Alpha (.ass) format.
-        """
+        """Export subtitles in Advanced SubStation Alpha (.ass) format."""
         path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if path:
             try:
                 await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
-                    self.subtitles_manager._subtitles,
+                    self.subtitles_manager.subtitles,
                     self.style_manager.style,
-                    path
+                    path,
                 )
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as ASS:\n{path}")
             except Exception as e:
@@ -139,23 +132,21 @@ class TopBar(QWidget):
 
     @asyncSlot()
     async def export_mp4(self):
-        """
-        Export the video with embedded subtitles in MP4 format.
-        """
+        """Export the video with embedded subtitles in MP4 format."""
         path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
         if path:
             try:
                 ass_subtitles = await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
-                    self.subtitles_manager._subtitles,
+                    self.subtitles_manager.subtitles,
                     self.style_manager.style,
-                    None
+                    None,
                 )
                 await asyncio.to_thread(
                     get_video_with_subtitles,
-                    self.video_manager._video_path,
+                    self.video_manager.video_path,
                     ass_subtitles,
-                    path
+                    path,
                 )
                 QMessageBox.information(self, "Export Successful", f"Video exported with subtitles:\n{path}")
             except Exception as e:
@@ -163,9 +154,7 @@ class TopBar(QWidget):
 
     @asyncSlot()
     async def import_mp4(self):
-        """
-        Prompt the user to select an MP4 file to import.
-        """
+        """Prompt the user to select an MP4 file to import."""
         path, _ = QFileDialog.getOpenFileName(self, "Import MP4", "", "MP4 files (*.mp4)")
         if path:
             self.video_manager.set_video_path(path)
@@ -173,17 +162,13 @@ class TopBar(QWidget):
     # --- Style Menu Handlers ---
 
     def reset_style_to_default(self):
-        """
-        Reset subtitle styling to the default settings.
-        """
+        """Reset subtitle styling to the default settings."""
         self.style_manager.reset_to_default()
         QMessageBox.information(self, "Style Reset", "Style has been reset to the default configuration.")
 
     @asyncSlot()
     async def save_style_to_file(self):
-        """
-        Save the current style to a JSON file.
-        """
+        """Save the current style to a JSON file."""
         path, _ = QFileDialog.getSaveFileName(self, "Save Style", str(STYLES_DIR), "JSON files (*.json)")
         if path:
             try:
@@ -194,9 +179,7 @@ class TopBar(QWidget):
 
     @asyncSlot()
     async def load_style_from_file(self):
-        """
-        Load subtitle styling from a JSON file.
-        """
+        """Load subtitle styling from a JSON file."""
         path, _ = QFileDialog.getOpenFileName(self, "Load Style", str(STYLES_DIR), "JSON files (*.json)")
         if path:
             try:

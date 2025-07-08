@@ -1,28 +1,15 @@
 import os
-from PySide6.QtGui import QCloseEvent, QShowEvent
-from PySide6.QtWidgets import QWidget, QVBoxLayout
 from logging import getLogger
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Retrieve the MPV DLL directory from the environment variable
-dll_directory = os.getenv("MPV_DLL_DIR")
-if os.path.isdir(dll_directory):
-    os.environ["PATH"] = dll_directory + os.pathsep + os.environ["PATH"]
-else:
-    # Using print here as logger might not be configured this early.
-    print(f"WARNING: MPV DLL directory not found: {dll_directory}. MPV initialization may fail.")
 from mpv import MPV
+from PySide6.QtGui import QCloseEvent, QShowEvent
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 logger = getLogger(__name__)
 
 
 class MediaPlayer(QWidget):
-    """
-    A media player widget using the MPV library for video playback.
-    """
+    """A media player widget using the MPV library for video playback."""
 
     def __init__(self, parent=None):
         """
@@ -32,7 +19,7 @@ class MediaPlayer(QWidget):
             parent: Parent widget.
         """
         super().__init__(parent)
-        self.player: MPV = None
+        self.player: MPV | None = None
         self.mpv_initialized = False
 
         # Set up the layout
@@ -44,9 +31,7 @@ class MediaPlayer(QWidget):
         self.setMinimumSize(320, 240)
 
     def _initialize_mpv(self):
-        """
-        Initialize the MPV player instance. This should be called when the widget's window ID is valid.
-        """
+        """Initialize the MPV player instance. This should be called when the widget's window ID is valid."""
         if self.mpv_initialized:
             return True
 
@@ -57,11 +42,7 @@ class MediaPlayer(QWidget):
 
         try:
             logger.debug(f"Initializing MPV with wid: {wid_val}")
-            self.player = MPV(
-                wid=str(wid_val),
-                loglevel="debug",
-                keep_open='yes'
-            )
+            self.player = MPV(wid=str(wid_val), loglevel="debug", keep_open="yes")
             self.mpv_initialized = True
             logger.info("MPV player initialized successfully.")
             return True
@@ -72,18 +53,13 @@ class MediaPlayer(QWidget):
             return False
 
     def showEvent(self, event: QShowEvent):
-        """
-        Handle widget show event to initialize MPV when the widget becomes visible.
-        """
+        """Handle widget show event to initialize MPV when the widget becomes visible."""
         super().showEvent(event)
-        if not self.mpv_initialized and self.isVisible():
-            if not self._initialize_mpv():
-                logger.error("MPV initialization failed during showEvent.")
+        if not self.mpv_initialized and self.isVisible() and not self._initialize_mpv():
+            logger.error("MPV initialization failed during showEvent.")
 
     def _ensure_player_ready(self):
-        """
-        Check if the MPV player is initialized and ready for commands.
-        """
+        """Check if the MPV player is initialized and ready for commands."""
         if not self.player:
             logger.warning("MPV player is not initialized or has been terminated.")
             return False
@@ -110,9 +86,10 @@ class MediaPlayer(QWidget):
                 return
 
             self.pause()
+            # TODO: Add throttling here in a try catch loop with maximum of 3 attempts
             self.player.sub_add(subtitle_path)
             self.player.sub_visibility = True
-            self.player.command('sub_reload')
+            self.player.command("sub_reload")
             logger.info("Subtitles set and reloaded.")
         except Exception as e:
             logger.error(f"Failed to set subtitles: {e}", exc_info=True)
@@ -135,7 +112,7 @@ class MediaPlayer(QWidget):
         logger.info(f"Setting media: {video_path}, subtitles: {subtitle_path}")
         try:
             self.pause()
-            self.player.loadfile(video_path, mode='replace')
+            self.player.loadfile(video_path, mode="replace")
 
             if subtitle_path:
                 self.set_subtitles_only(subtitle_path)
@@ -143,9 +120,7 @@ class MediaPlayer(QWidget):
             logger.error(f"Failed to set media: {e}", exc_info=True)
 
     def play(self):
-        """
-        Play the media by unpausing.
-        """
+        """Play the media by unpausing."""
         if not self._ensure_player_ready():
             return
 
@@ -160,9 +135,7 @@ class MediaPlayer(QWidget):
             logger.error(f"Failed to play media: {e}", exc_info=True)
 
     def pause(self):
-        """
-        Pause media playback.
-        """
+        """Pause media playback."""
         if not self._ensure_player_ready():
             return
 
@@ -177,9 +150,7 @@ class MediaPlayer(QWidget):
             logger.error(f"Failed to pause media: {e}", exc_info=True)
 
     def toggle_pause_state(self):
-        """
-        Toggle the pause state of the media. If paused, resume playback; otherwise, pause.
-        """
+        """Toggle the pause state of the media. If paused, resume playback; otherwise, pause."""
         if not self._ensure_player_ready():
             return
 
@@ -210,7 +181,7 @@ class MediaPlayer(QWidget):
                 return
 
             seconds = timestamp / 1000.0
-            self.player.seek(seconds, reference='absolute', precision='exact')
+            self.player.seek(seconds, reference="absolute", precision="exact")
             logger.info(f"Playback position set to {seconds:.3f}s.")
         except Exception as e:
             logger.error(f"Failed to set timestamp: {e}", exc_info=True)

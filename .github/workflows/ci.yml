@@ -1,0 +1,68 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-test-typecheck:
+    name: Lint, Type Check, and Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      # Step 1: Checkout Code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 2.5: Install system dependencies for Qt (THE FIX)
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0
+
+      # Step 3: Install Poetry
+      - name: Install Poetry
+        run: pip install poetry==1.8.2
+
+      # Step 4: Configure Poetry
+      - name: Configure Poetry
+        run: poetry config virtualenvs.in-project true
+
+      # Step 5: Install Dependencies
+      - name: Install project dependencies
+        run: poetry install --no-interaction --no-root
+
+      # Step 6: Install project package
+      - name: Install project itself
+        run: poetry install --no-interaction
+
+      # Step 7: Validate pyproject.toml
+      - name: Check pyproject.toml validity
+        run: poetry check
+
+      # Step 8: Lint with Ruff
+      - name: Lint code with Ruff
+        run: poetry run ruff check .
+
+      # Step 9: Check formatting with Black
+      - name: Check code formatting with Black
+        run: poetry run black --check .
+
+      # Step 10: Static type checking with mypy
+#      - name: Type check with mypy
+#        run: poetry run mypy .
+
+      # Step 11: Run tests with pytest
+      - name: Run test suite with pytest
+        run: poetry run pytest

@@ -1,11 +1,11 @@
 import os
 import uuid
-from typing import Dict
+from logging import getLogger
 
 from src.subtitles.models import Subtitles
-from src.utils.file_operations import generate_ass_header
 from src.utils.constants import TEMP_DIR
-from logging import getLogger
+from src.utils.file_operations import generate_ass_header
+
 logger = getLogger(__name__)
 
 HIGHLIGHT_END = r"{\\r}"
@@ -15,25 +15,23 @@ class SubtitleGenerator:
     """Utility class for generating subtitle files in ASS and SRT formats."""
 
     @staticmethod
-    def to_ass(subtitles: Subtitles,
-               ass_settings: Dict[str, any],
-               output_path: str = None) -> str:
+    def to_ass(subtitles: Subtitles, ass_settings: dict[str, any], output_path: str = None) -> str:
         """
-    Generate an ASS subtitle file from the given subtitles and settings.
+        Generate an ASS subtitle file from the given subtitles and settings.
 
-    This method creates an ASS (Advanced SubStation Alpha) subtitle file
-    using the provided subtitles and styling settings. It supports optional
-    highlighting of specific words and offsets the timestamps based on the
-    provided `timestamp` parameter.
+        This method creates an ASS (Advanced SubStation Alpha) subtitle file
+        using the provided subtitles and styling settings. It supports optional
+        highlighting of specific words and offsets the timestamps based on the
+        provided `timestamp` parameter.
 
-    Args:
-        subtitles (Subtitles): The subtitles to export, containing segments and words.
-        ass_settings (Dict[str, any]): ASS-specific settings, including styles and optional highlight styles.
-        output_path (str, optional): Path to save the generated file. If not provided, a temporary file is created.
+        Args:
+            subtitles (Subtitles): The subtitles to export, containing segments and words.
+            ass_settings (Dict[str, any]): ASS-specific settings, including styles and optional highlight styles.
+            output_path (str, optional): Path to save the generated file. If not provided, a temporary file is created.
 
-    Returns:
-        str: The path to the generated ASS file.
-    """
+        Returns:
+            str: The path to the generated ASS file.
+        """
 
         def format_ass_timestamp(seconds: float) -> str:
             """Format a timestamp in seconds to ASS format (h:mm:ss.cs)."""

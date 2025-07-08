@@ -1,6 +1,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+
 from src.utils.constants import LOGS_DIR
 
 LOG_FILE = "app.log"
@@ -12,15 +13,10 @@ log_path = os.path.join(LOGS_DIR, LOG_FILE)
 
 formatter = logging.Formatter(
     fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-file_handler = RotatingFileHandler(
-    filename=log_path,
-    maxBytes=MAX_BYTES,
-    backupCount=BACKUP_COUNT,
-    encoding="utf-8"
-)
+file_handler = RotatingFileHandler(filename=log_path, maxBytes=MAX_BYTES, backupCount=BACKUP_COUNT, encoding="utf-8")
 file_handler.setFormatter(formatter)
 file_handler.setLevel(logging.DEBUG)
 

@@ -1,0 +1,89 @@
+[tool.poetry]
+name = "auto-subs"
+version = "0.3.0"
+description = "A desktop application to automatically generate, edit, and style subtitles for videos using OpenAI's Whisper."
+authors = ["mateusz_kow <auto-subs+kowalski.mateusz.1lo1@gmail.com>"]
+
+license = "MIT"
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.scripts]
+start = "main:main"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <3.13"
+
+# Core Application & GUI
+PySide6 = "~=6.7.0"
+qasync = "~=0.27.1"
+appdirs = "~=1.4.4"
+numpy = "<2.0.0"
+
+# Comment the next line if you are using windows and have issues with downloading triton
+openai-whisper = "^20231117"
+
+# Video & Media
+python-mpv = "^1.0.5"
+
+# Utilities
+python-dotenv = "~=1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+# Code Quality & Formatting
+ruff = "^0.4.8"
+black = "^24.4.2"
+
+# Static Type Checking
+mypy = "^1.10.0"
+
+# Testing Framework
+pytest = "^8.2.2"
+pytest-qt = "^4.4.0"
+pytest-asyncio = "^0.23.7"
+pytest-mock = "^3.14.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# --- Tool Configurations ---
+
+[tool.ruff]
+fix = true
+line-length = 120
+lint.select = [
+    "E", "F", "W", "I", "D", "B", "UP", "C4", "SIM", "PLW"
+]
+lint.ignore = [
+    "D100", "D104", "D415", "D401", "D400", "D212", "D205", "D413", "D203",
+    "D102", "D107", "E501",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_return_any = true
+check_untyped_defs = true
+no_implicit_optional = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["mpv.*", "whisper.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+markers = ["asyncio: mark test as asyncio"]
