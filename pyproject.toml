@@ -1,35 +1,28 @@
 [tool.poetry]
 name = "auto-subs"
-version = "0.1.0"
+version = "0.3.0"
 description = "A desktop application to automatically generate, edit, and style subtitles for videos using OpenAI's Whisper."
-authors = ["mateusz_kow <ytsum+kowalski.mateusz.1lo1@gmail.com>"]
+authors = ["mateusz_kow <auto-subs+kowalski.mateusz.1lo1@gmail.com>"]
 
 license = "MIT"
 readme = "README.md"
-#requires-python = ">=3.9, <3.12"  # Whisper/Torch mają lepsze wsparcie dla starszych wersji Pythona
 packages = [{include = "src"}]
 
 [tool.poetry.scripts]
-# Pozwala uruchomić aplikację komendą: poetry run start
 start = "main:main"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.13"
 
 # Core Application & GUI
-PySide6 = "~=6.7.0"  # Zmieniono z 6.9 na 6.7 dla szerszej kompatybilności, można dostosować
+PySide6 = "~=6.7.0"
 qasync = "~=0.27.1"
 appdirs = "~=1.4.4"
 
-# AI & Transcription
-# Whisper jest teraz oficjalnie na PyPI jako openai-whisper
+# Comment the next line if you are using windows and have issues with downloading triton
 openai-whisper = "^20231117"
-# Torch jest zależnością Whisper, ale warto go jawnie zdefiniować dla przejrzystości
-torch = ">=2.0.0"
-numpy = "<2.0.0"  # Niezbędne dla Whisper i Torch
 
 # Video & Media
-# Zgodnie z kodem używasz python-mpv
 python-mpv = "^1.0.5"
 
 # Utilities
@@ -45,7 +38,9 @@ mypy = "^1.10.0"
 
 # Testing Framework
 pytest = "^8.2.2"
-pytest-qt = "^4.4.0" # Niezbędne do testowania widżetów Qt
+pytest-qt = "^4.4.0"
+pytest-asyncio = "^0.23.7"
+pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -55,45 +50,22 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
-# Wybór reguł do sprawdzania
 lint.select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes (błędy logiczne)
-    "W",    # pycodestyle warnings
-    "I",    # isort (sortowanie importów)
-#    "N",    # pep8-naming
-    "D",    # pydocstyle (konwencje docstringów)
-    "B",    # flake8-bugbear (potencjalne błędy)
-    "UP",   # pyupgrade (sugestie modernizacji składni)
-    "C4",   # flake8-comprehensions
-    "SIM",  # flake8-simplify
+    "E", "F", "W", "I", "D", "B", "UP", "C4", "SIM", "PLW"
 ]
-# Reguły do ignorowania
 lint.ignore = [
-    "D100",
-    "D104",
-    "D415",
-    "D401",
-    "D400",
-    "D212",
-    "D205",
-    "D413",
-    "D203",
-    # These will be supported in the future
-    "D102",
-    "D107",
-    "E501",
+    "D100", "D104", "D415", "D401", "D400", "D212", "D205", "D413", "D203",
+    "D102", "D107", "E501",
 ]
 
 [tool.ruff.lint.pydocstyle]
-convention = "google" # lub "numpy"
+convention = "google"
 
 [tool.black]
 line-length = 120
 target-version = ['py311']
 
 [tool.mypy]
-# Konfiguracja bazująca na twoim poprzednim, bardzo dobrym projekcie
 python_version = "3.11"
 ignore_missing_imports = true
 strict = true
@@ -104,17 +76,12 @@ check_untyped_defs = true
 no_implicit_optional = true
 show_error_codes = true
 
-# Dodatkowe ustawienia dla bibliotek trzecich
 [[tool.mypy.overrides]]
-module = [
-    "mpv.*",
-    "whisper.*",
-]
+module = ["mpv.*", "whisper.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
+markers = ["asyncio: mark test as asyncio"]

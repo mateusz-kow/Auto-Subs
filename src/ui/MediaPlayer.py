@@ -19,7 +19,7 @@ class MediaPlayer(QWidget):
             parent: Parent widget.
         """
         super().__init__(parent)
-        self.player: MPV = None
+        self.player: MPV | None = None
         self.mpv_initialized = False
 
         # Set up the layout

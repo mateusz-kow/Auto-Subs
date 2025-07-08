@@ -98,7 +98,7 @@ class TopBar(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "Text files (*.txt)")
         if path:
             try:
-                await asyncio.to_thread(SubtitleGenerator.to_txt, self.subtitles_manager._subtitles, path)
+                await asyncio.to_thread(SubtitleGenerator.to_txt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as TXT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{str(e)}")
@@ -109,7 +109,7 @@ class TopBar(QWidget):
         path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if path:
             try:
-                await asyncio.to_thread(SubtitleGenerator.to_srt, self.subtitles_manager._subtitles, path)
+                await asyncio.to_thread(SubtitleGenerator.to_srt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as SRT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export SRT:\n{str(e)}")
@@ -122,7 +122,7 @@ class TopBar(QWidget):
             try:
                 await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
-                    self.subtitles_manager._subtitles,
+                    self.subtitles_manager.subtitles,
                     self.style_manager.style,
                     path,
                 )
@@ -138,13 +138,13 @@ class TopBar(QWidget):
             try:
                 ass_subtitles = await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
-                    self.subtitles_manager._subtitles,
+                    self.subtitles_manager.subtitles,
                     self.style_manager.style,
                     None,
                 )
                 await asyncio.to_thread(
                     get_video_with_subtitles,
-                    self.video_manager._video_path,
+                    self.video_manager.video_path,
                     ass_subtitles,
                     path,
                 )

@@ -60,7 +60,7 @@ class VideoLayout(QVBoxLayout):
         Args:
             time (float): Timestamp in seconds to preview.
         """
-        if self.video_manager._video_path and time >= 0:
+        if self.video_manager.video_path and time >= 0:
             logger.debug(f"Seeking to preview time: {time:.2f}s")
             self.media_player_widget.set_timestamp(int(time * 1000))
 
@@ -103,7 +103,7 @@ class VideoLayout(QVBoxLayout):
             subtitles (Subtitles): The new subtitles object.
         """
         logger.info("Subtitles updated. Refreshing media with new subtitles.")
-        self.set_media_with_subtitles(self.video_manager._video_path, self.subtitles_manager.subtitles)
+        self.set_media_with_subtitles(self.video_manager.video_path, self.subtitles_manager.subtitles)
 
     def on_style_changed(self, style: dict) -> None:
         """
@@ -113,5 +113,5 @@ class VideoLayout(QVBoxLayout):
             style (dict): The new style dictionary.
         """
         logger.info("Style updated. Refreshing subtitles rendering.")
-        if self.subtitles_manager._subtitles:
-            self.set_subtitles_only(self.subtitles_manager._subtitles)
+        if self.subtitles_manager.subtitles:
+            self.set_subtitles_only(self.subtitles_manager.subtitles)

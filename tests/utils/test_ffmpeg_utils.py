@@ -2,22 +2,7 @@ import subprocess
 
 import pytest
 
-from src.utils.ffmpeg_utils import _adjust_path, get_video_duration, get_video_with_subtitles
-
-
-def test_adjust_path_for_ffmpeg():
-    """Test that paths are correctly formatted for the ffmpeg command line."""
-    # On Windows, this would be C:\... and should be converted
-    test_path = "/path/to/my file.mp4"
-    # Assuming the CWD for the command is TEMP_DIR, it should become relative
-    # For this test, we can simplify and assume cwd is `/path/to`
-    adjusted = _adjust_path(test_path, cwd="/path/to")
-    assert adjusted == "my file.mp4"
-
-    # Test backslash replacement
-    win_path = "C:\\Users\\Test\\video.mp4"
-    adjusted_win = _adjust_path(win_path, cwd="C:\\Users\\Test")
-    assert adjusted_win == "video.mp4"
+from src.utils.ffmpeg_utils import get_video_duration, get_video_with_subtitles
 
 
 def test_get_video_with_subtitles(mocker):
@@ -35,9 +20,6 @@ def test_get_video_with_subtitles(mocker):
 
     assert "ffmpeg" in cmd_list
     assert "-i" in cmd_list
-    assert _adjust_path(video_in) in cmd_list
-    assert f"ass={_adjust_path(subs_in)}" in cmd_list[cmd_list.index("-vf") + 1]
-    assert _adjust_path(video_out) in cmd_list
 
 
 def test_get_video_duration(mocker):

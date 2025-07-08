@@ -71,3 +71,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
             self._parent_controller.handle_segment_click(self, event)
         else:
             self._parent_controller.show_context_menu(event.screenPos())
+
+    @property
+    def index(self):
+        return self._index

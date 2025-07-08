@@ -77,8 +77,8 @@ class SegmentsBar(QGraphicsView):
             segment_item (SubtitleSegmentBar): The clicked segment.
             event (QMouseEvent): The mouse event.
         """
-        logger.debug("Segment clicked (index=%d, modifiers=%s)", segment_item._index, event.modifiers())
-        self.segment_clicked.emit(segment_item._index)
+        logger.debug("Segment clicked (index=%d, modifiers=%s)", segment_item.index, event.modifiers())
+        self.segment_clicked.emit(segment_item.index)
 
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             self._toggle_segment_selection(segment_item)
@@ -164,18 +164,18 @@ class SegmentsBar(QGraphicsView):
                 self.scene.addItem(text)
 
     def _select_segment(self, segment_item: SubtitleSegmentBar):
-        logger.debug("Selecting segment %d", segment_item._index)
-        self.selected_segments.add(segment_item._index)
+        logger.debug("Selecting segment %d", segment_item.index)
+        self.selected_segments.add(segment_item.index)
         segment_item.select()
 
     def _toggle_segment_selection(self, segment_item: SubtitleSegmentBar):
-        if segment_item._index in self.selected_segments:
-            logger.debug("Deselecting segment %d", segment_item._index)
-            self.selected_segments.remove(segment_item._index)
+        if segment_item.index in self.selected_segments:
+            logger.debug("Deselecting segment %d", segment_item.index)
+            self.selected_segments.remove(segment_item.index)
             segment_item.deselect()
         else:
-            logger.debug("Adding segment to selection %d", segment_item._index)
-            self.selected_segments.add(segment_item._index)
+            logger.debug("Adding segment to selection %d", segment_item.index)
+            self.selected_segments.add(segment_item.index)
             segment_item.select()
 
     def _select_range(self, segment_item: SubtitleSegmentBar):
@@ -184,12 +184,12 @@ class SegmentsBar(QGraphicsView):
             return
 
         last_selected = max(self.selected_segments)
-        start, end = sorted((last_selected, segment_item._index))
+        start, end = sorted((last_selected, segment_item.index))
         logger.debug("Selecting range: %d to %d", start, end)
 
         for item in self.scene.items():
-            if isinstance(item, SubtitleSegmentBar) and start <= item._index <= end:
-                self.selected_segments.add(item._index)
+            if isinstance(item, SubtitleSegmentBar) and start <= item.index <= end:
+                self.selected_segments.add(item.index)
                 item.select()
 
     def clear_selection(self):
