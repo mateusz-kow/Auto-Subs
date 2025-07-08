@@ -18,6 +18,7 @@ python = ">=3.9, <3.13"
 PySide6 = "~=6.7.0"
 qasync = "~=0.27.1"
 appdirs = "~=1.4.4"
+numpy = "<2.0.0"
 
 # Comment the next line if you are using windows and have issues with downloading triton
 openai-whisper = "^20231117"
@@ -49,6 +50,7 @@ build-backend = "poetry.core.masonry.api"
 # --- Tool Configurations ---
 
 [tool.ruff]
+fix = true
 line-length = 120
 lint.select = [
     "E", "F", "W", "I", "D", "B", "UP", "C4", "SIM", "PLW"

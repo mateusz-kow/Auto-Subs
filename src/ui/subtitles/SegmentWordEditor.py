@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -41,8 +41,8 @@ class SegmentWordEditor(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["#", "Text", "Start (s)", "End (s)"])
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["Text", "Start (s)", "End (s)"])
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
@@ -74,12 +74,9 @@ class SegmentWordEditor(QWidget):
         self.table.setRowCount(len(segment.words))
 
         for row_idx, word in enumerate(segment.words):
-            self.table.setItem(row_idx, 0, QTableWidgetItem(str(row_idx + 1)))
-            self.table.setItem(row_idx, 1, QTableWidgetItem(word.text))
-            self.table.setItem(row_idx, 2, QTableWidgetItem(f"{word.start:.3f}"))
-            self.table.setItem(row_idx, 3, QTableWidgetItem(f"{word.end:.3f}"))
-            # Make the ID column read-only
-            self.table.item(row_idx, 0).setFlags(self.table.item(row_idx, 0).flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.table.setItem(row_idx, 0, QTableWidgetItem(word.text))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(f"{word.start:.3f}"))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(f"{word.end:.3f}"))
 
         self._block_signals = False
         logger.info(f"Populated word editor for segment {segment_index} with {len(segment.words)} words.")
@@ -100,9 +97,9 @@ class SegmentWordEditor(QWidget):
 
         row = item.row()
         try:
-            text = self.table.item(row, 1).text().strip()
-            start = float(self.table.item(row, 2).text())
-            end = float(self.table.item(row, 3).text())
+            text = self.table.item(row, 0).text().strip()
+            start = float(self.table.item(row, 1).text())
+            end = float(self.table.item(row, 2).text())
 
             if start < 0 or end < start:
                 raise ValueError("Invalid timestamp values.")
