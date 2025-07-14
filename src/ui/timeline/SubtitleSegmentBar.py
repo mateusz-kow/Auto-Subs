@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush
 from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsSceneMouseEvent
@@ -10,7 +14,9 @@ from src.ui.timeline.constants import (
     SUBTITLE_BAR_Y,
     TIME_SCALE_FACTOR,
 )
-from src.ui.timeline.SegmentsBar import SegmentsBar
+
+if TYPE_CHECKING:
+    from src.ui.timeline.SegmentsBar import SegmentsBar
 
 
 class SubtitleSegmentBar(QGraphicsRectItem):
@@ -36,7 +42,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         """
         super().__init__()
         self._index = index
-        self._parent_controller = parent_controller  # Reference to the parent controller
+        self._parent_controller: SegmentsBar = parent_controller  # Reference to the parent controller
 
         # Set the size and position of the subtitle segment
         self.setRect(

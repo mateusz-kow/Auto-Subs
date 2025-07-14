@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from logging import getLogger
-from typing import Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QBrush, QKeyEvent, QPen, Qt
@@ -12,6 +14,9 @@ from src.ui.timeline.constants import (
     VIDEO_BAR_COLOR,
     VIDEO_BAR_Y,
 )
+
+if TYPE_CHECKING:
+    from src.ui.timeline.SegmentsBar import SegmentsBar
 
 logger = getLogger(__name__)
 
@@ -32,7 +37,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         fill_item (QGraphicsRectItem): The graphical fill representing playback progress.
     """
 
-    def __init__(self, video_duration: float, parent_controller: Any) -> None:
+    def __init__(self, video_duration: float, parent_controller: SegmentsBar) -> None:
         """
         Initialize the VideoSegmentBar.
 
@@ -46,7 +51,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         self.total_frames: int = int(video_duration * FRAME_RATE)
         self.current_frame: int = 0
         self.is_dragging: bool = False
-        self.parent_controller: Any = parent_controller
+        self.parent_controller: SegmentsBar = parent_controller
 
         # Set up the video bar background
         self.setRect(QRectF(0, 0, video_duration * TIME_SCALE_FACTOR, BAR_HEIGHT))
