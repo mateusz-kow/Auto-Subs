@@ -26,7 +26,7 @@ class SegmentWordEditor(QWidget):
     word_deleted = Signal(int)
     add_new_word_requested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize the SegmentWordEditor."""
         super().__init__(parent)
         self._current_segment_index: int | None = None

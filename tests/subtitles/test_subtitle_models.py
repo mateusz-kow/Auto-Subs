@@ -1,10 +1,13 @@
+from typing import Any
+
 import pytest
+from pytest_mock import MockerFixture
 
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 
 
 # --- SubtitleWord Tests ---
-def test_subtitle_word_init():
+def test_subtitle_word_init() -> None:
     """Test initialization of SubtitleWord with trimming and correct timing."""
     word = SubtitleWord("  test  ", 1.0, 2.0)
     assert word.text == "test"
@@ -12,7 +15,7 @@ def test_subtitle_word_init():
     assert word.end == 2.0
 
 
-def test_subtitle_word_empty():
+def test_subtitle_word_empty() -> None:
     """Test the empty static method of SubtitleWord returns default empty values."""
     word = SubtitleWord.empty()
     assert word.text == ""
@@ -20,7 +23,7 @@ def test_subtitle_word_empty():
     assert word.end == 0
 
 
-def test_subtitle_word_equality():
+def test_subtitle_word_equality() -> None:
     """Test equality comparison of SubtitleWord instances."""
     word1 = SubtitleWord("a", 1, 2)
     word2 = SubtitleWord("a", 1, 2)
@@ -31,7 +34,7 @@ def test_subtitle_word_equality():
 
 
 # --- SubtitleSegment Tests ---
-def test_subtitle_segment_init_and_refresh():
+def test_subtitle_segment_init_and_refresh() -> None:
     """Test SubtitleSegment initialization and automatic sorting/timing."""
     w1 = SubtitleWord("world", 1.0, 1.5)
     w2 = SubtitleWord("Hello", 0.5, 0.9)
@@ -42,7 +45,7 @@ def test_subtitle_segment_init_and_refresh():
     assert segment.words[1].text == "world"
 
 
-def test_subtitle_segment_str():
+def test_subtitle_segment_str() -> None:
     """Test string representation of SubtitleSegment."""
     segment = SubtitleSegment(
         [
@@ -53,7 +56,7 @@ def test_subtitle_segment_str():
     assert str(segment) == "Hello world."
 
 
-def test_subtitle_segment_add_word():
+def test_subtitle_segment_add_word() -> None:
     """Test adding a word to an empty SubtitleSegment."""
     segment = SubtitleSegment.empty()
     segment.add_word(SubtitleWord("New", 10.0, 11.0))
@@ -64,7 +67,7 @@ def test_subtitle_segment_add_word():
 
 # --- Subtitles Tests ---
 @pytest.fixture
-def sample_transcription():
+def sample_transcription() -> dict[str, Any]:
     """Fixture providing a sample transcription dictionary."""
     return {
         "text": "Hello world. Test sentence.",
@@ -85,7 +88,7 @@ def sample_transcription():
     }
 
 
-def test_subtitles_from_transcription(sample_transcription, mocker):
+def test_subtitles_from_transcription(sample_transcription: dict[str, Any], mocker: MockerFixture) -> None:
     """Test creating Subtitles from a transcription dictionary using a mocked segmenter."""
     mocker.patch(
         "src.subtitles.models.segment_words",
@@ -106,7 +109,7 @@ def test_subtitles_from_transcription(sample_transcription, mocker):
     assert subs.segments[1].end == 3.0
 
 
-def test_subtitles_refresh_sorts_segments():
+def test_subtitles_refresh_sorts_segments() -> None:
     """Test that Subtitles correctly sorts segments by start time."""
     seg1 = SubtitleSegment([SubtitleWord("Later", 5.0, 6.0)])
     seg2 = SubtitleSegment([SubtitleWord("First", 1.0, 2.0)])
@@ -115,7 +118,7 @@ def test_subtitles_refresh_sorts_segments():
     assert subs.segments[1].start == 5.0
 
 
-def test_subtitles_str(sample_transcription, mocker):
+def test_subtitles_str(sample_transcription: dict[str, Any], mocker: MockerFixture) -> None:
     """Test string representation of Subtitles object."""
     mocker.patch(
         "src.subtitles.models.segment_words",

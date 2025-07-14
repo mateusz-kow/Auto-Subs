@@ -1,51 +1,54 @@
+from pathlib import Path
+
 import pytest
+from pytest_mock import MockerFixture
 
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 
 
 @pytest.fixture
-def sample_word_1():
+def sample_word_1() -> SubtitleWord:
     """Return a sample SubtitleWord representing the word 'Hello'."""
     return SubtitleWord("Hello", 0.0, 0.5)
 
 
 @pytest.fixture
-def sample_word_2():
+def sample_word_2() -> SubtitleWord:
     """Return a sample SubtitleWord representing the word 'world'."""
     return SubtitleWord("world", 0.6, 1.0)
 
 
 @pytest.fixture
-def sample_segment_1(sample_word_1, sample_word_2):
+def sample_segment_1(sample_word_1: SubtitleWord, sample_word_2: SubtitleWord) -> SubtitleSegment:
     """Return a sample SubtitleSegment containing two words."""
     return SubtitleSegment([sample_word_1, sample_word_2])
 
 
 @pytest.fixture
-def sample_segment_2():
+def sample_segment_2() -> SubtitleSegment:
     """Return a sample SubtitleSegment containing a single word."""
     return SubtitleSegment([SubtitleWord("Test", 1.5, 2.0)])
 
 
 @pytest.fixture
-def sample_subtitles(sample_segment_1, sample_segment_2):
+def sample_subtitles(sample_segment_1: SubtitleSegment, sample_segment_2: SubtitleSegment) -> Subtitles:
     """Return a Subtitles object composed of two segments."""
     return Subtitles([sample_segment_1, sample_segment_2])
 
 
 @pytest.fixture
-def subtitles_manager(sample_subtitles):
+def subtitles_manager(sample_subtitles: Subtitles) -> SubtitlesManager:
     """Return a SubtitlesManager initialized with sample subtitles."""
     return SubtitlesManager(sample_subtitles)
 
 
-def test_initialization(subtitles_manager, sample_subtitles):
+def test_initialization(subtitles_manager: SubtitlesManager, sample_subtitles: Subtitles) -> None:
     """Test that SubtitlesManager initializes with the correct subtitles."""
     assert subtitles_manager.subtitles == sample_subtitles
 
 
-def test_set_subtitles_notifies(mocker):
+def test_set_subtitles_notifies(mocker: MockerFixture) -> None:
     """Test that setting new subtitles triggers listener notification."""
     manager = SubtitlesManager()
     mock_listener = mocker.MagicMock()
@@ -58,7 +61,7 @@ def test_set_subtitles_notifies(mocker):
     mock_listener.assert_called_once_with(new_subs)
 
 
-def test_delete_word(subtitles_manager, mocker):
+def test_delete_word(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
     """Test deleting a word from a segment and notifying listeners."""
     mock_listener = mocker.MagicMock()
     subtitles_manager.add_subtitles_listener(mock_listener)
@@ -71,20 +74,20 @@ def test_delete_word(subtitles_manager, mocker):
     mock_listener.assert_called_once()
 
 
-def test_delete_segments(subtitles_manager, mocker):
+def test_delete_segments(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
     """Test deleting a subtitle segment by index and notifying listeners."""
     mock_listener = mocker.MagicMock()
     subtitles_manager.add_subtitles_listener(mock_listener)
     assert len(subtitles_manager.subtitles.segments) == 2
 
-    subtitles_manager.delete_segments([0])
+    subtitles_manager.delete_segments({0})
 
     assert len(subtitles_manager.subtitles.segments) == 1
     assert subtitles_manager.subtitles.segments[0].words[0].text == "Test"
     mock_listener.assert_called_once()
 
 
-def test_add_empty_segment(subtitles_manager, mocker):
+def test_add_empty_segment(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
     """Test that an empty segment is added and listeners are notified."""
     mock_listener = mocker.MagicMock()
     subtitles_manager.add_subtitles_listener(mock_listener)
@@ -97,7 +100,7 @@ def test_add_empty_segment(subtitles_manager, mocker):
     mock_listener.assert_called_once()
 
 
-def test_merge_segments(subtitles_manager, mocker):
+def test_merge_segments(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
     """Test merging multiple segments into one and notifying listeners."""
     mock_listener = mocker.MagicMock()
     subtitles_manager.add_subtitles_listener(mock_listener)
@@ -105,7 +108,7 @@ def test_merge_segments(subtitles_manager, mocker):
     subtitles_manager.subtitles.add_segment(SubtitleSegment([SubtitleWord("Again", 3.0, 3.5)]))
     assert len(subtitles_manager.subtitles.segments) == 3
 
-    subtitles_manager.merge_segments([0, 1, 2])
+    subtitles_manager.merge_segments({0, 1, 2})
 
     assert len(subtitles_manager.subtitles.segments) == 1
     merged_segment = subtitles_manager.subtitles.segments[0]
@@ -117,7 +120,7 @@ def test_merge_segments(subtitles_manager, mocker):
     mock_listener.assert_called_once()
 
 
-def test_set_word(subtitles_manager, mocker, sample_word_1):
+def test_set_word(subtitles_manager: SubtitlesManager, mocker: MockerFixture, sample_word_1: SubtitleWord) -> None:
     """Test replacing a word in a segment and notifying listeners."""
     mock_listener = mocker.MagicMock()
     subtitles_manager.add_subtitles_listener(mock_listener)
@@ -132,9 +135,9 @@ def test_set_word(subtitles_manager, mocker, sample_word_1):
     mock_listener.assert_called_once()
 
 
-def test_on_video_changed_clears_subtitles(subtitles_manager):
+def test_on_video_changed_clears_subtitles(subtitles_manager: SubtitlesManager) -> None:
     """Test that subtitles are cleared when the video is changed."""
     assert subtitles_manager.subtitles is not None
-    subtitles_manager.on_video_changed("/fake/video.mp4")
+    subtitles_manager.on_video_changed(Path("/fake/video.mp4"))
     assert subtitles_manager.subtitles is not None
     assert len(subtitles_manager.subtitles.segments) == 0

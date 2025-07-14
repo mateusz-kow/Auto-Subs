@@ -1,7 +1,8 @@
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QBrush, QMouseEvent
-from PySide6.QtWidgets import QGraphicsRectItem
+from PySide6.QtGui import QBrush
+from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsSceneMouseEvent
 
+from src.subtitles.models import SubtitleSegment
 from src.ui.timeline.constants import (
     SELECTED_SEGMENT_COLOR,
     SUBTITLE_BAR_COLOR,
@@ -9,6 +10,7 @@ from src.ui.timeline.constants import (
     SUBTITLE_BAR_Y,
     TIME_SCALE_FACTOR,
 )
+from src.ui.timeline.SegmentsBar import SegmentsBar
 
 
 class SubtitleSegmentBar(QGraphicsRectItem):
@@ -23,7 +25,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         _parent_controller: A reference to the controller managing this item.
     """
 
-    def __init__(self, segment, index: int, parent_controller):
+    def __init__(self, segment: SubtitleSegment, index: int, parent_controller: SegmentsBar) -> None:
         """
         Initialize the subtitle segment bar.
 
@@ -52,15 +54,15 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         self.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsFocusable, True)
 
-    def select(self):
+    def select(self) -> None:
         """Visually indicate that the segment is selected."""
         self.setBrush(QBrush(SELECTED_SEGMENT_COLOR))
 
-    def deselect(self):
+    def deselect(self) -> None:
         """Revert the visual state to indicate the segment is not selected."""
         self.setBrush(QBrush(SUBTITLE_BAR_COLOR))
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """
         Handle mouse press events for interaction.
 
@@ -73,5 +75,5 @@ class SubtitleSegmentBar(QGraphicsRectItem):
             self._parent_controller.show_context_menu(event.screenPos())
 
     @property
-    def index(self):
+    def index(self) -> int:
         return self._index

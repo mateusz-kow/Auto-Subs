@@ -15,7 +15,7 @@ from src.ui.VideoLayout import VideoLayout
 class SubtitleEditorApp(QWidget):
     """Main application window for the Subtitle Editor."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Auto Subs")
 

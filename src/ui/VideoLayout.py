@@ -1,5 +1,7 @@
 import asyncio
 from logging import getLogger
+from pathlib import Path
+from typing import Any
 
 from PySide6.QtWidgets import QSizePolicy, QVBoxLayout
 
@@ -73,13 +75,13 @@ class VideoLayout(QVBoxLayout):
         """
         logger.info("Updating subtitles only...")
 
-        async def task():
+        async def task() -> None:
             ass_path = await asyncio.to_thread(SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None)
             self.media_player_widget.set_subtitles_only(ass_path)
 
         asyncio.create_task(task())
 
-    def set_media_with_subtitles(self, video_path: str, subtitles: Subtitles) -> None:
+    def set_media_with_subtitles(self, video_path: Path, subtitles: Subtitles) -> None:
         """
         Set both the video file and subtitles in the media player.
 
@@ -89,7 +91,7 @@ class VideoLayout(QVBoxLayout):
         """
         logger.info(f"Updating media: {video_path}")
 
-        async def task():
+        async def task() -> None:
             ass_path = await asyncio.to_thread(SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None)
             self.media_player_widget.set_media(video_path, ass_path)
 
@@ -105,7 +107,7 @@ class VideoLayout(QVBoxLayout):
         logger.info("Subtitles updated. Refreshing media with new subtitles.")
         self.set_media_with_subtitles(self.video_manager.video_path, self.subtitles_manager.subtitles)
 
-    def on_style_changed(self, style: dict) -> None:
+    def on_style_changed(self, style: dict[str, Any]) -> None:
         """
         Callback invoked when subtitle style settings are updated.
 

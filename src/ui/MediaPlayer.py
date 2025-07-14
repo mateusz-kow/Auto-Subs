@@ -1,5 +1,6 @@
 import os
 from logging import getLogger
+from pathlib import Path
 
 from mpv import MPV
 from PySide6.QtGui import QCloseEvent, QShowEvent
@@ -11,7 +12,7 @@ logger = getLogger(__name__)
 class MediaPlayer(QWidget):
     """A media player widget using the MPV library for video playback."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         """
         Initialize the MediaPlayer widget. MPV instance is initialized on first show.
 
@@ -30,7 +31,7 @@ class MediaPlayer(QWidget):
         # Set a minimum size for the widget
         self.setMinimumSize(320, 240)
 
-    def _initialize_mpv(self):
+    def _initialize_mpv(self) -> bool:
         """Initialize the MPV player instance. This should be called when the widget's window ID is valid."""
         if self.mpv_initialized:
             return True
@@ -52,20 +53,20 @@ class MediaPlayer(QWidget):
             self.mpv_initialized = False
             return False
 
-    def showEvent(self, event: QShowEvent):
+    def showEvent(self, event: QShowEvent) -> None:
         """Handle widget show event to initialize MPV when the widget becomes visible."""
         super().showEvent(event)
         if not self.mpv_initialized and self.isVisible() and not self._initialize_mpv():
             logger.error("MPV initialization failed during showEvent.")
 
-    def _ensure_player_ready(self):
+    def _ensure_player_ready(self) -> bool:
         """Check if the MPV player is initialized and ready for commands."""
         if not self.player:
             logger.warning("MPV player is not initialized or has been terminated.")
             return False
         return True
 
-    def set_subtitles_only(self, subtitle_path: str):
+    def set_subtitles_only(self, subtitle_path: Path) -> None:
         """
         Add a subtitle file for playback.
 
@@ -74,6 +75,7 @@ class MediaPlayer(QWidget):
         """
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         if not subtitle_path or not os.path.exists(subtitle_path):
             logger.warning(f"Invalid subtitle path: {subtitle_path}.")
@@ -94,7 +96,7 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to set subtitles: {e}", exc_info=True)
 
-    def set_media(self, video_path: str, subtitle_path: str = None):
+    def set_media(self, video_path: Path, subtitle_path: Path | None = None) -> None:
         """
         Set the media file and optional subtitle file for playback.
 
@@ -104,6 +106,7 @@ class MediaPlayer(QWidget):
         """
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         if not video_path or not os.path.exists(video_path):
             logger.warning(f"Invalid video path: {video_path}.")
@@ -119,10 +122,11 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to set media: {e}", exc_info=True)
 
-    def play(self):
+    def play(self) -> None:
         """Play the media by unpausing."""
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         try:
             if not self.player.filename:
@@ -134,10 +138,11 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to play media: {e}", exc_info=True)
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause media playback."""
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         try:
             if not self.player.filename:
@@ -149,10 +154,11 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to pause media: {e}", exc_info=True)
 
-    def toggle_pause_state(self):
+    def toggle_pause_state(self) -> None:
         """Toggle the pause state of the media. If paused, resume playback; otherwise, pause."""
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         try:
             if not self.player.filename:
@@ -165,7 +171,7 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to toggle pause state: {e}", exc_info=True)
 
-    def set_timestamp(self, timestamp: int):
+    def set_timestamp(self, timestamp: int) -> None:
         """
         Set the playback position to the given timestamp.
 
@@ -174,6 +180,7 @@ class MediaPlayer(QWidget):
         """
         if not self._ensure_player_ready():
             return
+        assert self.player is not None
 
         try:
             if not self.player.filename:
@@ -186,7 +193,7 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to set timestamp: {e}", exc_info=True)
 
-    def closeEvent(self, event: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """
         Handle widget close event to release MPV resources.
 

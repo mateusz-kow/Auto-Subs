@@ -1,10 +1,12 @@
+from typing import Any
+
 from src.subtitles.segmenter import segment_words
 
 
 class SubtitleWord:
     """Represents a single word in a subtitle with its text and timing."""
 
-    def __init__(self, text: str, start: float, end: float):
+    def __init__(self, text: str, start: float, end: float) -> None:
         """
         Initialize a SubtitleWord instance.
 
@@ -28,7 +30,7 @@ class SubtitleWord:
             return False
         return self.text == other.text and self.start == other.start and self.end == other.end
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the SubtitleWord."""
         return f"SubtitleWord(text='{self.text}', start={self.start}, end={self.end})"
 
@@ -36,7 +38,7 @@ class SubtitleWord:
 class SubtitleSegment:
     """Represents a segment of subtitles containing multiple words."""
 
-    def __init__(self, words: list[SubtitleWord]):
+    def __init__(self, words: list[SubtitleWord]) -> None:
         """
         Initialize a SubtitleSegment instance.
 
@@ -63,11 +65,11 @@ class SubtitleSegment:
             return False
         return self.words == other.words
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the SubtitleSegment."""
         return f"SubtitleSegment(start={self.start}, end={self.end}, words={self.words})"
 
-    def add_word(self, word: SubtitleWord = None) -> None:
+    def add_word(self, word: SubtitleWord | None = None) -> None:
         """
         Add a word to the segment.
 
@@ -108,7 +110,7 @@ class Subtitles:
         return cls([])
 
     @classmethod
-    def from_transcription(cls, transcription: dict) -> "Subtitles":
+    def from_transcription(cls, transcription: dict[str, Any]) -> "Subtitles":
         """
         Create a Subtitles instance from a transcription dictionary.
 
@@ -129,7 +131,7 @@ class Subtitles:
         """Return the subtitles as a string of concatenated segments."""
         return "\n".join(str(segment) for segment in self.segments)
 
-    def add_segment(self, new_segment: SubtitleSegment = None) -> None:
+    def add_segment(self, new_segment: SubtitleSegment | None = None) -> None:
         """
         Add a new segment to the subtitles.
 

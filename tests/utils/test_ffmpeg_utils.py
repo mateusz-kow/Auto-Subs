@@ -1,16 +1,18 @@
 import subprocess
+from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 from src.utils.ffmpeg_utils import get_video_duration, get_video_with_subtitles
 
 
-def test_get_video_with_subtitles(mocker):
+def test_get_video_with_subtitles(mocker: MockerFixture) -> None:
     """Test that the ffmpeg command for burning subtitles is constructed correctly."""
     mock_run = mocker.patch("subprocess.run")
-    video_in = "input.mp4"
-    subs_in = "subs.ass"
-    video_out = "output.mp4"
+    video_in = Path("input.mp4")
+    subs_in = Path("subs.ass")
+    video_out = Path("output.mp4")
 
     get_video_with_subtitles(video_in, subs_in, video_out)
 
@@ -22,7 +24,7 @@ def test_get_video_with_subtitles(mocker):
     assert "-i" in cmd_list
 
 
-def test_get_video_duration(mocker):
+def test_get_video_duration(mocker: MockerFixture) -> None:
     """Test that video duration is correctly parsed from ffprobe output."""
     json_output = '{"format": {"duration": "123.45"}}'
     mock_run = mocker.patch("subprocess.run")
@@ -38,7 +40,7 @@ def test_get_video_duration(mocker):
     assert "format=duration" in cmd_list
 
 
-def test_get_video_duration_raises_error(mocker):
+def test_get_video_duration_raises_error(mocker: MockerFixture) -> None:
     """Test that a RuntimeError is raised if ffprobe fails."""
     mocker.patch(
         "subprocess.run",

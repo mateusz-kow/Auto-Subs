@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QCheckBox, QColorDialog, QPushButton, QVBoxLayout
@@ -20,7 +22,7 @@ class HighlightStyleLayout(QVBoxLayout):
 
     settings_changed = Signal(object)
 
-    def __init__(self, style: dict):
+    def __init__(self, style: dict[str, Any]):
         """
         Initialize the highlight style configuration UI.
 
@@ -53,7 +55,7 @@ class HighlightStyleLayout(QVBoxLayout):
         # Load initial settings
         self.set_settings(style)
 
-    def _select_highlight_color(self):
+    def _select_highlight_color(self) -> None:
         """Open a color picker for the text highlight color."""
         color = QColorDialog.getColor(self.highlight_color)
         if color.isValid() and color != self.highlight_color:
@@ -61,7 +63,7 @@ class HighlightStyleLayout(QVBoxLayout):
             self.highlight_color_button.setStyleSheet(f"background-color: {color.name()}")
             self._emit_settings()
 
-    def _select_highlight_border_color(self):
+    def _select_highlight_border_color(self) -> None:
         """Open a color picker for the border highlight color."""
         color = QColorDialog.getColor(self.highlight_border_color)
         if color.isValid() and color != self.highlight_border_color:
@@ -69,11 +71,11 @@ class HighlightStyleLayout(QVBoxLayout):
             self.highlight_border_button.setStyleSheet(f"background-color: {color.name()}")
             self._emit_settings()
 
-    def _emit_settings(self):
+    def _emit_settings(self) -> None:
         """Emit the current settings dictionary to listeners."""
         self.settings_changed.emit(self.get_settings())
 
-    def get_settings(self) -> dict:
+    def get_settings(self) -> dict[str, Any]:
         """
         Retrieve the current highlight style as a dictionary.
 
@@ -88,7 +90,7 @@ class HighlightStyleLayout(QVBoxLayout):
             }
         }
 
-    def set_settings(self, settings: dict):
+    def set_settings(self, settings: dict[str, Any]) -> None:
         """
         Apply highlight style settings from a dictionary.
 

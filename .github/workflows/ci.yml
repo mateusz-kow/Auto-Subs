@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   lint-test-typecheck:
@@ -60,8 +60,8 @@ jobs:
         run: poetry run black --check .
 
       # Step 10: Static type checking with mypy
-#      - name: Type check with mypy
-#        run: poetry run mypy .
+      - name: Type check with mypy
+        run: poetry run mypy .
 
       # Step 11: Run tests with pytest
       - name: Run test suite with pytest

@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -15,7 +16,6 @@ from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
-from src.utils.constants import STYLES_DIR
 from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 
@@ -27,28 +27,28 @@ class TopBar(QWidget):
         style_manager: StyleManager,
         subtitles_manager: SubtitlesManager,
         video_manager: VideoManager,
-    ):
+    ) -> None:
         super().__init__()
 
         self.style_manager = style_manager
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
 
-        self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(4, 4, 4, 4)
-        self.layout.setSpacing(8)
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(4, 4, 4, 4)
+        self.main_layout.setSpacing(8)
 
         # File Menu
         self.file_btn = QPushButton("File")
         self.file_menu = QMenu(self.file_btn)
         self.file_btn.setMenu(self.file_menu)
-        self.layout.addWidget(self.file_btn)
+        self.main_layout.addWidget(self.file_btn)
 
         # Style Menu
         self.style_btn = QPushButton("Style")
         self.style_menu = QMenu(self.style_btn)
         self.style_btn.setMenu(self.style_menu)
-        self.layout.addWidget(self.style_btn)
+        self.main_layout.addWidget(self.style_btn)
 
         # File Menu Actions
         self._setup_file_menu()
@@ -56,9 +56,9 @@ class TopBar(QWidget):
         # Style Menu Actions
         self._setup_style_menu()
 
-        self.layout.addStretch()
+        self.main_layout.addStretch()
 
-    def _setup_file_menu(self):
+    def _setup_file_menu(self) -> None:
         import_mp4 = QAction("Import MP4", self)
         import_mp4.triggered.connect(self.import_mp4)
 
@@ -78,7 +78,7 @@ class TopBar(QWidget):
         self.file_menu.addSeparator()
         self.file_menu.addActions([export_txt, export_srt, export_ass, export_mp4])
 
-    def _setup_style_menu(self):
+    def _setup_style_menu(self) -> None:
         reset_style = QAction("Reset to Default", self)
         reset_style.triggered.connect(self.reset_style_to_default)
 
@@ -92,33 +92,36 @@ class TopBar(QWidget):
         self.style_menu.addSeparator()
         self.style_menu.addActions([save_style, load_style])
 
-    @asyncSlot()
-    async def export_txt(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def export_txt(self) -> None:
         """Export subtitles as a plain text (.txt) file."""
-        path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "Text files (*.txt)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 await asyncio.to_thread(SubtitleGenerator.to_txt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as TXT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{str(e)}")
 
-    @asyncSlot()
-    async def export_srt(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def export_srt(self) -> None:
         """Export subtitles in SubRip (.srt) format."""
-        path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 await asyncio.to_thread(SubtitleGenerator.to_srt, self.subtitles_manager.subtitles, path)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as SRT:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export SRT:\n{str(e)}")
 
-    @asyncSlot()
-    async def export_ass(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def export_ass(self) -> None:
         """Export subtitles in Advanced SubStation Alpha (.ass) format."""
-        path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
@@ -130,11 +133,12 @@ class TopBar(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export ASS:\n{str(e)}")
 
-    @asyncSlot()
-    async def export_mp4(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def export_mp4(self) -> None:
         """Export the video with embedded subtitles in MP4 format."""
-        path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 ass_subtitles = await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
@@ -152,36 +156,39 @@ class TopBar(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export MP4:\n{str(e)}")
 
-    @asyncSlot()
-    async def import_mp4(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def import_mp4(self) -> None:
         """Prompt the user to select an MP4 file to import."""
-        path, _ = QFileDialog.getOpenFileName(self, "Import MP4", "", "MP4 files (*.mp4)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             self.video_manager.set_video_path(path)
 
     # --- Style Menu Handlers ---
 
-    def reset_style_to_default(self):
+    def reset_style_to_default(self) -> None:
         """Reset subtitle styling to the default settings."""
         self.style_manager.reset_to_default()
         QMessageBox.information(self, "Style Reset", "Style has been reset to the default configuration.")
 
-    @asyncSlot()
-    async def save_style_to_file(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        path, _ = QFileDialog.getSaveFileName(self, "Save Style", str(STYLES_DIR), "JSON files (*.json)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 await asyncio.to_thread(self.style_manager.save_to_file, path)
                 QMessageBox.information(self, "Style Saved", f"Style saved to:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Save Error", f"Failed to save style:\n{str(e)}")
 
-    @asyncSlot()
-    async def load_style_from_file(self):
+    @asyncSlot()  # type: ignore[misc]
+    async def load_style_from_file(self) -> None:
         """Load subtitle styling from a JSON file."""
-        path, _ = QFileDialog.getOpenFileName(self, "Load Style", str(STYLES_DIR), "JSON files (*.json)")
-        if path:
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        if selected_path:
+            path = Path(selected_path)
             try:
                 await asyncio.to_thread(self.style_manager.load_from_file, path)
                 QMessageBox.information(self, "Style Loaded", f"Style loaded from:\n{path}")

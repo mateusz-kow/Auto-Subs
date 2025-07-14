@@ -1,8 +1,9 @@
 from logging import getLogger
+from typing import Any
 
 from PySide6.QtCore import QRectF
-from PySide6.QtGui import QBrush, QMouseEvent, QPen, Qt
-from PySide6.QtWidgets import QGraphicsRectItem
+from PySide6.QtGui import QBrush, QKeyEvent, QPen, Qt
+from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsSceneMouseEvent
 
 from src.ui.timeline.constants import (
     BAR_HEIGHT,
@@ -31,7 +32,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         fill_item (QGraphicsRectItem): The graphical fill representing playback progress.
     """
 
-    def __init__(self, video_duration: float, parent_controller):
+    def __init__(self, video_duration: float, parent_controller: Any) -> None:
         """
         Initialize the VideoSegmentBar.
 
@@ -41,11 +42,11 @@ class VideoSegmentBar(QGraphicsRectItem):
         """
         super().__init__()
 
-        self.video_duration = video_duration
-        self.total_frames = int(video_duration * FRAME_RATE)
-        self.current_frame = 0
-        self.is_dragging = False
-        self.parent_controller = parent_controller
+        self.video_duration: float = video_duration
+        self.total_frames: int = int(video_duration * FRAME_RATE)
+        self.current_frame: int = 0
+        self.is_dragging: bool = False
+        self.parent_controller: Any = parent_controller
 
         # Set up the video bar background
         self.setRect(QRectF(0, 0, video_duration * TIME_SCALE_FACTOR, BAR_HEIGHT))
@@ -54,7 +55,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         self.setPos(0, VIDEO_BAR_Y)
 
         # Progress fill item
-        self.fill_item = QGraphicsRectItem(self)
+        self.fill_item: QGraphicsRectItem = QGraphicsRectItem(self)
         self.fill_item.setRect(QRectF(0, 0, 0, BAR_HEIGHT))
         self.fill_item.setBrush(QBrush(Qt.GlobalColor.green))
 
@@ -72,12 +73,12 @@ class VideoSegmentBar(QGraphicsRectItem):
         self.fill_item.setRect(QRectF(0, 0, width, BAR_HEIGHT))
         logger.debug("Progress updated to frame %d (%.2f seconds)", frame, frame / FRAME_RATE)
 
-    def keyPressEvent(self, event) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """
         Handle keyboard events to navigate frames.
 
         Args:
-            event: The key press event (e.g., left/right arrow).
+            event (QKeyEvent): The key press event (e.g., left/right arrow).
         """
         if event.key() == Qt.Key.Key_Left:
             self.update_progress(self.current_frame - 1)
@@ -85,35 +86,35 @@ class VideoSegmentBar(QGraphicsRectItem):
             self.update_progress(self.current_frame + 1)
         super().keyPressEvent(event)
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """
         Start dragging and update progress on mouse press.
 
         Args:
-            event (QMouseEvent): The mouse press event.
+            event (QGraphicsSceneMouseEvent): The mouse press event.
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = True
             self._update_progress_from_position(event.pos().x())
             logger.info("Mouse press detected. Dragging started.")
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """
         Update progress while dragging the mouse.
 
         Args:
-            event (QMouseEvent): The mouse move event.
+            event (QGraphicsSceneMouseEvent): The mouse move event.
         """
         if self.is_dragging:
             self._update_progress_from_position(event.pos().x())
             logger.debug("Dragging... Updated progress from mouse move.")
 
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """
         Stop dragging on mouse release.
 
         Args:
-            event (QMouseEvent): The mouse release event.
+            event (QGraphicsSceneMouseEvent): The mouse release event.
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = False

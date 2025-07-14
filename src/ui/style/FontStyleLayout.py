@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -11,12 +13,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QVBoxLayout,
+    QWidget,
 )
 
 from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
-def _create_labeled_row(label_text, widget):
+def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:
     """
     Utility function to create a horizontal layout row with a label and widget.
 
@@ -43,7 +46,7 @@ class FontStyleLayout(QVBoxLayout):
 
     settings_changed = Signal(object)
 
-    def __init__(self, style: dict):
+    def __init__(self, style: dict[str, Any]):
         """
         Initialize the font style layout with given style settings.
 
@@ -51,7 +54,8 @@ class FontStyleLayout(QVBoxLayout):
             style (dict): A dictionary containing font style configuration.
         """
         super().__init__()
-        self.color_buttons = {}
+        # Typowanie uproszczone do Any, aby uniknąć problemów z unią typów
+        self.color_buttons: dict[str, dict[str, Any]] = {}
 
         self.font_selector = QFontComboBox()
         self.font_selector.currentFontChanged.connect(self._emit_settings)
@@ -88,11 +92,11 @@ class FontStyleLayout(QVBoxLayout):
             self._update_color_button_style(name)
             self.addWidget(btn)
 
-        self.alignment = QComboBox()
-        self.alignment.addItems(["Left", "Center", "Right"])
-        self.alignment.setCurrentIndex(1)
-        self.alignment.currentIndexChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Alignment:", self.alignment))
+        self._alignment = QComboBox()
+        self._alignment.addItems(["Left", "Center", "Right"])
+        self._alignment.setCurrentIndex(1)
+        self._alignment.currentIndexChanged.connect(self._emit_settings)
+        self.addLayout(_create_labeled_row("Alignment:", self._alignment))
 
         # Margin spinboxes
         self.margin_l = QSpinBox()
@@ -149,35 +153,36 @@ class FontStyleLayout(QVBoxLayout):
 
         self.set_settings(style)
 
-    def _update_color_button_style(self, name: str):
+    def _update_color_button_style(self, name: str) -> None:
         """
         Update the background color of a color picker button.
 
         Args:
             name (str): The name of the color field (e.g., "primary_color").
         """
-        color = self.color_buttons[name]["color"]
-        self.color_buttons[name]["button"].setStyleSheet(f"background-color: {color.name()}")
+        color: QColor = self.color_buttons[name]["color"]
+        button: QPushButton = self.color_buttons[name]["button"]
+        button.setStyleSheet(f"background-color: {color.name()}")
 
-    def _select_color(self, name: str):
+    def _select_color(self, name: str) -> None:
         """
         Open a QColorDialog for selecting a new color.
 
         Args:
             name (str): The color field to update (e.g., "back_color").
         """
-        current = self.color_buttons[name]["color"]
+        current: QColor = self.color_buttons[name]["color"]
         color = QColorDialog.getColor(current)
         if color.isValid():
             self.color_buttons[name]["color"] = color
             self._update_color_button_style(name)
             self._emit_settings()
 
-    def _emit_settings(self):
+    def _emit_settings(self) -> None:
         """Emit the settings_changed signal with the current settings."""
         self.settings_changed.emit(self.get_settings())
 
-    def get_settings(self) -> dict:
+    def get_settings(self) -> dict[str, Any]:
         """
         Retrieve the current font style configuration.
 
@@ -195,7 +200,7 @@ class FontStyleLayout(QVBoxLayout):
             "secondary_color": qcolor_to_ass(self.color_buttons["secondary_color"]["color"]),
             "outline_color": qcolor_to_ass(self.color_buttons["outline_color"]["color"]),
             "back_color": qcolor_to_ass(self.color_buttons["back_color"]["color"]),
-            "alignment": self.alignment.currentIndex() + 1,
+            "alignment": self._alignment.currentIndex() + 1,
             "margin_l": self.margin_l.value(),
             "margin_r": self.margin_r.value(),
             "margin_v": self.margin_v.value(),
@@ -209,7 +214,7 @@ class FontStyleLayout(QVBoxLayout):
             "encoding": self.encoding.currentIndex(),
         }
 
-    def set_settings(self, settings: dict):
+    def set_settings(self, settings: dict[str, Any]) -> None:
         """
         Apply a font style configuration from a dictionary.
 
@@ -228,7 +233,7 @@ class FontStyleLayout(QVBoxLayout):
             self.color_buttons[name]["color"] = color
             self._update_color_button_style(name)
 
-        self.alignment.setCurrentIndex(max(0, settings.get("alignment", 2) - 1))
+        self._alignment.setCurrentIndex(max(0, settings.get("alignment", 2) - 1))
         self.margin_l.setValue(settings.get("margin_l", 10))
         self.margin_r.setValue(settings.get("margin_r", 10))
         self.margin_v.setValue(settings.get("margin_v", 10))

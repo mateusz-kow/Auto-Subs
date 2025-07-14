@@ -1,9 +1,14 @@
 from logging import getLogger
+from pathlib import Path
+from typing import Any, Callable
 
-from PySide6.QtCore import QPointF, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QMouseEvent, QPen, QWheelEvent
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView, QMenu
+from PySide6.QtCore import QPoint, QPointF, Qt, QTimer, Signal
+from PySide6.QtGui import QAction, QPen, QWheelEvent
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsTextItem, QGraphicsView, QMenu
 
+from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.VideoManager import VideoManager
+from src.subtitles.models import Subtitles
 from src.ui.timeline.constants import (
     BAR_HEIGHT,
     MAJOR_MARKER_HEIGHT,
@@ -36,7 +41,7 @@ class SegmentsBar(QGraphicsView):
 
     segment_clicked = Signal(int)
 
-    def __init__(self, subtitles_manager, video_manager):
+    def __init__(self, subtitles_manager: SubtitlesManager, video_manager: VideoManager) -> None:
         """
         Initialize the SegmentsBar.
 
@@ -48,12 +53,12 @@ class SegmentsBar(QGraphicsView):
 
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
-        self.selected_segments = set()
-        self.preview_time_listeners = []
+        self.selected_segments: set[int] = set()
+        self.preview_time_listeners: list[Callable[[float], None]] = []
 
         # Graphics scene setup
-        self.scene = QGraphicsScene()
-        self.setScene(self.scene)
+        self._scene = QGraphicsScene()
+        self.setScene(self._scene)
         self.setFixedHeight(SUBTITLE_BAR_HEIGHT + BAR_HEIGHT + VIDEO_BAR_Y)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -64,12 +69,12 @@ class SegmentsBar(QGraphicsView):
         self.subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
 
         self._step = 0
-        self._subtitles = None
-        self._video_duration = 0
+        self._subtitles = subtitles_manager.subtitles
+        self._video_duration = 0.0
 
         logger.debug("SegmentsBar initialized")
 
-    def handle_segment_click(self, segment_item: SubtitleSegmentBar, event: QMouseEvent):
+    def handle_segment_click(self, segment_item: SubtitleSegmentBar, event: QGraphicsSceneMouseEvent) -> None:
         """
         Handle mouse click on a subtitle segment.
 
@@ -88,7 +93,7 @@ class SegmentsBar(QGraphicsView):
             self.clear_selection()
             self._select_segment(segment_item)
 
-    def update_timeline(self, subtitles, video_duration: float):
+    def update_timeline(self, subtitles: Subtitles, video_duration: float) -> None:
         """
         Refresh the entire timeline with new subtitle and video data.
 
@@ -102,7 +107,7 @@ class SegmentsBar(QGraphicsView):
             video_duration,
         )
 
-        self.scene.clear()
+        self._scene.clear()
         self.setUpdatesEnabled(False)
 
         self._step = 0
@@ -111,7 +116,7 @@ class SegmentsBar(QGraphicsView):
 
         QTimer.singleShot(0, self._step_update)
 
-    def _step_update(self):
+    def _step_update(self) -> None:
         """Incremental, staged update of the timeline UI to avoid blocking the main thread."""
         try:
             if self._step == 0:
@@ -124,7 +129,7 @@ class SegmentsBar(QGraphicsView):
                 if self._subtitles and self._subtitles.segments:
                     for i, segment in enumerate(self._subtitles.segments):
                         segment_item = SubtitleSegmentBar(segment, i, self)
-                        self.scene.addItem(segment_item)
+                        self._scene.addItem(segment_item)
 
             elif self._step == 3:
                 total_duration = max(
@@ -132,7 +137,7 @@ class SegmentsBar(QGraphicsView):
                     self._subtitles.segments[-1].end if self._subtitles and self._subtitles.segments else 0,
                 )
                 scene_width = max(SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR))
-                self.scene.setSceneRect(0, 0, scene_width, self.height())
+                self._scene.setSceneRect(0, 0, scene_width, self.height())
                 self.setUpdatesEnabled(True)
                 logger.info("Timeline update complete")
                 return  # Exit the loop
@@ -143,32 +148,32 @@ class SegmentsBar(QGraphicsView):
         except Exception as e:
             logger.exception("Error during timeline update step %d: %s", self._step, e)
 
-    def _add_video_bar(self, video_duration: float):
+    def _add_video_bar(self, video_duration: float) -> None:
         """Add the video playback bar to the timeline."""
         video_bar = VideoSegmentBar(video_duration, self)
-        self.scene.addItem(video_bar)
+        self._scene.addItem(video_bar)
 
-    def _add_time_markers(self, video_duration: float):
+    def _add_time_markers(self, video_duration: float) -> None:
         """Add visual time markers to the timeline based on video duration."""
         for sec in range(0, int(video_duration) + 1, MINOR_MARKER_INTERVAL):
             x_pos = sec * TIME_SCALE_FACTOR
             is_major = sec % MAJOR_MARKER_INTERVAL == 0
             height = MAJOR_MARKER_HEIGHT if is_major else MINOR_MARKER_HEIGHT
 
-            self.scene.addLine(x_pos, MARKER_Y, x_pos, MARKER_Y + height, QPen(Qt.GlobalColor.white, 1))
+            self._scene.addLine(x_pos, MARKER_Y, x_pos, MARKER_Y + height, QPen(Qt.GlobalColor.white, 1))
 
             if is_major:
                 text = QGraphicsTextItem(f"{sec}s")
                 text.setDefaultTextColor(Qt.GlobalColor.white)
                 text.setPos(QPointF(x_pos - MARKER_TEXT_OFFSET / 2, MARKER_Y + height + 2))
-                self.scene.addItem(text)
+                self._scene.addItem(text)
 
-    def _select_segment(self, segment_item: SubtitleSegmentBar):
+    def _select_segment(self, segment_item: SubtitleSegmentBar) -> None:
         logger.debug("Selecting segment %d", segment_item.index)
         self.selected_segments.add(segment_item.index)
         segment_item.select()
 
-    def _toggle_segment_selection(self, segment_item: SubtitleSegmentBar):
+    def _toggle_segment_selection(self, segment_item: SubtitleSegmentBar) -> None:
         if segment_item.index in self.selected_segments:
             logger.debug("Deselecting segment %d", segment_item.index)
             self.selected_segments.remove(segment_item.index)
@@ -178,7 +183,7 @@ class SegmentsBar(QGraphicsView):
             self.selected_segments.add(segment_item.index)
             segment_item.select()
 
-    def _select_range(self, segment_item: SubtitleSegmentBar):
+    def _select_range(self, segment_item: SubtitleSegmentBar) -> None:
         if not self.selected_segments:
             self._select_segment(segment_item)
             return
@@ -187,20 +192,20 @@ class SegmentsBar(QGraphicsView):
         start, end = sorted((last_selected, segment_item.index))
         logger.debug("Selecting range: %d to %d", start, end)
 
-        for item in self.scene.items():
+        for item in self._scene.items():
             if isinstance(item, SubtitleSegmentBar) and start <= item.index <= end:
                 self.selected_segments.add(item.index)
                 item.select()
 
-    def clear_selection(self):
+    def clear_selection(self) -> None:
         """Deselect all currently selected subtitle segments."""
         logger.debug("Clearing all segment selections")
-        for item in self.scene.items():
+        for item in self._scene.items():
             if isinstance(item, SubtitleSegmentBar):
                 item.deselect()
         self.selected_segments.clear()
 
-    def show_context_menu(self, position):
+    def show_context_menu(self, position: QPoint) -> None:
         """
         Show context menu for subtitle segment actions.
 
@@ -222,22 +227,22 @@ class SegmentsBar(QGraphicsView):
         menu.addAction(merge_action)
         menu.exec(position)
 
-    def delete_segments(self):
+    def delete_segments(self) -> None:
         """Request deletion of all currently selected subtitle segments."""
         logger.info("Deleting %d selected segments", len(self.selected_segments))
         self.subtitles_manager.delete_segments(self.selected_segments)
 
-    def merge_segments(self):
+    def merge_segments(self) -> None:
         """Request merging of all currently selected subtitle segments."""
         logger.info("Merging %d selected segments", len(self.selected_segments))
         self.subtitles_manager.merge_segments(self.selected_segments)
 
-    def wheelEvent(self, event: QWheelEvent):
+    def wheelEvent(self, event: QWheelEvent) -> None:
         """Enable horizontal scrolling using the mouse wheel."""
         delta = event.angleDelta().y()
         self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta)
 
-    def notify_preview_time_change(self, timestamp: float):
+    def notify_preview_time_change(self, timestamp: float) -> None:
         """
         Notify registered listeners that the preview time has changed.
 
@@ -248,7 +253,7 @@ class SegmentsBar(QGraphicsView):
         for listener in self.preview_time_listeners:
             listener(timestamp)
 
-    def add_preview_time_listener(self, listener):
+    def add_preview_time_listener(self, listener: Callable[[float], Any]) -> None:
         """
         Add a listener for preview time updates.
 
@@ -261,7 +266,7 @@ class SegmentsBar(QGraphicsView):
         else:
             logger.warning("Listener already registered: %s", listener)
 
-    def on_subtitles_changed(self, subtitles):
+    def on_subtitles_changed(self, subtitles: Subtitles) -> None:
         """
         Callback for subtitle data changes.
 
@@ -273,7 +278,7 @@ class SegmentsBar(QGraphicsView):
         video_duration = getattr(self.video_manager, "_video_duration", 0)
         self.update_timeline(subtitles, video_duration)
 
-    def on_video_changed(self, video_path: str):
+    def on_video_changed(self, video_path: Path) -> None:
         """
         Callback for video source changes.
 
@@ -282,6 +287,6 @@ class SegmentsBar(QGraphicsView):
         """
         logger.info("Video changed: %s", video_path)
         self.clear_selection()
-        video_duration = getattr(self.video_manager, "_video_duration", 0)
-        subtitles = getattr(self.subtitles_manager, "_subtitles", None)
+        video_duration = self.video_manager.video_duration
+        subtitles = self.subtitles_manager.subtitles
         self.update_timeline(subtitles, video_duration)

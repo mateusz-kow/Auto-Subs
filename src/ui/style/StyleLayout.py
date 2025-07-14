@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from src.managers.StyleManager import StyleManager
@@ -12,12 +14,12 @@ class StyleLayout(QScrollArea):
     and allows applying those styles via StyleManager.
     """
 
-    def __init__(self, style_manager: StyleManager):
+    def __init__(self, style_manager: StyleManager) -> None:
         super().__init__()
 
         # Create a container widget for the scrollable content
         container = QWidget()
-        self.layout = QVBoxLayout(container)
+        self.main_layout = QVBoxLayout(container)
 
         self.style_manager = style_manager
 
@@ -25,8 +27,8 @@ class StyleLayout(QScrollArea):
         self.font_layout = FontStyleLayout(style)
         self.highlight_layout = HighlightStyleLayout(style)
 
-        self.layout.addLayout(self.font_layout)
-        self.layout.addLayout(self.highlight_layout)
+        self.main_layout.addLayout(self.font_layout)
+        self.main_layout.addLayout(self.highlight_layout)
 
         self.font_layout.settings_changed.connect(self.apply_current_style)
         self.highlight_layout.settings_changed.connect(self.apply_current_style)
@@ -38,12 +40,12 @@ class StyleLayout(QScrollArea):
         self.setWidget(container)
         self.setWidgetResizable(True)
 
-    def apply_current_style(self):
+    def apply_current_style(self) -> None:
         """Collects current managers and applies them via StyleManager."""
         style_data = self.get_current_settings()
         self.style_manager.from_dict(style_data)
 
-    def get_current_settings(self):
+    def get_current_settings(self) -> dict[str, Any]:
         """
         Combines font and highlight managers into a single dictionary.
 
@@ -56,7 +58,7 @@ class StyleLayout(QScrollArea):
             **self.highlight_layout.get_settings(),
         }
 
-    def on_style_loaded(self, new_style: dict):
+    def on_style_loaded(self, new_style: dict[str, Any]) -> None:
         """
         Callback for when a new style is loaded.
 

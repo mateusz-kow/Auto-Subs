@@ -1,7 +1,8 @@
 import json
 import os
 from logging import getLogger
-from typing import Callable, Optional
+from pathlib import Path
+from typing import Any, Callable
 
 from src.utils.QThrottler import QThrottler
 
@@ -46,15 +47,15 @@ DEFAULT_STYLE = {
 class StyleManager:
     """Class for managing subtitle styles and related file operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the StyleManager with default values."""
         self._style = DEFAULT_STYLE.copy()
-        self._style_listeners = []
-        self._style_loaded_listeners = []
+        self._style_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._style_loaded_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._style_throttler = QThrottler(1000)
         self._style_loaded_throttler = QThrottler(1000)
 
-    def from_dict(self, new_style: dict):
+    def from_dict(self, new_style: dict[str, Any]) -> None:
         """
         Update the current style with a new style dictionary and notify listeners.
 
@@ -69,7 +70,7 @@ class StyleManager:
 
         self._style_throttler.call(self._notify_style_listeners, self._style)
 
-    def _notify_style_listeners(self, new_style: dict):
+    def _notify_style_listeners(self, new_style: dict[str, Any]) -> None:
         """
         Notify all registered style listeners with the new style.
 
@@ -79,12 +80,12 @@ class StyleManager:
         for listener in self._style_listeners:
             listener(new_style)
 
-    def reset_to_default(self):
+    def reset_to_default(self) -> None:
         """Reset the style to the default values and notify listeners."""
         logger.debug("Resetting style to default")
         self.from_dict(DEFAULT_STYLE.copy())
 
-    def save_to_file(self, path: Optional[str] = None) -> str:
+    def save_to_file(self, path: Path) -> Path:
         """
         Save the current style to a JSON file.
 
@@ -108,14 +109,14 @@ class StyleManager:
 
         return path
 
-    def load_from_file(self, path: str):
+    def load_from_file(self, path: Path) -> None:
         """
         Load style from a JSON file.
 
         Args:
             path (str): The file path from which to load the style.
         """
-        path = os.path.abspath(path)
+        path = path.absolute()
         try:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
@@ -132,7 +133,7 @@ class StyleManager:
             logger.error(f"Failed to load style from {path}: {e}")
             raise
 
-    def _notify_style_loaded_listeners(self, new_style: dict):
+    def _notify_style_loaded_listeners(self, new_style: dict[str, Any]) -> None:
         """
         Notify all registered style loaded listeners with the new style.
 
@@ -142,7 +143,7 @@ class StyleManager:
         for listener in self._style_loaded_listeners:
             listener(new_style)
 
-    def add_style_listener(self, listener: Callable):
+    def add_style_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
         """
         Add a listener that will be called when the style is updated.
 
@@ -155,7 +156,7 @@ class StyleManager:
         else:
             logger.warning("Listener already exists")
 
-    def add_style_loaded_listener(self, listener: Callable):
+    def add_style_loaded_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
         """
         Add a listener that will be called after the style is loaded.
 
@@ -169,5 +170,5 @@ class StyleManager:
             logger.warning("Listener already exists")
 
     @property
-    def style(self):
+    def style(self) -> dict[str, Any]:
         return self._style

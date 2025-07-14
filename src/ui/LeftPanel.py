@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
-from src.subtitles.models import SubtitleWord
+from src.subtitles.models import Subtitles, SubtitleWord
 from src.ui.style.StyleLayout import StyleLayout
 from src.ui.subtitles.SegmentWordEditor import SegmentWordEditor
 
@@ -27,7 +27,9 @@ class LeftPanel(QWidget):
     and the context-aware Segment Word Editor.
     """
 
-    def __init__(self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, parent=None):
+    def __init__(
+        self, style_manager: StyleManager, subtitles_manager: SubtitlesManager, parent: QWidget | None = None
+    ) -> None:
         """Initialize the LeftPanel."""
         super().__init__(parent)
         self.style_manager = style_manager
@@ -120,7 +122,7 @@ class LeftPanel(QWidget):
         if self.current_segment_index is not None:
             self.subtitles_manager.delete_word(self.current_segment_index, word_index)
 
-    def on_subtitles_changed(self, subtitles):
+    def on_subtitles_changed(self, subtitles: Subtitles) -> None:
         """Called when subtitles data changes to refresh the current view if necessary."""
         if (
             self.current_segment_index is not None

@@ -1,13 +1,15 @@
 import json
+from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 from src.managers.StyleManager import DEFAULT_STYLE, StyleManager
 from src.utils.QThrottler import QThrottler
 
 
 @pytest.fixture
-def style_manager(mocker):
+def style_manager(mocker: MockerFixture) -> StyleManager:
     """
     Fixture to provide a StyleManager instance where the QThrottler
     is mocked to execute immediately (synchronously).
@@ -18,12 +20,12 @@ def style_manager(mocker):
     return StyleManager()
 
 
-def test_initialization(style_manager: StyleManager):
+def test_initialization(style_manager: StyleManager) -> None:
     """Test that the StyleManager initializes with the default style."""
     assert style_manager.style == DEFAULT_STYLE
 
 
-def test_from_dict_updates_style_and_notifies(style_manager: StyleManager, mocker):
+def test_from_dict_updates_style_and_notifies(style_manager: StyleManager, mocker: MockerFixture) -> None:
     """Test that updating from a dictionary changes the style and calls listeners."""
     # We need a fresh mock for the listener itself in each test
     mock_listener = mocker.MagicMock()
@@ -37,7 +39,7 @@ def test_from_dict_updates_style_and_notifies(style_manager: StyleManager, mocke
     mock_listener.assert_called_once()
 
 
-def test_from_dict_does_not_notify_on_same_style(style_manager: StyleManager, mocker):
+def test_from_dict_does_not_notify_on_same_style(style_manager: StyleManager, mocker: MockerFixture) -> None:
     """Test that listeners are not called if the style is identical."""
     mock_listener = mocker.MagicMock()
     style_manager.add_style_listener(mock_listener)
@@ -48,7 +50,7 @@ def test_from_dict_does_not_notify_on_same_style(style_manager: StyleManager, mo
     mock_listener.assert_not_called()
 
 
-def test_reset_to_default(style_manager: StyleManager, mocker):
+def test_reset_to_default(style_manager: StyleManager, mocker: MockerFixture) -> None:
     """Test resetting the style to its default values."""
     mock_listener = mocker.MagicMock()
     style_manager.add_style_listener(mock_listener)
@@ -65,7 +67,7 @@ def test_reset_to_default(style_manager: StyleManager, mocker):
     assert mock_listener.call_count == 2  # Called again from the reset
 
 
-def test_save_and_load_style(style_manager: StyleManager, tmp_path, mocker):
+def test_save_and_load_style(style_manager: StyleManager, tmp_path: Path, mocker: MockerFixture) -> None:
     """Test that a style can be saved to a file and loaded back correctly."""
     mock_loaded_listener = mocker.MagicMock()
     style_manager.add_style_loaded_listener(mock_loaded_listener)
@@ -78,7 +80,7 @@ def test_save_and_load_style(style_manager: StyleManager, tmp_path, mocker):
 
     # 2. Save the style to a temporary file
     file_path = tmp_path / "test_style.json"
-    style_manager.save_to_file(str(file_path))
+    style_manager.save_to_file(file_path)
     assert file_path.exists()
 
     # 3. Reset the manager to default
@@ -86,7 +88,7 @@ def test_save_and_load_style(style_manager: StyleManager, tmp_path, mocker):
     assert style_manager.style["font"] != "Test Font"
 
     # 4. Load the style from the file
-    style_manager.load_from_file(str(file_path))
+    style_manager.load_from_file(file_path)
 
     # 5. Assert the style is restored
     assert style_manager.style["font"] == "Test Font"
@@ -94,14 +96,14 @@ def test_save_and_load_style(style_manager: StyleManager, tmp_path, mocker):
     mock_loaded_listener.assert_called_once()
 
 
-def test_load_merges_with_default(style_manager: StyleManager, tmp_path):
+def test_load_merges_with_default(style_manager: StyleManager, tmp_path: Path) -> None:
     """Test that loading a partial style file correctly merges with default values."""
     partial_style = {"font": "PartialFont", "font_size": 123}
     file_path = tmp_path / "partial_style.json"
     with open(file_path, "w") as f:
         json.dump(partial_style, f)
 
-    style_manager.load_from_file(str(file_path))
+    style_manager.load_from_file(file_path)
 
     # Check that loaded values are present
     assert style_manager.style["font"] == "PartialFont"

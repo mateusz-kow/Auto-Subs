@@ -1,7 +1,8 @@
 import asyncio
 import threading
 from logging import getLogger
-from typing import Callable, Optional
+from pathlib import Path
+from typing import Any, Callable
 
 import whisper
 
@@ -28,10 +29,10 @@ class TranscriptionManager:
         """
         self._model = None
         self._model_lock = asyncio.Lock()
-        self._transcription_listeners: list[Callable[[dict], None]] = []
+        self._transcription_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._model_loaded_event = threading.Event()
-        self._model_loading_thread: Optional[threading.Thread] = None
-        self._current_audio_path: Optional[str] = None
+        self._model_loading_thread: threading.Thread | None = None
+        self._current_audio_path: Path | None = None
 
         self._load_model(whisper_model)
 
@@ -43,7 +44,7 @@ class TranscriptionManager:
             whisper_model (str): The model name (e.g., 'base', 'small') or file path.
         """
 
-        def worker():
+        def worker() -> None:
             try:
                 logger.info("Loading Whisper model...")
                 self._model = whisper.load_model(whisper_model)
@@ -58,8 +59,8 @@ class TranscriptionManager:
         self._model_loading_thread.start()
 
     async def transcribe(
-        self, audio_path: str, word_timestamps: bool = True, language: Optional[str] = None
-    ) -> Optional[dict]:
+        self, audio_path: Path, word_timestamps: bool = True, language: str | None = None
+    ) -> dict[str, Any] | None:
         """
         Asynchronously transcribe an audio file using the loaded Whisper model.
 
@@ -101,7 +102,7 @@ class TranscriptionManager:
                 logger.exception("Error during transcription")
                 raise RuntimeError(f"Transcription failed: {e}") from e
 
-    def add_transcription_listener(self, listener: Callable[[dict], None]) -> None:
+    def add_transcription_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
         """
         Register a listener to be called when transcription completes.
 
@@ -111,7 +112,7 @@ class TranscriptionManager:
         """
         self._transcription_listeners.append(listener)
 
-    def _notify_listeners(self, transcription: dict) -> None:
+    def _notify_listeners(self, transcription: dict[str, Any]) -> None:
         """
         Notify all registered listeners with the transcription result.
 
@@ -124,7 +125,7 @@ class TranscriptionManager:
             except Exception as e:
                 logger.warning(f"Listener raised an exception: {e}")
 
-    def on_video_changed(self, video_path: str) -> None:
+    def on_video_changed(self, video_path: Path) -> None:
         """
         Trigger transcription for a new video or audio source.
 

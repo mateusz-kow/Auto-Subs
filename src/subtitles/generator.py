@@ -1,6 +1,7 @@
-import os
 import uuid
 from logging import getLogger
+from pathlib import Path
+from typing import Any
 
 from src.subtitles.models import Subtitles
 from src.utils.constants import TEMP_DIR
@@ -15,7 +16,7 @@ class SubtitleGenerator:
     """Utility class for generating subtitle files in ASS and SRT formats."""
 
     @staticmethod
-    def to_ass(subtitles: Subtitles, ass_settings: dict[str, any], output_path: str = None) -> str:
+    def to_ass(subtitles: Subtitles, ass_settings: dict[str, Any], output_path: Path | None = None) -> Path:
         """
         Generate an ASS subtitle file from the given subtitles and settings.
 
@@ -26,11 +27,11 @@ class SubtitleGenerator:
 
         Args:
             subtitles (Subtitles): The subtitles to export, containing segments and words.
-            ass_settings (Dict[str, any]): ASS-specific settings, including styles and optional highlight styles.
-            output_path (str, optional): Path to save the generated file. If not provided, a temporary file is created.
+            ass_settings (Dict[str, Any]): ASS-specific settings, including styles and optional highlight styles.
+            output_path (Path, optional): Path to save the generated file. If not provided, a temporary file is created.
 
         Returns:
-            str: The path to the generated ASS file.
+            Path: The path to the generated ASS file.
         """
 
         def format_ass_timestamp(seconds: float) -> str:
@@ -41,7 +42,7 @@ class SubtitleGenerator:
             cs = int((seconds - int(seconds)) * 100)
             return f"{h}:{m:02}:{s:02}.{cs:02}"
 
-        def build_ass_highlight_tag(style_dict: dict) -> str:
+        def build_ass_highlight_tag(style_dict: dict[str, Any]) -> str:
             """Build ASS highlight tags based on the provided style dictionary."""
             tag = r"{"
             if "text_color" in style_dict:
@@ -59,7 +60,6 @@ class SubtitleGenerator:
         if highlight_style_dict:
             highlight_tag = build_ass_highlight_tag(highlight_style_dict)
             for segment in subtitles.segments:
-
                 for h_index, highlighted_word in enumerate(segment.words):
                     text = []
                     start = format_ass_timestamp(highlighted_word.start)
@@ -79,13 +79,16 @@ class SubtitleGenerator:
             for segment in subtitles.segments:
                 start = format_ass_timestamp(segment.start)
                 end = format_ass_timestamp(segment.end)
-                text = str(segment)
-                lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}")
+                text = [str(segment)]
+                lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{' '.join(text)}")
 
         lines.append("")
 
-        if not output_path:
-            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.ass")
+        if output_path is None:
+            output_path = Path(TEMP_DIR) / f"{uuid.uuid4()}_subs.ass"
+        elif not isinstance(output_path, Path):
+            assert output_path is not None
+            output_path = Path(output_path)
 
         with open(output_path, "w", encoding="utf-8") as file:
             file.write("\n".join(lines))
@@ -94,16 +97,16 @@ class SubtitleGenerator:
         return output_path
 
     @staticmethod
-    def to_srt(subtitles: Subtitles, output_path: str = None) -> str:
+    def to_srt(subtitles: Subtitles, output_path: Path | None = None) -> Path:
         """
         Generate an SRT subtitle file from the given subtitles.
 
         Args:
             subtitles (Subtitles): The subtitles to export.
-            output_path (str, optional): Path to save the generated file. Defaults to a temporary file.
+            output_path (Path, optional): Path to save the generated file. Defaults to a temporary file.
 
         Returns:
-            str: The path to the generated SRT file.
+            Path: The path to the generated SRT file.
         """
 
         def format_to_srt_time(seconds: float) -> str:
@@ -114,8 +117,10 @@ class SubtitleGenerator:
             millis = int((seconds - int(seconds)) * 1000)
             return f"{hrs:02}:{mins:02}:{secs:02},{millis:03}"
 
-        if not output_path:
-            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.srt")
+        if output_path is None:
+            output_path = Path(TEMP_DIR) / f"{uuid.uuid4()}_subs.srt"
+        elif not isinstance(output_path, Path):
+            output_path = Path(output_path)
 
         with open(output_path, "w", encoding="utf-8") as file:
             srt_lines = []
@@ -135,9 +140,11 @@ class SubtitleGenerator:
         return output_path
 
     @staticmethod
-    def to_txt(subtitles: Subtitles, output_path: str = None) -> str:
-        if not output_path:
-            output_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}_subs.txt")
+    def to_txt(subtitles: Subtitles, output_path: Path | None = None) -> Path:
+        if output_path is None:
+            output_path = Path(TEMP_DIR) / f"{uuid.uuid4()}_subs.txt"
+        elif not isinstance(output_path, Path):
+            output_path = Path(output_path)
 
         with open(output_path, "w", encoding="utf-8") as file:
             file.write(str(subtitles))

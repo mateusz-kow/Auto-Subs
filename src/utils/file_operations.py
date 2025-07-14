@@ -1,4 +1,7 @@
-def generate_ass_header(settings: dict) -> str:
+from typing import Any
+
+
+def generate_ass_header(settings: dict[str, Any]) -> str:
     """
     Generates the ASS file header section using the provided settings.
 

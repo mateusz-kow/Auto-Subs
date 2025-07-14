@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.VideoManager import VideoManager
+from src.ui.MediaPlayer import MediaPlayer
 from src.ui.timeline.constants import BAR_HEIGHT, SUBTITLE_BAR_HEIGHT, VIDEO_BAR_Y
 from src.ui.timeline.SegmentsBar import SegmentsBar
 
@@ -21,7 +24,9 @@ class TimelineBar(QWidget):
         segments_bar (SegmentsBar): The widget displaying subtitle segments.
     """
 
-    def __init__(self, subtitles_manager, video_manager, media_player):
+    def __init__(
+        self, subtitles_manager: SubtitlesManager, video_manager: VideoManager, media_player: MediaPlayer
+    ) -> None:
         """
         Initialize the TimelineBar widget.
 
@@ -82,10 +87,10 @@ class TimelineBar(QWidget):
 
         return button_container
 
-    def _toggle_play_pause(self):
+    def _toggle_play_pause(self) -> None:
         """Toggle the playback state of the media player."""
         self.media_player.toggle_pause_state()
 
-    def _reset_to_start(self):
+    def _reset_to_start(self) -> None:
         """Reset the media player's playback position to the beginning."""
         self.media_player.set_timestamp(0)
