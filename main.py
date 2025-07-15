@@ -8,6 +8,7 @@ from qasync import QEventLoop
 
 from src.ui.SubtitleEditorApp import SubtitleEditorApp
 from src.utils.constants import clean_temp_dir
+from src.utils.exception_handler import install_handler
 
 logger = getLogger(__name__)
 
@@ -21,6 +22,8 @@ def main() -> None:
     # Create the Qt application
     logger.debug("Initializing application")
     app = QApplication(sys.argv)
+
+    install_handler()
 
     # Integrate the asyncio event loop with Qt
     loop = QEventLoop(app)

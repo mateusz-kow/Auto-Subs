@@ -95,7 +95,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def export_txt(self) -> None:
         """Export subtitles as a plain text (.txt) file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "TXT files (*.txt)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -107,7 +107,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def export_srt(self) -> None:
         """Export subtitles in SubRip (.srt) format."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -119,7 +119,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def export_ass(self) -> None:
         """Export subtitles in Advanced SubStation Alpha (.ass) format."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -159,7 +159,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def import_mp4(self) -> None:
         """Prompt the user to select an MP4 file to import."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Import from MP4", "", "MP4 files (*.mp4)")
         if selected_path:
             path = Path(selected_path)
             self.video_manager.set_video_path(path)
@@ -174,7 +174,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save as JSON", "", "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -186,7 +186,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def load_style_from_file(self) -> None:
         """Load subtitle styling from a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Load from JSON", "", "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:

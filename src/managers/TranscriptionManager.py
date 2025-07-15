@@ -86,7 +86,7 @@ class TranscriptionManager:
                 logger.info(f"Starting transcription for: {audio_path}")
                 result = await asyncio.to_thread(
                     self._model.transcribe,
-                    audio_path,
+                    audio=str(audio_path),
                     word_timestamps=word_timestamps,
                     language=language,
                 )
