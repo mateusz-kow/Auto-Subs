@@ -53,16 +53,19 @@ class SubtitleEditorApp(QWidget):
             self.style_manager,
             self.subtitles_manager,
         )
-        self.top_bar = TopBar(self.style_manager, self.subtitles_manager, self.video_manager)
+        self.top_bar = TopBar(
+            self.style_manager, self.subtitles_manager, self.video_manager, self.transcription_manager
+        )
         self.timeline_bar = TimelineBar(self.subtitles_manager, self.video_manager, self.media_player)
 
-        # --- NEW CONNECTIONS ---
         # Connect timeline clicks to the LeftPanel's slot
         self.timeline_bar.segments_bar.segment_clicked.connect(self.left_panel.show_editor_for_segment)
         self.timeline_bar.segments_bar.segment_clicked.connect(self._seek_player_to_segment)
 
         # Connect subtitle changes to the LeftPanel to keep it in sync
         self.subtitles_manager.add_subtitles_listener(self.left_panel.on_subtitles_changed)
+        # Connect video changes to TopBar to enable/disable transcribe button
+        self.video_manager.add_video_listener(self.top_bar.on_video_changed)
 
         self.timeline_bar.segments_bar.add_preview_time_listener(self.video_layout.on_preview_time_changed)
 
