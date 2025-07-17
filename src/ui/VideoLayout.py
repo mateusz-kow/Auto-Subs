@@ -54,6 +54,13 @@ class VideoLayout(QVBoxLayout):
 
         style_manager.add_style_listener(self.on_style_changed)
         subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
+        video_manager.add_video_listener(self.on_video_changed)
+
+    def on_video_changed(self, video_path: Path) -> None:
+        """Load a new video into the media player immediately."""
+        if video_path and video_path.exists():
+            logger.info(f"Loading new video media: {video_path}")
+            self.media_player_widget.set_media(video_path, None)
 
     def on_preview_time_changed(self, time: float) -> None:
         """
@@ -81,31 +88,17 @@ class VideoLayout(QVBoxLayout):
 
         asyncio.create_task(task())
 
-    def set_media_with_subtitles(self, video_path: Path, subtitles: Subtitles) -> None:
-        """
-        Set both the video file and subtitles in the media player.
-
-        Args:
-            video_path (str): Path to the video file.
-            subtitles (Subtitles): The updated subtitles object.
-        """
-        logger.info(f"Updating media: {video_path}")
-
-        async def task() -> None:
-            ass_path = await asyncio.to_thread(SubtitleGenerator.to_ass, subtitles, self.style_manager.style, None)
-            self.media_player_widget.set_media(video_path, ass_path)
-
-        asyncio.create_task(task())
-
     def on_subtitles_changed(self, subtitles: Subtitles) -> None:
         """
-        Callback invoked when subtitle content is updated.
+        Callback invoked when subtitle content is updated. This method now
+        only refreshes the subtitle track, as the video is loaded separately.
 
         Args:
             subtitles (Subtitles): The new subtitles object.
         """
-        logger.info("Subtitles updated. Refreshing media with new subtitles.")
-        self.set_media_with_subtitles(self.video_manager.video_path, self.subtitles_manager.subtitles)
+        logger.info("Subtitles updated. Refreshing subtitles rendering.")
+        if self.video_manager.video_path.exists():
+            self.set_subtitles_only(self.subtitles_manager.subtitles)
 
     def on_style_changed(self, style: dict[str, Any]) -> None:
         """
@@ -115,5 +108,5 @@ class VideoLayout(QVBoxLayout):
             style (dict): The new style dictionary.
         """
         logger.info("Style updated. Refreshing subtitles rendering.")
-        if self.subtitles_manager.subtitles:
+        if self.subtitles_manager.subtitles and self.video_manager.video_path.exists():
             self.set_subtitles_only(self.subtitles_manager.subtitles)

@@ -1,6 +1,8 @@
 import asyncio
 from pathlib import Path
+from typing import Any
 
+from PySide6.QtCore import Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -14,6 +16,7 @@ from qasync import asyncSlot
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.TranscriptionManager import TranscriptionManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
 from src.utils.ffmpeg_utils import get_video_with_subtitles
@@ -27,12 +30,14 @@ class TopBar(QWidget):
         style_manager: StyleManager,
         subtitles_manager: SubtitlesManager,
         video_manager: VideoManager,
+        transcription_manager: TranscriptionManager,
     ) -> None:
         super().__init__()
 
         self.style_manager = style_manager
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
+        self.transcription_manager = transcription_manager
 
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(4, 4, 4, 4)
@@ -50,16 +55,26 @@ class TopBar(QWidget):
         self.style_btn.setMenu(self.style_menu)
         self.main_layout.addWidget(self.style_btn)
 
+        # Transcribe/Cancel Button
+        self.transcribe_btn = QPushButton("Transcribe Video")
+        self.transcribe_btn.setEnabled(False)
+        self.transcribe_btn.clicked.connect(self._on_transcribe_cancel_clicked)
+        self.main_layout.addWidget(self.transcribe_btn)
+
         # File Menu Actions
         self._setup_file_menu()
 
         # Style Menu Actions
         self._setup_style_menu()
 
+        # Listen for transcription state changes
+        self.transcription_manager.add_transcription_listener(self._on_transcription_finished)
+        self.transcription_manager.add_transcription_cancelled_listener(self._on_transcription_cancelled)
+
         self.main_layout.addStretch()
 
     def _setup_file_menu(self) -> None:
-        import_mp4 = QAction("Import MP4", self)
+        import_mp4 = QAction("Import Video", self)
         import_mp4.triggered.connect(self.import_mp4)
 
         export_txt = QAction("Export as TXT", self)
@@ -92,10 +107,39 @@ class TopBar(QWidget):
         self.style_menu.addSeparator()
         self.style_menu.addActions([save_style, load_style])
 
+    def _on_transcribe_cancel_clicked(self) -> None:
+        """Handles clicks on the dynamic 'Transcribe/Cancel' button."""
+        if self.transcribe_btn.text() == "Transcribe Video":
+            self.transcription_manager.start_transcription()
+            self.transcribe_btn.setText("Cancel Transcription")
+        elif self.transcribe_btn.text() == "Cancel Transcription":
+            self.transcription_manager.cancel_transcription()
+            self.transcribe_btn.setText("Cancelling...")
+            self.transcribe_btn.setEnabled(False)
+
+    @Slot(Path)
+    def on_video_changed(self, video_path: Path) -> None:
+        """Enables or disables the transcribe button based on video presence."""
+        self._reset_transcribe_button()
+
+    def _on_transcription_finished(self, result: Any) -> None:
+        """Resets the transcribe button after transcription is complete."""
+        self._reset_transcribe_button()
+
+    def _on_transcription_cancelled(self) -> None:
+        """Resets the transcribe button after transcription is cancelled."""
+        self._reset_transcribe_button()
+
+    def _reset_transcribe_button(self) -> None:
+        """Resets the transcribe button to its default state based on video presence."""
+        self.transcribe_btn.setText("Transcribe Video")
+        has_video = bool(self.video_manager.video_path and self.video_manager.video_path.exists())
+        self.transcribe_btn.setEnabled(has_video)
+
     @asyncSlot()  # type: ignore[misc]
     async def export_txt(self) -> None:
         """Export subtitles as a plain text (.txt) file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "TXT files (*.txt)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -107,7 +151,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def export_srt(self) -> None:
         """Export subtitles in SubRip (.srt) format."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -119,7 +163,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def export_ass(self) -> None:
         """Export subtitles in Advanced SubStation Alpha (.ass) format."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -158,13 +202,11 @@ class TopBar(QWidget):
 
     @asyncSlot()  # type: ignore[misc]
     async def import_mp4(self) -> None:
-        """Prompt the user to select an MP4 file to import."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        """Prompt the user to select a video file to import."""
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Import Video", "", "Video files (*.mp4 *.mkv *.avi)")
         if selected_path:
             path = Path(selected_path)
             self.video_manager.set_video_path(path)
-
-    # --- Style Menu Handlers ---
 
     def reset_style_to_default(self) -> None:
         """Reset subtitle styling to the default settings."""
@@ -174,7 +216,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style", "", "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -186,7 +228,7 @@ class TopBar(QWidget):
     @asyncSlot()  # type: ignore[misc]
     async def load_style_from_file(self) -> None:
         """Load subtitle styling from a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Load Style", "", "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:

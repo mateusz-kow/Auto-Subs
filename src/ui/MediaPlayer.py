@@ -1,4 +1,5 @@
 import os
+import time
 from logging import getLogger
 from pathlib import Path
 
@@ -89,7 +90,16 @@ class MediaPlayer(QWidget):
 
             self.pause()
             # TODO: Add throttling here in a try catch loop with maximum of 3 attempts
-            self.player.sub_add(subtitle_path)
+            for trial in range(1, 4):
+                try:
+                    self.player.sub_add(str(subtitle_path))
+                    break
+                except Exception as e:
+                    logger.warning(f"Failed to add subtitles. Try ({trial}/3) Retrying... {e}")
+                    time.sleep(0.1)
+            else:
+                raise RuntimeError("Failed to add subtitles after 3 attempts.")
+
             self.player.sub_visibility = True
             self.player.command("sub_reload")
             logger.info("Subtitles set and reloaded.")
@@ -115,7 +125,7 @@ class MediaPlayer(QWidget):
         logger.info(f"Setting media: {video_path}, subtitles: {subtitle_path}")
         try:
             self.pause()
-            self.player.loadfile(video_path, mode="replace")
+            self.player.loadfile(str(video_path), mode="replace")
 
             if subtitle_path:
                 self.set_subtitles_only(subtitle_path)
