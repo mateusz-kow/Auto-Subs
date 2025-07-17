@@ -30,6 +30,7 @@ class TranscriptionManager:
         self._model = None
         self._model_lock = asyncio.Lock()
         self._transcription_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._transcription_failed_listeners: list[Callable[[Exception], None]] = []
         self._transcription_cancelled_listeners: list[Callable[[], None]] = []
         self._model_loaded_event = threading.Event()
         self._model_loading_thread: threading.Thread | None = None
@@ -107,7 +108,8 @@ class TranscriptionManager:
 
             except Exception as e:
                 logger.exception("Error during transcription")
-                raise RuntimeError(f"Transcription failed: {e}") from e
+                self._notify_failed_listeners(e)
+                return None
 
     def add_transcription_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
         """
@@ -118,6 +120,15 @@ class TranscriptionManager:
                 the transcription result as an argument.
         """
         self._transcription_listeners.append(listener)
+
+    def add_transcription_failed_listener(self, listener: Callable[[Exception], None]) -> None:
+        """
+        Register a listener to be called when transcription fails.
+
+        Args:
+            listener: A callback function that takes the exception as an argument.
+        """
+        self._transcription_failed_listeners.append(listener)
 
     def add_transcription_cancelled_listener(self, listener: Callable[[], None]) -> None:
         """Register a listener to be called when transcription is cancelled."""
@@ -135,6 +146,19 @@ class TranscriptionManager:
                 listener(transcription)
             except Exception as e:
                 logger.warning(f"Listener raised an exception: {e}")
+
+    def _notify_failed_listeners(self, error: Exception) -> None:
+        """
+        Notify all registered listeners about a transcription failure.
+
+        Args:
+            error (Exception): The exception that occurred during transcription.
+        """
+        for listener in self._transcription_failed_listeners:
+            try:
+                listener(error)
+            except Exception as e:
+                logger.warning(f"Failure listener raised an exception: {e}")
 
     def _notify_cancelled_listeners(self) -> None:
         """Notify all registered listeners that transcription was cancelled."""
