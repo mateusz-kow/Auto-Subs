@@ -1,5 +1,7 @@
+from pathlib import Path
+
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QVBoxLayout, QWidget
 
 from src.managers.StyleManager import StyleManager
 from src.managers.SubtitlesManager import SubtitlesManager
@@ -12,7 +14,7 @@ from src.ui.TopBar import TopBar
 from src.ui.VideoLayout import VideoLayout
 
 
-class SubtitleEditorApp(QWidget):
+class SubtitleEditorApp(QMainWindow):
     """Main application window for the Subtitle Editor."""
 
     def __init__(self) -> None:
@@ -28,6 +30,8 @@ class SubtitleEditorApp(QWidget):
         # Set up layout
         self._setup_layout()
 
+        self.statusBar().showMessage("Ready")
+
     def _initialize_managers(self) -> None:
         """Initialize the managers and set up their interactions."""
         self.style_manager = StyleManager()
@@ -38,6 +42,7 @@ class SubtitleEditorApp(QWidget):
         # Connect managers
         self.video_manager.add_video_listener(self.transcription_manager.on_video_changed)
         self.video_manager.add_video_listener(self.subtitles_manager.on_video_changed)
+        self.video_manager.add_video_listener(self.on_video_loaded_status)
         self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
 
     def _initialize_ui(self) -> None:
@@ -54,7 +59,11 @@ class SubtitleEditorApp(QWidget):
             self.subtitles_manager,
         )
         self.top_bar = TopBar(
-            self.style_manager, self.subtitles_manager, self.video_manager, self.transcription_manager
+            self.style_manager,
+            self.subtitles_manager,
+            self.video_manager,
+            self.transcription_manager,
+            self.statusBar(),
         )
         self.timeline_bar = TimelineBar(self.subtitles_manager, self.video_manager, self.media_player)
 
@@ -70,12 +79,14 @@ class SubtitleEditorApp(QWidget):
         self.timeline_bar.segments_bar.add_preview_time_listener(self.video_layout.on_preview_time_changed)
 
     def _setup_layout(self) -> None:
-        # This method remains largely the same, ensuring self.left_panel is added
-        # to the center_layout.
-        main_layout = QVBoxLayout(self)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout(central_widget)
         main_layout.addWidget(self.top_bar)
+
         center_layout = QHBoxLayout()
-        center_layout.addWidget(self.left_panel, 2)  # It now holds our dynamic editor
+        center_layout.addWidget(self.left_panel, 2)
         center_layout.addLayout(self.video_layout, 4)
         main_layout.addLayout(center_layout)
         main_layout.addWidget(self.timeline_bar)
@@ -86,3 +97,9 @@ class SubtitleEditorApp(QWidget):
         if self.subtitles_manager.subtitles:
             segment = self.subtitles_manager.subtitles.segments[segment_index]
             self.media_player.set_timestamp(int(segment.start * 1000))
+
+    @Slot(Path)
+    def on_video_loaded_status(self, video_path: Path) -> None:
+        """Updates the status bar when a new video is loaded."""
+        if video_path and video_path.exists():
+            self.statusBar().showMessage(f"'{video_path.name}' loaded successfully.", 5000)

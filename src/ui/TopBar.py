@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QPushButton,
+    QStatusBar,
     QWidget,
 )
 from qasync import asyncSlot
@@ -31,6 +32,7 @@ class TopBar(QWidget):
         subtitles_manager: SubtitlesManager,
         video_manager: VideoManager,
         transcription_manager: TranscriptionManager,
+        status_bar: QStatusBar,
     ) -> None:
         super().__init__()
 
@@ -38,6 +40,7 @@ class TopBar(QWidget):
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
         self.transcription_manager = transcription_manager
+        self.status_bar = status_bar
 
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(4, 4, 4, 4)
@@ -69,6 +72,7 @@ class TopBar(QWidget):
 
         # Listen for transcription state changes
         self.transcription_manager.add_transcription_listener(self._on_transcription_finished)
+        self.transcription_manager.add_transcription_failed_listener(self._on_transcription_failed)
         self.transcription_manager.add_transcription_cancelled_listener(self._on_transcription_cancelled)
 
         self.main_layout.addStretch()
@@ -110,6 +114,7 @@ class TopBar(QWidget):
     def _on_transcribe_cancel_clicked(self) -> None:
         """Handles clicks on the dynamic 'Transcribe/Cancel' button."""
         if self.transcribe_btn.text() == "Transcribe Video":
+            self.status_bar.showMessage("Transcribing video... This may take a while.")
             self.transcription_manager.start_transcription()
             self.transcribe_btn.setText("Cancel Transcription")
         elif self.transcribe_btn.text() == "Cancel Transcription":
@@ -124,10 +129,21 @@ class TopBar(QWidget):
 
     def _on_transcription_finished(self, result: Any) -> None:
         """Resets the transcribe button after transcription is complete."""
+        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage("Transcription complete.", 5000)
+        self._reset_transcribe_button()
+
+    @Slot(Exception)
+    def _on_transcription_failed(self, error: Exception) -> None:
+        """Shows a failure message when transcription fails."""
+        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage(f"Transcription failed: {str(error)}", 5000)
         self._reset_transcribe_button()
 
     def _on_transcription_cancelled(self) -> None:
         """Resets the transcribe button after transcription is cancelled."""
+        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage("Transcription cancelled.", 5000)
         self._reset_transcribe_button()
 
     def _reset_transcribe_button(self) -> None:
@@ -142,10 +158,15 @@ class TopBar(QWidget):
         selected_path, _ = QFileDialog.getSaveFileName(self, "Export as TXT", "", "TXT files (*.txt)")
         if selected_path:
             path = Path(selected_path)
+            self.status_bar.showMessage(f"Exporting to {path.name}...")
             try:
                 await asyncio.to_thread(SubtitleGenerator.to_txt, self.subtitles_manager.subtitles, path)
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export complete.", 5000)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as TXT:\n{path}")
             except Exception as e:
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export failed.", 5000)
                 QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{str(e)}")
 
     @asyncSlot()  # type: ignore[misc]
@@ -154,10 +175,15 @@ class TopBar(QWidget):
         selected_path, _ = QFileDialog.getSaveFileName(self, "Export as SRT", "", "SRT files (*.srt)")
         if selected_path:
             path = Path(selected_path)
+            self.status_bar.showMessage(f"Exporting to {path.name}...")
             try:
                 await asyncio.to_thread(SubtitleGenerator.to_srt, self.subtitles_manager.subtitles, path)
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export complete.", 5000)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as SRT:\n{path}")
             except Exception as e:
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export failed.", 5000)
                 QMessageBox.critical(self, "Export Error", f"Failed to export SRT:\n{str(e)}")
 
     @asyncSlot()  # type: ignore[misc]
@@ -166,6 +192,7 @@ class TopBar(QWidget):
         selected_path, _ = QFileDialog.getSaveFileName(self, "Export as ASS", "", "ASS files (*.ass)")
         if selected_path:
             path = Path(selected_path)
+            self.status_bar.showMessage(f"Exporting to {path.name}...")
             try:
                 await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
@@ -173,8 +200,12 @@ class TopBar(QWidget):
                     self.style_manager.style,
                     path,
                 )
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export complete.", 5000)
                 QMessageBox.information(self, "Export Successful", f"Subtitles exported as ASS:\n{path}")
             except Exception as e:
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export failed.", 5000)
                 QMessageBox.critical(self, "Export Error", f"Failed to export ASS:\n{str(e)}")
 
     @asyncSlot()  # type: ignore[misc]
@@ -183,6 +214,7 @@ class TopBar(QWidget):
         selected_path, _ = QFileDialog.getSaveFileName(self, "Export as MP4", "", "MP4 files (*.mp4)")
         if selected_path:
             path = Path(selected_path)
+            self.status_bar.showMessage(f"Exporting to {path.name}...")
             try:
                 ass_subtitles = await asyncio.to_thread(
                     SubtitleGenerator.to_ass,
@@ -196,8 +228,12 @@ class TopBar(QWidget):
                     ass_subtitles,
                     path,
                 )
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export complete.", 5000)
                 QMessageBox.information(self, "Export Successful", f"Video exported with subtitles:\n{path}")
             except Exception as e:
+                self.status_bar.showMessage("Ready")
+                self.status_bar.showMessage("Export failed.", 5000)
                 QMessageBox.critical(self, "Export Error", f"Failed to export MP4:\n{str(e)}")
 
     @asyncSlot()  # type: ignore[misc]
