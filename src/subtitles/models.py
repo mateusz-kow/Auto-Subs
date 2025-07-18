@@ -24,6 +24,15 @@ class SubtitleWord:
         """Create an empty SubtitleWord instance."""
         return cls("", 0, 0)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the SubtitleWord to a dictionary."""
+        return {"text": self.text, "start": self.start, "end": self.end}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SubtitleWord":
+        """Create a SubtitleWord instance from a dictionary."""
+        return cls(text=data["text"], start=data["start"], end=data["end"])
+
     def __eq__(self, other: object) -> bool:
         """Check equality between two SubtitleWord instances."""
         if not isinstance(other, SubtitleWord):
@@ -54,6 +63,16 @@ class SubtitleSegment:
     def empty(cls) -> "SubtitleSegment":
         """Create an empty SubtitleSegment instance."""
         return cls([])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the SubtitleSegment to a dictionary."""
+        return {"words": [w.to_dict() for w in self.words]}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SubtitleSegment":
+        """Create a SubtitleSegment from a dictionary."""
+        words = [SubtitleWord.from_dict(w) for w in data.get("words", [])]
+        return cls(words)
 
     def __str__(self) -> str:
         """Return the segment as a string of concatenated word texts."""
@@ -108,6 +127,16 @@ class Subtitles:
     def empty(cls) -> "Subtitles":
         """Create an empty Subtitles instance."""
         return cls([])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the Subtitles to a dictionary."""
+        return {"segments": [s.to_dict() for s in self.segments]}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Subtitles":
+        """Create a Subtitles instance from a dictionary."""
+        segments = [SubtitleSegment.from_dict(s) for s in data.get("segments", [])]
+        return cls(segments)
 
     @classmethod
     def from_transcription(cls, transcription: dict[str, Any]) -> "Subtitles":

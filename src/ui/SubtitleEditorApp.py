@@ -1,9 +1,12 @@
 import asyncio
+import json
+import uuid
+import zipfile
 from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
@@ -23,6 +26,7 @@ from src.subtitles.models import Subtitles
 from src.ui.LeftPanel import LeftPanel
 from src.ui.MediaPlayer import MediaPlayer
 from src.ui.timeline.TimelineBar import TimelineBar
+from src.utils.constants import TEMP_DIR
 from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 
@@ -31,7 +35,8 @@ class SubtitleEditorApp(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Auto Subs")
+        self._current_project_path: Path | None = None
+        self._update_window_title()
 
         self._initialize_managers()
         self._initialize_ui()
@@ -72,6 +77,7 @@ class SubtitleEditorApp(QMainWindow):
         self.subtitles_manager.add_subtitles_listener(self.left_panel.on_subtitles_changed)
         self.subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
         self.style_manager.add_style_listener(self.on_style_changed)
+        self.style_manager.add_style_loaded_listener(self.left_panel.style_layout.on_style_loaded)
         self.video_manager.add_video_listener(self._on_video_changed_for_transcribe_button)
 
     def _setup_layout(self) -> None:
@@ -98,17 +104,39 @@ class SubtitleEditorApp(QMainWindow):
         """Create and configure the menu bar and toolbars."""
         # --- File Menu ---
         file_menu = self.menuBar().addMenu("&File")
-        import_action = QAction("Import Video", self)
+
+        open_project_action = QAction("Open Project...", self)
+        open_project_action.setShortcut(QKeySequence.StandardKey.Open)
+        open_project_action.triggered.connect(self.open_project)
+        file_menu.addAction(open_project_action)
+
+        file_menu.addSeparator()
+
+        save_project_action = QAction("Save Project", self)
+        save_project_action.setShortcut(QKeySequence.StandardKey.Save)
+        save_project_action.triggered.connect(self.save_project)
+        file_menu.addAction(save_project_action)
+
+        save_project_as_action = QAction("Save Project As...", self)
+        save_project_as_action.setShortcut(QKeySequence("Ctrl+Shift+S"))
+        save_project_as_action.triggered.connect(self.save_project_as)
+        file_menu.addAction(save_project_as_action)
+
+        file_menu.addSeparator()
+
+        import_action = QAction("Import Video...", self)
         import_action.triggered.connect(self.import_mp4)
         file_menu.addAction(import_action)
+
         file_menu.addSeparator()
-        export_txt_action = QAction("Export as TXT", self)
+
+        export_txt_action = QAction("Export as TXT...", self)
         export_txt_action.triggered.connect(self.export_txt)
-        export_srt_action = QAction("Export as SRT", self)
+        export_srt_action = QAction("Export as SRT...", self)
         export_srt_action.triggered.connect(self.export_srt)
-        export_ass_action = QAction("Export as ASS", self)
+        export_ass_action = QAction("Export as ASS...", self)
         export_ass_action.triggered.connect(self.export_ass)
-        export_mp4_action = QAction("Export as MP4 (Hardsub)", self)
+        export_mp4_action = QAction("Export as MP4 (Hardsub)...", self)
         export_mp4_action.triggered.connect(self.export_mp4)
         file_menu.addActions([export_txt_action, export_srt_action, export_ass_action, export_mp4_action])
 
@@ -116,9 +144,9 @@ class SubtitleEditorApp(QMainWindow):
         style_menu = self.menuBar().addMenu("&Style")
         reset_style_action = QAction("Reset to Default", self)
         reset_style_action.triggered.connect(self.reset_style_to_default)
-        save_style_action = QAction("Save Style", self)
+        save_style_action = QAction("Save Style As...", self)
         save_style_action.triggered.connect(self.save_style_to_file)
-        load_style_action = QAction("Load Style", self)
+        load_style_action = QAction("Load Style...", self)
         load_style_action.triggered.connect(self.load_style_from_file)
         style_menu.addAction(reset_style_action)
         style_menu.addSeparator()
@@ -234,6 +262,112 @@ class SubtitleEditorApp(QMainWindow):
         has_video = bool(self.video_manager.video_path and self.video_manager.video_path.exists())
         self.transcribe_btn.setEnabled(has_video)
 
+    # --- Project Management Slots ---
+
+    @asyncSlot()  # type: ignore[misc]
+    async def open_project(self) -> None:
+        """Prompt the user to select and load an .asproj project file."""
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Open Project", "", "Auto-Subs Project (*.asproj)")
+        if not selected_path:
+            return
+
+        path = Path(selected_path)
+        self.statusBar().showMessage(f"Opening project {path.name}...")
+
+        project_temp_dir = TEMP_DIR / f"project_{path.stem}_{uuid.uuid4().hex[:8]}"
+        project_temp_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+
+            def _extract_and_find_files() -> tuple[Path, Path]:
+                with zipfile.ZipFile(path, "r") as zf:
+                    namelist = zf.namelist()
+                    video_arcname = next((name for name in namelist if name.startswith("video.")), None)
+                    if not video_arcname:
+                        raise FileNotFoundError("Video file not found in project archive.")
+                    if "project.json" not in namelist:
+                        raise FileNotFoundError("'project.json' not found in project archive.")
+
+                    zf.extractall(project_temp_dir)
+
+                    return project_temp_dir / "project.json", project_temp_dir / video_arcname
+
+            project_json_path, video_path_in_temp = await asyncio.to_thread(_extract_and_find_files)
+
+            with open(project_json_path, encoding="utf-8") as f:
+                project_data = json.load(f)
+
+            style_data = project_data.get("style_data", {})
+            subtitles_data = project_data.get("subtitles_data", {})
+
+            self.video_manager.set_video_path(video_path_in_temp)
+            self.style_manager.from_dict(style_data, notify_loaded=True)
+            new_subtitles = await asyncio.to_thread(Subtitles.from_dict, subtitles_data)
+            self.subtitles_manager.set_subtitles(new_subtitles)
+
+            self._current_project_path = path
+            self._update_window_title()
+            self.statusBar().showMessage(f"Project '{path.name}' loaded successfully.", 5000)
+
+        except (zipfile.BadZipFile, json.JSONDecodeError, ValueError, FileNotFoundError) as e:
+            QMessageBox.critical(self, "Load Error", f"Failed to load project:\n{str(e)}")
+            self.statusBar().showMessage("Project load failed.", 5000)
+        except Exception as e:
+            QMessageBox.critical(self, "Load Error", f"An unexpected error occurred while loading project:\n{str(e)}")
+            self.statusBar().showMessage("Project load failed.", 5000)
+
+    @asyncSlot()  # type: ignore[misc]
+    async def save_project(self) -> None:
+        """Save the current project to its existing path, or prompt for a new one."""
+        if self._current_project_path:
+            await self._save_to_path(self._current_project_path)
+        else:
+            await self.save_project_as()
+
+    @asyncSlot()  # type: ignore[misc]
+    async def save_project_as(self) -> None:
+        """Prompt the user for a new path and save the project."""
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Project As", "", "Auto-Subs Project (*.asproj)")
+        if not selected_path:
+            return
+
+        path = Path(selected_path)
+        await self._save_to_path(path)
+        self._current_project_path = path
+        self._update_window_title()
+
+    async def _save_to_path(self, path: Path) -> None:
+        """Serialize the application state and write it to a compressed archive."""
+        if not self.video_manager.video_path.exists():
+            QMessageBox.warning(self, "Cannot Save", "A video must be loaded before saving a project.")
+            return
+
+        self.statusBar().showMessage(f"Saving project to {path.name}...")
+        try:
+            project_json_content = {
+                "subtitles_data": self.subtitles_manager.subtitles.to_dict(),
+                "style_data": self.style_manager.style,
+            }
+            video_source_path = self.video_manager.video_path
+
+            def _create_archive() -> None:
+                with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
+                    zf.writestr("project.json", json.dumps(project_json_content, indent=2))
+                    zf.write(video_source_path, arcname=f"video{video_source_path.suffix}")
+
+            await asyncio.to_thread(_create_archive)
+            self.statusBar().showMessage(f"Project saved to '{path.name}'.", 5000)
+        except Exception as e:
+            QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{str(e)}")
+            self.statusBar().showMessage("Project save failed.", 5000)
+
+    def _update_window_title(self) -> None:
+        """Update the main window title based on the current project path."""
+        if self._current_project_path:
+            self.setWindowTitle(f"Auto Subs - {self._current_project_path.name}")
+        else:
+            self.setWindowTitle("Auto Subs")
+
     # --- Menu Action Slots (Import/Export/Style) ---
 
     @asyncSlot()  # type: ignore[misc]
@@ -241,6 +375,8 @@ class SubtitleEditorApp(QMainWindow):
         """Prompt the user to select a video file to import."""
         selected_path, _ = QFileDialog.getOpenFileName(self, "Import Video", "", "Video files (*.mp4 *.mkv *.avi)")
         if selected_path:
+            self._current_project_path = None
+            self._update_window_title()
             path = Path(selected_path)
             self.video_manager.set_video_path(path)
 
@@ -336,7 +472,7 @@ class SubtitleEditorApp(QMainWindow):
     @asyncSlot()  # type: ignore[misc]
     async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style", "", "JSON files (*.json)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style As", "", "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
