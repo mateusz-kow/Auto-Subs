@@ -55,12 +55,13 @@ class StyleManager:
         self._style_throttler = QThrottler(1000)
         self._style_loaded_throttler = QThrottler(1000)
 
-    def from_dict(self, new_style: dict[str, Any]) -> None:
+    def from_dict(self, new_style: dict[str, Any], notify_loaded: bool = False) -> None:
         """
         Update the current style with a new style dictionary and notify listeners.
 
         Args:
             new_style (dict): A dictionary containing the new style values.
+            notify_loaded (bool): If True, also notify style_loaded_listeners.
         """
         if new_style == self._style or new_style is None:
             return
@@ -69,6 +70,9 @@ class StyleManager:
         self._style.update(new_style)
 
         self._style_throttler.call(self._notify_style_listeners, self._style)
+
+        if notify_loaded:
+            self._style_loaded_throttler.call(self._notify_style_loaded_listeners, self._style)
 
     def _notify_style_listeners(self, new_style: dict[str, Any]) -> None:
         """
@@ -83,7 +87,7 @@ class StyleManager:
     def reset_to_default(self) -> None:
         """Reset the style to the default values and notify listeners."""
         logger.debug("Resetting style to default")
-        self.from_dict(DEFAULT_STYLE.copy())
+        self.from_dict(DEFAULT_STYLE.copy(), notify_loaded=True)
 
     def save_to_file(self, path: Path) -> Path:
         """
@@ -126,9 +130,7 @@ class StyleManager:
                 return
 
             logger.debug(f"Loaded style from {path}: {data}")
-            self.from_dict(data)
-
-            self._style_loaded_throttler.call(self._notify_style_loaded_listeners, data)
+            self.from_dict(data, notify_loaded=True)
         except (OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load style from {path}: {e}")
             raise

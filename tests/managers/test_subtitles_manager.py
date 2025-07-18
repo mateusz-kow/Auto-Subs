@@ -141,3 +141,75 @@ def test_on_video_changed_clears_subtitles(subtitles_manager: SubtitlesManager) 
     subtitles_manager.on_video_changed(Path("/fake/video.mp4"))
     assert subtitles_manager.subtitles is not None
     assert len(subtitles_manager.subtitles.segments) == 0
+
+
+def test_resize_segment_scales_words_down(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
+    """Test that resizing a segment to a shorter duration scales words correctly."""
+    mock_listener = mocker.MagicMock()
+    subtitles_manager.add_subtitles_listener(mock_listener)
+    segment_index = 0
+    # Original: start=0.0, end=1.0, duration=1.0
+    # Words: (0.0, 0.5), (0.6, 1.0)
+    new_start, new_end = 0.5, 1.0  # New duration = 0.5 (scale factor = 0.5)
+
+    subtitles_manager.resize_segment(segment_index, new_start, new_end)
+    resized_segment = subtitles_manager.subtitles.segments[segment_index]
+
+    assert resized_segment.start == pytest.approx(0.5)
+    assert resized_segment.end == pytest.approx(1.0)
+    assert resized_segment.words[0].start == pytest.approx(0.5 + (0.0 - 0.0) * 0.5)  # 0.5
+    assert resized_segment.words[0].end == pytest.approx(0.5 + (0.5 - 0.0) * 0.5)  # 0.75
+    assert resized_segment.words[1].start == pytest.approx(0.5 + (0.6 - 0.0) * 0.5)  # 0.8
+    assert resized_segment.words[1].end == pytest.approx(0.5 + (1.0 - 0.0) * 0.5)  # 1.0
+    mock_listener.assert_called_once()
+
+
+def test_resize_segment_scales_words_up(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
+    """Test that resizing a segment to a longer duration scales words correctly."""
+    mock_listener = mocker.MagicMock()
+    subtitles_manager.add_subtitles_listener(mock_listener)
+    segment_index = 0
+    # Original: start=0.0, end=1.0, duration=1.0
+    # Words: (0.0, 0.5), (0.6, 1.0)
+    new_start, new_end = 0.0, 2.0  # New duration = 2.0 (scale factor = 2.0)
+
+    subtitles_manager.resize_segment(segment_index, new_start, new_end)
+    resized_segment = subtitles_manager.subtitles.segments[segment_index]
+
+    assert resized_segment.start == pytest.approx(0.0)
+    assert resized_segment.end == pytest.approx(2.0)
+    assert resized_segment.words[0].start == pytest.approx(0.0 + (0.0 - 0.0) * 2.0)  # 0.0
+    assert resized_segment.words[0].end == pytest.approx(0.0 + (0.5 - 0.0) * 2.0)  # 1.0
+    assert resized_segment.words[1].start == pytest.approx(0.0 + (0.6 - 0.0) * 2.0)  # 1.2
+    assert resized_segment.words[1].end == pytest.approx(0.0 + (1.0 - 0.0) * 2.0)  # 2.0
+    mock_listener.assert_called_once()
+
+
+def test_resize_segment_aborts_on_min_word_duration(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
+    """Test that resizing aborts if the new duration is too short for the words."""
+    mock_listener = mocker.MagicMock()
+    subtitles_manager.add_subtitles_listener(mock_listener)
+    segment = subtitles_manager.subtitles.segments[0]
+    original_words = [SubtitleWord(w.text, w.start, w.end) for w in segment.words]
+    # Segment has 2 words, min duration is 2 * 0.05 = 0.1s
+    new_start, new_end = 0.0, 0.09
+
+    subtitles_manager.resize_segment(0, new_start, new_end)
+
+    # Assert that no change was made
+    assert subtitles_manager.subtitles.segments[0].words == original_words
+    mock_listener.assert_not_called()
+
+
+def test_resize_segment_aborts_on_zero_duration(subtitles_manager: SubtitlesManager, mocker: MockerFixture) -> None:
+    """Test that resizing aborts if the new duration is zero or negative."""
+    mock_listener = mocker.MagicMock()
+    subtitles_manager.add_subtitles_listener(mock_listener)
+    segment = subtitles_manager.subtitles.segments[0]
+    original_words = [SubtitleWord(w.text, w.start, w.end) for w in segment.words]
+
+    subtitles_manager.resize_segment(0, 0.5, 0.5)
+
+    # Assert that no change was made
+    assert subtitles_manager.subtitles.segments[0].words == original_words
+    mock_listener.assert_not_called()
