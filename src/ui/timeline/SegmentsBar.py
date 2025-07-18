@@ -238,6 +238,29 @@ class SegmentsBar(QGraphicsView):
         logger.info("Merging %d selected segments", len(self.selected_segments))
         self.subtitles_manager.merge_segments(self.selected_segments)
 
+    def request_segment_resize(self, segment_index: int, new_start: float, new_end: float) -> None:
+        """Request a resize operation from the SubtitlesManager."""
+        logger.info("Requesting resize for segment %d to start: %.2f, end: %.2f", segment_index, new_start, new_end)
+        self.subtitles_manager.resize_segment(segment_index, new_start, new_end)
+
+    def get_resize_boundaries(self, segment_index: int) -> tuple[float, float]:
+        """
+        Get the valid resize boundaries for a segment to prevent overlap.
+
+        Returns:
+            A tuple (left_boundary, right_boundary) in seconds.
+        """
+        segments = self.subtitles_manager.subtitles.segments
+        # Left boundary is the end time of the previous segment, or 0.0
+        left_boundary = segments[segment_index - 1].end if segment_index > 0 else 0.0
+        # Right boundary is the start time of the next segment, or video duration
+        right_boundary = (
+            segments[segment_index + 1].start
+            if segment_index < len(segments) - 1
+            else self.video_manager.video_duration
+        )
+        return left_boundary, right_boundary
+
     def wheelEvent(self, event: QWheelEvent) -> None:
         """Enable horizontal scrolling using the mouse wheel."""
         delta = event.angleDelta().y()

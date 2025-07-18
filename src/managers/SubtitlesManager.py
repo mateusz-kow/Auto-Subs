@@ -68,6 +68,37 @@ class SubtitlesManager:
         self.subtitles.add_segment(merged_segment)
         self._notify_listeners()
 
+    def resize_segment(self, segment_index: int, new_start: float, new_end: float) -> None:
+        """Resize a segment and scale its words proportionally."""
+        segment = self._subtitles.segments[segment_index]
+        original_start = segment.start
+        original_duration = segment.end - original_start
+        new_duration = new_end - new_start
+
+        if original_duration <= 0 or new_duration <= 0:
+            logger.warning("Resize resulted in zero or negative duration. Aborting.")
+            return
+
+        min_segment_duration = len(segment.words) * 0.05
+        if new_duration < min_segment_duration:
+            logger.warning(
+                "Resize aborted. New duration %.2f is less than minimum required %.2f",
+                new_duration,
+                min_segment_duration,
+            )
+            return
+
+        scale_factor = new_duration / original_duration
+
+        for word in segment.words:
+            start_offset = word.start - original_start
+            end_offset = word.end - original_start
+
+            word.start = new_start + (start_offset * scale_factor)
+            word.end = new_start + (end_offset * scale_factor)
+
+        self._refresh_segment(segment_index)
+
     def set_word(self, segment_index: int, word_index: int, word: SubtitleWord) -> None:
         """Update a word in a specific segment."""
         segment = self._subtitles.segments[segment_index]
@@ -78,8 +109,8 @@ class SubtitlesManager:
     def add_empty_word(self, segment_index: int) -> None:
         """Add an empty word to a specific segment."""
         segment = self._subtitles.segments[segment_index]
-        if not segment.words or segment.words[0] != SubtitleWord("", 0, 0):
-            segment.words.append(SubtitleWord("", 0, 0))
+        if not segment.words or segment.words[0] != SubtitleWord.empty():
+            segment.words.append(SubtitleWord.empty())
             self._refresh_segment(segment_index)
 
     def on_transcription_changed(self, transcription: dict[str, Any]) -> None:
