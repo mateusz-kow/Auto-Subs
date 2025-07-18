@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QToolBar,
-    QWidget,
 )
 from qasync import asyncSlot
 
@@ -81,7 +80,9 @@ class SubtitleEditorApp(QMainWindow):
 
         # Dock the editor panel
         self.left_dock_widget = QDockWidget("Editor Panel", self)
-        self.left_dock_widget.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.left_dock_widget.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
         self.left_dock_widget.setWidget(self.left_panel)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.left_dock_widget)
 

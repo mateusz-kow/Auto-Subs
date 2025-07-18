@@ -20,7 +20,6 @@ from src.ui.timeline.constants import (
     SUBTITLE_BAR_HEIGHT,
     SUBTITLE_BAR_Y,
     TIME_SCALE_FACTOR,
-    VIDEO_BAR_Y,
 )
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
