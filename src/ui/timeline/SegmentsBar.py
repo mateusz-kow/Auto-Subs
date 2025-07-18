@@ -10,7 +10,6 @@ from src.managers.SubtitlesManager import SubtitlesManager
 from src.managers.VideoManager import VideoManager
 from src.subtitles.models import Subtitles
 from src.ui.timeline.constants import (
-    BAR_HEIGHT,
     MAJOR_MARKER_HEIGHT,
     MAJOR_MARKER_INTERVAL,
     MARKER_TEXT_OFFSET,
@@ -19,8 +18,8 @@ from src.ui.timeline.constants import (
     MINOR_MARKER_INTERVAL,
     SCENE_MIN_WIDTH,
     SUBTITLE_BAR_HEIGHT,
+    SUBTITLE_BAR_Y,
     TIME_SCALE_FACTOR,
-    VIDEO_BAR_Y,
 )
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
@@ -33,7 +32,8 @@ class SegmentsBar(QGraphicsView):
     Graphical timeline view displaying subtitle segments and the video progress bar.
 
     This view supports segment selection, preview synchronization, and context menu actions
-    such as deletion or merging of subtitle segments.
+    such as deletion or merging of subtitle segments. It is designed to be vertically
+    expandable while keeping its content at a fixed height.
 
     Signals:
         segment_clicked (int): Emitted when a segment is clicked, with its index.
@@ -54,13 +54,12 @@ class SegmentsBar(QGraphicsView):
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
         self.selected_segments: set[int] = set()
-        self.preview_time_listeners: list[Callable[[float], None]] = []
+        self.preview_time_listeners: list[Callable[[float], Any]] = []
 
         # Graphics scene setup
         self._scene = QGraphicsScene()
         self.setScene(self._scene)
-        self.setFixedHeight(SUBTITLE_BAR_HEIGHT + BAR_HEIGHT + VIDEO_BAR_Y)
-        self.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
@@ -137,7 +136,9 @@ class SegmentsBar(QGraphicsView):
                     self._subtitles.segments[-1].end if self._subtitles and self._subtitles.segments else 0,
                 )
                 scene_width = max(SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR))
-                self._scene.setSceneRect(0, 0, scene_width, self.height())
+                scene_height = SUBTITLE_BAR_Y + SUBTITLE_BAR_HEIGHT + 5  # Ensure scene is tall enough for content
+                self._scene.setSceneRect(0, 0, scene_width, scene_height)
+
                 self.setUpdatesEnabled(True)
                 logger.info("Timeline update complete")
                 return  # Exit the loop
