@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 import whisper
 
-from src.utils.constants import WHISPER_MODEL
+from src.config import WHISPER_MODEL
 
 logger = getLogger(__name__)
 

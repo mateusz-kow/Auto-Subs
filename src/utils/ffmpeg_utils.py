@@ -6,7 +6,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Optional, Union
 
-from src.utils.constants import TEMP_DIR
+from src.config import TEMP_DIR
 
 logger = getLogger(__name__)
 

@@ -26,7 +26,7 @@ from src.subtitles.models import Subtitles
 from src.ui.LeftPanel import LeftPanel
 from src.ui.MediaPlayer import MediaPlayer
 from src.ui.timeline.TimelineBar import TimelineBar
-from src.utils.constants import TEMP_DIR
+from src.config import TEMP_DIR, STYLES_DIR
 from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 
@@ -472,7 +472,7 @@ class SubtitleEditorApp(QMainWindow):
     @asyncSlot()  # type: ignore[misc]
     async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style As", "", "JSON files (*.json)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style As", str(STYLES_DIR), "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -484,7 +484,7 @@ class SubtitleEditorApp(QMainWindow):
     @asyncSlot()  # type: ignore[misc]
     async def load_style_from_file(self) -> None:
         """Load subtitle styling from a JSON file."""
-        selected_path, _ = QFileDialog.getOpenFileName(self, "Load Style", "", "JSON files (*.json)")
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Load Style", str(STYLES_DIR), "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
