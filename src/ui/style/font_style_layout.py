@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
+from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:

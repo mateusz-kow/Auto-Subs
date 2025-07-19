@@ -4,7 +4,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QCheckBox, QColorDialog, QPushButton, QVBoxLayout
 
-from src.utils.color_operations import ass_to_qcolor, qcolor_to_ass
+from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 class HighlightStyleLayout(QVBoxLayout):

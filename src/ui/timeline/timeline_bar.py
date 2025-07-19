@@ -9,7 +9,7 @@ from src.managers.subtitles_manager import SubtitlesManager
 from src.managers.video_manager import VideoManager
 from src.ui.media_player import MediaPlayer
 from src.ui.timeline.constants import SUBTITLE_BAR_HEIGHT, SUBTITLE_BAR_Y
-from src.ui.timeline.SegmentsBar import SegmentsBar
+from src.ui.timeline.segments_bar import SegmentsBar
 
 
 class TimelineBar(QWidget):

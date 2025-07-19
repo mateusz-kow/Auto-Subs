@@ -3,7 +3,7 @@ import asyncio
 import threading
 from logging import getLogger
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import whisper
 
@@ -11,6 +11,9 @@ from src.config import WHISPER_MODEL
 from src.managers.base_manager import BaseManager, EventType
 
 logger = getLogger(__name__)
+
+
+TranscriptionResult = dict[str, str | list[dict[str, int]]]
 
 
 class TranscriptionEventType(EventType):
@@ -72,7 +75,7 @@ class TranscriptionManager(BaseManager[Any]):
 
     async def transcribe(
         self, audio_path: Path, word_timestamps: bool = True, language: str | None = None
-    ) -> dict[str, Any] | None:
+    ) -> TranscriptionResult | None:
         """
         Asynchronously transcribe an audio file using the loaded Whisper model.
 
@@ -96,11 +99,14 @@ class TranscriptionManager(BaseManager[Any]):
 
             try:
                 logger.info(f"Starting transcription for: {audio_path}")
-                result = await asyncio.to_thread(
-                    self._model.transcribe,
-                    audio=str(audio_path),
-                    word_timestamps=word_timestamps,
-                    language=language,
+                result = cast(
+                    TranscriptionResult,
+                    await asyncio.to_thread(
+                        self._model.transcribe,
+                        audio=str(audio_path),
+                        word_timestamps=word_timestamps,
+                        language=language,
+                    ),
                 )
                 if self._is_cancellation_requested:
                     logger.info("Transcription was cancelled. Discarding result.")

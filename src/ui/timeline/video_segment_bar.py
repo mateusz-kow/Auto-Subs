@@ -16,7 +16,7 @@ from src.ui.timeline.constants import (
 )
 
 if TYPE_CHECKING:
-    from src.ui.timeline.SegmentsBar import SegmentsBar
+    from src.ui.timeline.segments_bar import SegmentsBar
 
 logger = getLogger(__name__)
 

@@ -14,9 +14,9 @@ from PySide6.QtWidgets import (
 from src.managers.style_manager import StyleManager
 from src.managers.subtitles_manager import SubtitlesManager
 from src.subtitles.models import Subtitles, SubtitleWord
-from src.ui.style.StyleLayout import StyleLayout
-from src.ui.style.StylePresetView import StylePresetView
-from src.ui.subtitles.SegmentWordEditor import SegmentWordEditor
+from src.ui.style.style_layout import StyleLayout
+from src.ui.style.style_preset_view import StylePresetView
+from src.ui.subtitles.segment_word_editor import SegmentWordEditor
 
 logger = getLogger(__name__)
 

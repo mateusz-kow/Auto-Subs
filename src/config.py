@@ -58,6 +58,7 @@ LOGGING_CONFIG = {
     },
 }
 
+# Default style configuration
 DEFAULT_STYLE = {
     "title": "Default",
     "font": "Comic Sans MS",
@@ -94,7 +95,8 @@ DEFAULT_STYLE = {
 }
 
 
-try:
-    from local_config import *
+# Overwrite with local configuration if available
+try:  # noqa: SIM105
+    from local_config import *  # noqa: F403
 except ImportError:
     pass

@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from src.managers.style_manager import StyleManager
 
-from .FontStyleLayout import FontStyleLayout
-from .HighlightStyleLayout import HighlightStyleLayout
+from .font_style_layout import FontStyleLayout
+from .highlight_style_layout import HighlightStyleLayout
 
 
 class StyleLayout(QScrollArea):

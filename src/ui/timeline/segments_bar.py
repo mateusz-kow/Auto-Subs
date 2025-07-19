@@ -1,4 +1,4 @@
-# src/ui/timeline/SegmentsBar.py
+# src/ui/timeline/segments_bar.py
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable
@@ -22,8 +22,8 @@ from src.ui.timeline.constants import (
     SUBTITLE_BAR_Y,
     TIME_SCALE_FACTOR,
 )
-from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
-from src.ui.timeline.VideoSegmentBar import VideoSegmentBar
+from src.ui.timeline.subtitle_segment_bar import SubtitleSegmentBar
+from src.ui.timeline.video_segment_bar import VideoSegmentBar
 
 logger = getLogger(__name__)
 

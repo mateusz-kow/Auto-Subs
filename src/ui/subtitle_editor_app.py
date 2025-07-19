@@ -27,7 +27,7 @@ from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
 from src.ui.left_panel import LeftPanel
 from src.ui.media_player import MediaPlayer
-from src.ui.timeline.TimelineBar import TimelineBar
+from src.ui.timeline.timeline_bar import TimelineBar
 from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 

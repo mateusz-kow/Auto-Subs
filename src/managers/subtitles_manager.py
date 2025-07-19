@@ -65,7 +65,7 @@ class SubtitlesManager(BaseManager[Subtitles]):
             return
 
         words: list[SubtitleWord] = []
-        for index in sorted(list(segment_indices), reverse=True):
+        for index in sorted(segment_indices, reverse=True):
             words.extend(self._subtitles.segments[index].words)
             del self._subtitles.segments[index]
 
