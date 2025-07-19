@@ -2,8 +2,7 @@ from PySide6.QtGui import QColor
 
 
 def ass_to_qcolor(ass_color: str) -> QColor:
-    """
-    Converts an ASS subtitle color string to a QColor object.
+    """Converts an ASS subtitle color string to a QColor object.
 
     Args:
         ass_color (str): The ASS color string in the format "&HAABBGGRR" or "AABBGGRR".
@@ -31,8 +30,7 @@ def ass_to_qcolor(ass_color: str) -> QColor:
 
 
 def qcolor_to_ass(qcolor: QColor) -> str:
-    """
-    Converts a QColor object to an ASS subtitle color string.
+    """Converts a QColor object to an ASS subtitle color string.
 
     Args:
         qcolor (QColor): The QColor object to convert.

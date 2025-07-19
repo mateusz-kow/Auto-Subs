@@ -22,8 +22,7 @@ logger = getLogger(__name__)
 
 
 class LeftPanel(QWidget):
-    """
-    A widget for the left panel of the application.
+    """A widget for the left panel of the application.
 
     This panel contains a QStackedWidget to switch between the Style editor,
     the context-aware Segment Word Editor, and the Style Preset browser.
@@ -108,8 +107,7 @@ class LeftPanel(QWidget):
 
     @Slot(int)
     def show_editor_for_segment(self, segment_index: int) -> None:
-        """
-        Public slot to switch the view to the word editor and populate it
+        """Public slot to switch the view to the word editor and populate it
         with data for the specified segment.
         """
         if self.subtitles_manager.subtitles is None:

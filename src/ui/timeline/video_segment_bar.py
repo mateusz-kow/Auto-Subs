@@ -22,8 +22,7 @@ logger = getLogger(__name__)
 
 
 class VideoSegmentBar(QGraphicsRectItem):
-    """
-    Represents the video timeline bar with an interactive progress indicator.
+    """Represents the video timeline bar with an interactive progress indicator.
 
     This class handles visual representation of video progress,
     mouse-based seeking, and keyboard interaction for frame-wise navigation.
@@ -38,8 +37,7 @@ class VideoSegmentBar(QGraphicsRectItem):
     """
 
     def __init__(self, video_duration: float, parent_controller: SegmentsBar) -> None:
-        """
-        Initialize the VideoSegmentBar.
+        """Initialize the VideoSegmentBar.
 
         Args:
             video_duration (float): Total duration of the video in seconds.
@@ -67,8 +65,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         logger.info("VideoSegmentBar initialized with duration: %.2f seconds", video_duration)
 
     def update_progress(self, frame: int) -> None:
-        """
-        Update the visual progress of the bar to the specified frame.
+        """Update the visual progress of the bar to the specified frame.
 
         Args:
             frame (int): The current frame to represent.
@@ -78,9 +75,8 @@ class VideoSegmentBar(QGraphicsRectItem):
         self.fill_item.setRect(QRectF(0, 0, width, BAR_HEIGHT))
         logger.debug("Progress updated to frame %d (%.2f seconds)", frame, frame / FRAME_RATE)
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        """
-        Handle keyboard events to navigate frames.
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
+        """Handle keyboard events to navigate frames.
 
         Args:
             event (QKeyEvent): The key press event (e.g., left/right arrow).
@@ -91,9 +87,8 @@ class VideoSegmentBar(QGraphicsRectItem):
             self.update_progress(self.current_frame + 1)
         super().keyPressEvent(event)
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        """
-        Start dragging and update progress on mouse press.
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        """Start dragging and update progress on mouse press.
 
         Args:
             event (QGraphicsSceneMouseEvent): The mouse press event.
@@ -103,9 +98,8 @@ class VideoSegmentBar(QGraphicsRectItem):
             self._update_progress_from_position(event.pos().x())
             logger.info("Mouse press detected. Dragging started.")
 
-    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        """
-        Update progress while dragging the mouse.
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        """Update progress while dragging the mouse.
 
         Args:
             event (QGraphicsSceneMouseEvent): The mouse move event.
@@ -114,9 +108,8 @@ class VideoSegmentBar(QGraphicsRectItem):
             self._update_progress_from_position(event.pos().x())
             logger.debug("Dragging... Updated progress from mouse move.")
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        """
-        Stop dragging on mouse release.
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        """Stop dragging on mouse release.
 
         Args:
             event (QGraphicsSceneMouseEvent): The mouse release event.
@@ -126,8 +119,7 @@ class VideoSegmentBar(QGraphicsRectItem):
             logger.info("Mouse released. Dragging ended.")
 
     def _update_progress_from_position(self, x_pos: float) -> None:
-        """
-        Convert x-coordinate to frame number and update progress.
+        """Convert x-coordinate to frame number and update progress.
 
         Args:
             x_pos (float): The horizontal position of the cursor within the bar.
@@ -139,8 +131,7 @@ class VideoSegmentBar(QGraphicsRectItem):
         self._notify_preview_time_change(frame / FRAME_RATE)
 
     def _notify_preview_time_change(self, timestamp: float) -> None:
-        """
-        Notify the parent controller that the preview time has changed.
+        """Notify the parent controller that the preview time has changed.
 
         Args:
             timestamp (float): The current timestamp in seconds.

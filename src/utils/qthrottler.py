@@ -4,15 +4,13 @@ from PySide6.QtCore import QDateTime, QObject, QTimer
 
 
 class QThrottler(QObject):
-    """
-    A utility class to throttle the execution of a function, ensuring it is not called
+    """A utility class to throttle the execution of a function, ensuring it is not called
     more frequently than the specified interval. If a call is made during the interval,
     it will be queued and executed after the interval has elapsed.
     """
 
     def __init__(self, interval_ms: int):
-        """
-        Initialize the QThrottler.
+        """Initialize the QThrottler.
 
         Args:
             interval_ms (int): The minimum interval (in milliseconds) between function calls.
@@ -30,8 +28,7 @@ class QThrottler(QObject):
         self._pending_kwargs: dict[str, Any] = {}
 
     def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
-        """
-        Call the given function, ensuring it adheres to the throttling interval.
+        """Call the given function, ensuring it adheres to the throttling interval.
 
         Args:
             func (Callable): The function to be called.

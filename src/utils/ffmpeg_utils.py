@@ -16,8 +16,7 @@ def get_video_with_subtitles(
     ass_path: Union[str, Path],
     output_path: Optional[Union[str, Path]] = None,
 ) -> Path:
-    """
-    Adds ASS subtitles to a video and saves the output.
+    """Adds ASS subtitles to a video and saves the output.
 
     Args:
         video_path (Union[str, Path]): Path to the input video file.
@@ -51,8 +50,8 @@ def get_video_with_subtitles(
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
         return output_path.resolve()
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to embed subtitles: {e}")
-        raise RuntimeError(f"FFmpeg subtitle processing failed: {e}") from e
+        logger.exception("Failed to embed subtitles")
+        raise RuntimeError("FFmpeg subtitle processing failed") from e
 
 
 def get_preview_image(
@@ -61,8 +60,7 @@ def get_preview_image(
     output_path: Optional[Union[str, Path]] = None,
     timestamp: float = 0.0,
 ) -> Path:
-    """
-    Generates a preview image from a video at a given timestamp with ASS subtitles.
+    """Generates a preview image from a video at a given timestamp with ASS subtitles.
 
     Args:
         video_path (Union[str, Path]): Path to the video file.
@@ -98,13 +96,12 @@ def get_preview_image(
         subprocess.run(cmd, check=True, cwd=TEMP_DIR)
         return output_path.resolve()
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to generate preview image: {e}")
-        raise RuntimeError(f"FFmpeg preview image generation failed: {e}") from e
+        logger.exception("Failed to generate preview image")
+        raise RuntimeError("FFmpeg preview image generation failed") from e
 
 
 def get_video_duration(video_path: Union[str, Path]) -> float:
-    """
-    Retrieves the duration of a video file using ffmpeg.
+    """Retrieves the duration of a video file using ffmpeg.
 
     Args:
         video_path (Union[str, Path]): Path to the video file.
@@ -137,13 +134,12 @@ def get_video_duration(video_path: Union[str, Path]) -> float:
         duration_info = json.loads(result.stdout)
         return float(duration_info["format"]["duration"])
     except (subprocess.CalledProcessError, KeyError, ValueError) as e:
-        logger.error(f"Failed to retrieve video duration: {e}")
-        raise RuntimeError(f"Failed to retrieve video duration: {e}") from e
+        logger.exception("Failed to retrieve video duration")
+        raise RuntimeError("Failed to retrieve video duration") from e
 
 
 def _adjust_path(path: Union[str, Path], cwd: Union[str, Path] = TEMP_DIR) -> str:
-    """
-    Adjusts the provided path relative to the given `cwd` directory and normalizes path separators.
+    """Adjusts the provided path relative to the given `cwd` directory and normalizes path separators.
 
     Args:
         path (Union[str, Path]): Input file path that needs to be adjusted.

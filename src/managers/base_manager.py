@@ -1,9 +1,6 @@
-# src/managers/base_manager.py
 from enum import Enum
 from logging import getLogger
 from typing import Any, Callable, Generic, TypeVar
-
-from PySide6.QtWidgets import QWidget
 
 logger = getLogger(__name__)
 
@@ -18,16 +15,14 @@ class EventType(Enum):
 
 
 class BaseManager(Generic[T]):
-    """
-    A generic base class for managers that handle state and notify listeners.
+    """A generic base class for managers that handle state and notify listeners.
 
     This class provides a standardized, type-safe implementation for managing
     a list of listeners and notifying them of state changes.
     """
 
     def __init__(self, event_types_enum: type[EventType]) -> None:
-        """
-        Initialize the BaseManager.
+        """Initialize the BaseManager.
 
         Args:
             event_types_enum: The Enum class defining the events for this manager.
@@ -38,8 +33,7 @@ class BaseManager(Generic[T]):
         }
 
     def register_listener(self, listener_obj: Any) -> None:
-        """
-        Register a listener object.
+        """Register a listener object.
 
         This method inspects the listener object for methods that match the
         names defined in the manager's EventType enum and registers them.
@@ -55,8 +49,7 @@ class BaseManager(Generic[T]):
                     methods.append(method)
 
     def _notify_listeners(self, data: T, event_type: EventType) -> None:
-        """
-        Notify all registered listeners for a specific event type.
+        """Notify all registered listeners for a specific event type.
 
         Args:
             data: The state data to pass to each listener.
@@ -69,26 +62,5 @@ class BaseManager(Generic[T]):
         for listener in self._listeners[event_type]:
             try:
                 listener(data)
-            except Exception as e:
-                logger.exception(f"Listener {getattr(listener, '__name__', 'unknown')} raised an exception: {e}")
-
-
-class ObserverWidget(QWidget):
-    """
-    Base class for widgets that observe managers.
-
-    Provides a convenient way to register the widget with multiple managers
-    upon initialization.
-    """
-
-    def __init__(self, managers: list[BaseManager[Any]], parent: QWidget | None = None) -> None:
-        """
-        Initialize the ObserverWidget and register with managers.
-
-        Args:
-            managers: A list of manager instances to observe.
-            parent: The parent widget.
-        """
-        super().__init__(parent)
-        for manager in managers:
-            manager.register_listener(self)
+            except Exception:
+                logger.exception(f"Listener {getattr(listener, '__name__', 'unknown')} raised an exception")

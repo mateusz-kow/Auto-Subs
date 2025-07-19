@@ -9,12 +9,12 @@ from .highlight_style_layout import HighlightStyleLayout
 
 
 class StyleLayout(QScrollArea):
-    """
-    A layout that combines font and highlight styling controls
+    """A layout that combines font and highlight styling controls
     and allows applying those styles via StyleManager.
     """
 
     def __init__(self, style_manager: StyleManager) -> None:
+        """Initialize the StyleLayout with font and highlight style managers."""
         super().__init__()
 
         # Create a container widget for the scrollable content
@@ -43,8 +43,7 @@ class StyleLayout(QScrollArea):
         self.style_manager.from_dict(style_data)
 
     def get_current_settings(self) -> dict[str, Any]:
-        """
-        Combines font and highlight managers into a single dictionary.
+        """Combines font and highlight managers into a single dictionary.
 
         Returns:
             dict: Combined style managers.
@@ -56,8 +55,7 @@ class StyleLayout(QScrollArea):
         }
 
     def on_style_loaded(self, new_style: dict[str, Any]) -> None:
-        """
-        Callback for when a new style is loaded.
+        """Callback for when a new style is loaded.
 
         Args:
             new_style (dict): The loaded style data.

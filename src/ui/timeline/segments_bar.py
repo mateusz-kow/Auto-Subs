@@ -29,8 +29,7 @@ logger = getLogger(__name__)
 
 
 class SegmentsBar(QGraphicsView):
-    """
-    Graphical timeline view displaying subtitle segments and the video progress bar.
+    """Graphical timeline view displaying subtitle segments and the video progress bar.
 
     This view supports segment selection, preview synchronization, and context menu actions
     such as deletion or merging of subtitle segments. It is designed to be vertically
@@ -43,8 +42,7 @@ class SegmentsBar(QGraphicsView):
     segment_clicked = Signal(int)
 
     def __init__(self, subtitles_manager: SubtitlesManager, video_manager: VideoManager) -> None:
-        """
-        Initialize the SegmentsBar.
+        """Initialize the SegmentsBar.
 
         Args:
             subtitles_manager: Manages subtitle segment data.
@@ -71,8 +69,7 @@ class SegmentsBar(QGraphicsView):
         logger.debug("SegmentsBar initialized")
 
     def handle_segment_click(self, segment_item: SubtitleSegmentBar, event: QGraphicsSceneMouseEvent) -> None:
-        """
-        Handle mouse click on a subtitle segment.
+        """Handle mouse click on a subtitle segment.
 
         Args:
             segment_item (SubtitleSegmentBar): The clicked segment.
@@ -90,8 +87,7 @@ class SegmentsBar(QGraphicsView):
             self._select_segment(segment_item)
 
     def update_timeline(self, subtitles: Subtitles | None, video_duration: float) -> None:
-        """
-        Refresh the entire timeline with new subtitle and video data.
+        """Refresh the entire timeline with new subtitle and video data.
 
         Args:
             subtitles: Subtitle data structure with segments.
@@ -144,8 +140,8 @@ class SegmentsBar(QGraphicsView):
             self._step += 1
             QTimer.singleShot(0, self._step_update)
 
-        except Exception as e:
-            logger.exception("Error during timeline update step %d: %s", self._step, e)
+        except Exception:
+            logger.exception(f"Error during timeline update step {self._step}")
 
     def _add_video_bar(self, video_duration: float) -> None:
         """Add the video playback bar to the timeline."""
@@ -206,8 +202,7 @@ class SegmentsBar(QGraphicsView):
         self.selected_segments.clear()
 
     def show_context_menu(self, position: QPoint) -> None:
-        """
-        Show context menu for subtitle segment actions.
+        """Show context menu for subtitle segment actions.
 
         Args:
             position: Screen position for context menu display.
@@ -243,8 +238,7 @@ class SegmentsBar(QGraphicsView):
         self.subtitles_manager.resize_segment(segment_index, new_start, new_end)
 
     def get_resize_boundaries(self, segment_index: int) -> tuple[float, float]:
-        """
-        Get the valid resize boundaries for a segment to prevent overlap.
+        """Get the valid resize boundaries for a segment to prevent overlap.
 
         Returns:
             A tuple (left_boundary, right_boundary) in seconds.
@@ -263,14 +257,13 @@ class SegmentsBar(QGraphicsView):
         )
         return left_boundary, right_boundary
 
-    def wheelEvent(self, event: QWheelEvent) -> None:
+    def wheelEvent(self, event: QWheelEvent) -> None:  # noqa: N802
         """Enable horizontal scrolling using the mouse wheel."""
         delta = event.angleDelta().y()
         self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta)
 
     def notify_preview_time_change(self, timestamp: float) -> None:
-        """
-        Notify registered listeners that the preview time has changed.
+        """Notify registered listeners that the preview time has changed.
 
         Args:
             timestamp (float): New preview timestamp in seconds.
@@ -280,8 +273,7 @@ class SegmentsBar(QGraphicsView):
             listener(timestamp)
 
     def add_preview_time_listener(self, listener: Callable[[float], Any]) -> None:
-        """
-        Add a listener for preview time updates.
+        """Add a listener for preview time updates.
 
         Args:
             listener (Callable): Function to call with updated timestamp.
@@ -293,8 +285,7 @@ class SegmentsBar(QGraphicsView):
             logger.warning("Listener already registered: %s", listener)
 
     def on_subtitles_changed(self, subtitles: Subtitles) -> None:
-        """
-        Callback for subtitle data changes.
+        """Callback for subtitle data changes.
 
         Args:
             subtitles: New subtitle data to display.
@@ -304,8 +295,7 @@ class SegmentsBar(QGraphicsView):
         self.update_timeline(subtitles, self.video_manager.video_duration)
 
     def on_video_changed(self, video_path: Path) -> None:
-        """
-        Callback for video source changes.
+        """Callback for video source changes.
 
         Args:
             video_path (str): Path to the new video file.

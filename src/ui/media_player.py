@@ -14,8 +14,7 @@ class MediaPlayer(QWidget):
     """A media player widget using the MPV library for video playback."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """
-        Initialize the MediaPlayer widget. MPV instance is initialized on first show.
+        """Initialize the MediaPlayer widget. MPV instance is initialized on first show.
 
         Args:
             parent: Parent widget.
@@ -54,7 +53,7 @@ class MediaPlayer(QWidget):
             self.mpv_initialized = False
             return False
 
-    def showEvent(self, event: QShowEvent) -> None:
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
         """Handle widget show event to initialize MPV when the widget becomes visible."""
         super().showEvent(event)
         if not self.mpv_initialized and self.isVisible() and not self._initialize_mpv():
@@ -68,8 +67,7 @@ class MediaPlayer(QWidget):
         return True
 
     def set_subtitles_only(self, subtitle_path: Path) -> None:
-        """
-        Add a subtitle file for playback.
+        """Add a subtitle file for playback.
 
         Args:
             subtitle_path (str): Path to the subtitle file.
@@ -107,8 +105,7 @@ class MediaPlayer(QWidget):
             logger.error(f"Failed to set subtitles: {e}", exc_info=True)
 
     def set_media(self, video_path: Path, subtitle_path: Path | None = None) -> None:
-        """
-        Set the media file and optional subtitle file for playback.
+        """Set the media file and optional subtitle file for playback.
 
         Args:
             video_path (str): Path to the video file.
@@ -182,8 +179,7 @@ class MediaPlayer(QWidget):
             logger.error(f"Failed to toggle pause state: {e}", exc_info=True)
 
     def set_timestamp(self, timestamp: int) -> None:
-        """
-        Set the playback position to the given timestamp.
+        """Set the playback position to the given timestamp.
 
         Args:
             timestamp (int): The timestamp in milliseconds.
@@ -203,9 +199,8 @@ class MediaPlayer(QWidget):
         except Exception as e:
             logger.error(f"Failed to set timestamp: {e}", exc_info=True)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
-        """
-        Handle widget close event to release MPV resources.
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        """Handle widget close event to release MPV resources.
 
         Args:
             event: The close event.

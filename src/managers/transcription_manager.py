@@ -25,8 +25,7 @@ class TranscriptionEventType(EventType):
 
 
 class TranscriptionManager(BaseManager[Any]):
-    """
-    Manages asynchronous transcription using OpenAI's Whisper model.
+    """Manages asynchronous transcription using OpenAI's Whisper model.
 
     This class loads the Whisper model in a background thread and provides
     an asynchronous interface to transcribe audio files. It also supports
@@ -34,8 +33,7 @@ class TranscriptionManager(BaseManager[Any]):
     """
 
     def __init__(self, whisper_model: str = WHISPER_MODEL) -> None:
-        """
-        Initialize the TranscriptionManager and begin loading the Whisper model.
+        """Initialize the TranscriptionManager and begin loading the Whisper model.
 
         Args:
             whisper_model (str): Name or path of the Whisper model to load.
@@ -52,8 +50,7 @@ class TranscriptionManager(BaseManager[Any]):
         self._load_model(whisper_model)
 
     def _load_model(self, whisper_model: str) -> None:
-        """
-        Load the Whisper model in a separate thread to avoid blocking the main thread.
+        """Load the Whisper model in a separate thread to avoid blocking the main thread.
 
         Args:
             whisper_model (str): The model name (e.g., 'base', 'small') or file path.
@@ -76,8 +73,7 @@ class TranscriptionManager(BaseManager[Any]):
     async def transcribe(
         self, audio_path: Path, word_timestamps: bool = True, language: str | None = None
     ) -> TranscriptionResult | None:
-        """
-        Asynchronously transcribe an audio file using the loaded Whisper model.
+        """Asynchronously transcribe an audio file using the loaded Whisper model.
 
         Args:
             audio_path (str): Path to the input audio file.
@@ -127,8 +123,7 @@ class TranscriptionManager(BaseManager[Any]):
                 return None
 
     def on_video_changed(self, video_path: Path) -> None:
-        """
-        Update the manager with the current video path.
+        """Update the manager with the current video path.
 
         This is called when a new video is loaded to keep the manager's state
         in sync and prevent stale transcription results from being applied.
@@ -139,8 +134,7 @@ class TranscriptionManager(BaseManager[Any]):
         self._current_audio_path = video_path
 
     def start_transcription(self) -> None:
-        """
-        Start the transcription process for the video path currently held by the manager.
+        """Start the transcription process for the video path currently held by the manager.
 
         This is intended to be called manually (e.g., by a button press).
         """

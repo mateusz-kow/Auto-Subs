@@ -15,8 +15,7 @@ logger = getLogger(__name__)
 
 
 def clean_temp_dir() -> None:
-    """
-    Clean the temporary directory by removing all files and folders inside.
+    """Clean the temporary directory by removing all files and folders inside.
 
     Raises:
         OSError: If a file or folder cannot be removed.
@@ -37,8 +36,7 @@ def clean_temp_dir() -> None:
 
 
 def main() -> None:
-    """
-    Entry point for the Subtitle Editor application.
+    """Entry point for the Subtitle Editor application.
     Sets up the QApplication, integrates the asyncio event loop with Qt,
     and starts the main application window.
     """
@@ -67,8 +65,8 @@ def main() -> None:
             loop.run_forever()
     except KeyboardInterrupt:
         logger.info("Application interrupted by user.")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+    except Exception:
+        logger.exception("An unexpected error occurred")
     finally:
         tasks = [t for t in all_tasks(loop) if not t.done()]
         if tasks:

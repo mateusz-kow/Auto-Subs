@@ -17,8 +17,7 @@ class SubtitleGenerator:
 
     @staticmethod
     def to_ass(subtitles: Subtitles, ass_settings: dict[str, Any], output_path: Path | None = None) -> Path:
-        """
-        Generate an ASS subtitle file from the given subtitles and settings.
+        """Generate an ASS subtitle file from the given subtitles and settings.
 
         This method creates an ASS (Advanced SubStation Alpha) subtitle file
         using the provided subtitles and styling settings. It supports optional
@@ -98,8 +97,7 @@ class SubtitleGenerator:
 
     @staticmethod
     def to_srt(subtitles: Subtitles, output_path: Path | None = None) -> Path:
-        """
-        Generate an SRT subtitle file from the given subtitles.
+        """Generate an SRT subtitle file from the given subtitles.
 
         Args:
             subtitles (Subtitles): The subtitles to export.
@@ -141,6 +139,7 @@ class SubtitleGenerator:
 
     @staticmethod
     def to_txt(subtitles: Subtitles, output_path: Path | None = None) -> Path:
+        """Generate a plain text file from the given subtitles."""
         if output_path is None:
             output_path = Path(TEMP_DIR) / f"{uuid.uuid4()}_subs.txt"
         elif not isinstance(output_path, Path):

@@ -7,8 +7,7 @@ class SubtitleWord:
     """Represents a single word in a subtitle with its text and timing."""
 
     def __init__(self, text: str, start: float, end: float) -> None:
-        """
-        Initialize a SubtitleWord instance.
+        """Initialize a SubtitleWord instance.
 
         Args:
             text (str): The word text.
@@ -48,8 +47,7 @@ class SubtitleSegment:
     """Represents a segment of subtitles containing multiple words."""
 
     def __init__(self, words: list[SubtitleWord]) -> None:
-        """
-        Initialize a SubtitleSegment instance.
+        """Initialize a SubtitleSegment instance.
 
         Args:
             words (List[SubtitleWord]): A list of SubtitleWord instances.
@@ -89,8 +87,7 @@ class SubtitleSegment:
         return f"SubtitleSegment(start={self.start}, end={self.end}, words={self.words})"
 
     def add_word(self, word: SubtitleWord | None = None) -> None:
-        """
-        Add a word to the segment.
+        """Add a word to the segment.
 
         Args:
             word (SubtitleWord, optional): The word to add. Defaults to an empty word.
@@ -114,8 +111,7 @@ class Subtitles:
     """Represents a collection of subtitle segments."""
 
     def __init__(self, segments: list[SubtitleSegment]):
-        """
-        Initialize a Subtitles instance.
+        """Initialize a Subtitles instance.
 
         Args:
             segments (List[SubtitleSegment]): A list of SubtitleSegment instances.
@@ -140,8 +136,7 @@ class Subtitles:
 
     @classmethod
     def from_transcription(cls, transcription: dict[str, Any]) -> "Subtitles":
-        """
-        Create a Subtitles instance from a transcription dictionary.
+        """Create a Subtitles instance from a transcription dictionary.
 
         Args:
             transcription (dict): The transcription data.
@@ -161,8 +156,7 @@ class Subtitles:
         return "\n".join(str(segment) for segment in self.segments)
 
     def add_segment(self, new_segment: SubtitleSegment | None = None) -> None:
-        """
-        Add a new segment to the subtitles.
+        """Add a new segment to the subtitles.
 
         Args:
             new_segment (SubtitleSegment, optional): The segment to add. Defaults to an empty segment.

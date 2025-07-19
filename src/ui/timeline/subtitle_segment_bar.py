@@ -20,8 +20,7 @@ if TYPE_CHECKING:
 
 
 class SubtitleSegmentBar(QGraphicsRectItem):
-    """
-    A graphical representation of a single subtitle segment in a timeline view.
+    """A graphical representation of a single subtitle segment in a timeline view.
 
     This item is responsible for displaying a colored bar that corresponds to a subtitle's
     start and end time. It also supports interaction such as selection and context menus.
@@ -32,8 +31,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
     """
 
     def __init__(self, segment: SubtitleSegment, index: int, parent_controller: SegmentsBar) -> None:
-        """
-        Initialize the subtitle segment bar.
+        """Initialize the subtitle segment bar.
 
         Args:
             segment: An object containing `start` and `end` time properties.
@@ -74,7 +72,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         """Revert the visual state to indicate the segment is not selected."""
         self.setBrush(QBrush(SUBTITLE_BAR_COLOR))
 
-    def hoverMoveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+    def hoverMoveEvent(self, event: QGraphicsSceneHoverEvent) -> None:  # noqa: N802
         """Change cursor shape when hovering over resizable edges."""
         pos = event.pos()
         rect = self.rect()
@@ -88,12 +86,12 @@ class SubtitleSegmentBar(QGraphicsRectItem):
             self.setCursor(Qt.CursorShape.ArrowCursor)
         super().hoverMoveEvent(event)
 
-    def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+    def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:  # noqa: N802
         """Reset cursor when leaving the item."""
         self.setCursor(Qt.CursorShape.ArrowCursor)
         super().hoverLeaveEvent(event)
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         """Handle mouse press events for interaction."""
         if event.button() == Qt.MouseButton.LeftButton:
             pos = event.pos()
@@ -117,7 +115,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         else:
             self._parent_controller.show_context_menu(event.screenPos())
 
-    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         """Handle dragging for resize."""
         if not self._is_resizing:
             super().mouseMoveEvent(event)
@@ -141,7 +139,7 @@ class SubtitleSegmentBar(QGraphicsRectItem):
         self.setRect(new_rect)
         event.accept()
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
         """Finalize resize on mouse release."""
         if self._is_resizing and event.button() == Qt.MouseButton.LeftButton:
             self._is_resizing = False
@@ -164,4 +162,5 @@ class SubtitleSegmentBar(QGraphicsRectItem):
 
     @property
     def index(self) -> int:
+        """Get the index of this segment in the subtitles list."""
         return self._index

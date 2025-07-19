@@ -8,8 +8,7 @@ from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 class HighlightStyleLayout(QVBoxLayout):
-    """
-    A layout providing controls to configure subtitle highlight styles using a structured dictionary.
+    """A layout providing controls to configure subtitle highlight styles using a structured dictionary.
 
     Users can customize:
         - Highlight text color
@@ -23,8 +22,7 @@ class HighlightStyleLayout(QVBoxLayout):
     settings_changed = Signal(object)
 
     def __init__(self, style: dict[str, Any]):
-        """
-        Initialize the highlight style configuration UI.
+        """Initialize the highlight style configuration UI.
 
         Args:
             style (dict): Initial style dictionary to load.
@@ -76,8 +74,7 @@ class HighlightStyleLayout(QVBoxLayout):
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
-        """
-        Retrieve the current highlight style as a dictionary.
+        """Retrieve the current highlight style as a dictionary.
 
         Returns:
             dict: A dictionary with keys `text_color`, `border_color`, and `fade`.
@@ -91,8 +88,7 @@ class HighlightStyleLayout(QVBoxLayout):
         }
 
     def set_settings(self, settings: dict[str, Any]) -> None:
-        """
-        Apply highlight style settings from a dictionary.
+        """Apply highlight style settings from a dictionary.
 
         Args:
             settings (dict): A dictionary containing highlight style configuration.

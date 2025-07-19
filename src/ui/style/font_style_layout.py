@@ -20,8 +20,7 @@ from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
 def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:
-    """
-    Utility function to create a horizontal layout row with a label and widget.
+    """Utility function to create a horizontal layout row with a label and widget.
 
     Args:
         label_text (str): Text for the QLabel.
@@ -37,8 +36,7 @@ def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:
 
 
 class FontStyleLayout(QVBoxLayout):
-    """
-    A layout that provides user controls for configuring subtitle font styles.
+    """A layout that provides user controls for configuring subtitle font styles.
 
     Emits:
         settings_changed (dict): Signal emitted whenever the style configuration is updated.
@@ -47,8 +45,7 @@ class FontStyleLayout(QVBoxLayout):
     settings_changed = Signal(object)
 
     def __init__(self, style: dict[str, Any]):
-        """
-        Initialize the font style layout with given style settings.
+        """Initialize the font style layout with given style settings.
 
         Args:
             style (dict): A dictionary containing font style configuration.
@@ -154,8 +151,7 @@ class FontStyleLayout(QVBoxLayout):
         self.set_settings(style)
 
     def _update_color_button_style(self, name: str) -> None:
-        """
-        Update the background color of a color picker button.
+        """Update the background color of a color picker button.
 
         Args:
             name (str): The name of the color field (e.g., "primary_color").
@@ -165,8 +161,7 @@ class FontStyleLayout(QVBoxLayout):
         button.setStyleSheet(f"background-color: {color.name()}")
 
     def _select_color(self, name: str) -> None:
-        """
-        Open a QColorDialog for selecting a new color.
+        """Open a QColorDialog for selecting a new color.
 
         Args:
             name (str): The color field to update (e.g., "back_color").
@@ -183,8 +178,7 @@ class FontStyleLayout(QVBoxLayout):
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
-        """
-        Retrieve the current font style configuration.
+        """Retrieve the current font style configuration.
 
         Returns:
             dict: The current font style settings.
@@ -215,8 +209,7 @@ class FontStyleLayout(QVBoxLayout):
         }
 
     def set_settings(self, settings: dict[str, Any]) -> None:
-        """
-        Apply a font style configuration from a dictionary.
+        """Apply a font style configuration from a dictionary.
 
         Args:
             settings (dict): Font style configuration to apply.

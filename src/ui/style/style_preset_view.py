@@ -26,16 +26,14 @@ logger = getLogger(__name__)
 
 
 class StylePresetView(QWidget):
-    """
-    A widget to display, preview, and apply saved style presets.
+    """A widget to display, preview, and apply saved style presets.
 
     It scans a directory for .json style files, generates visual thumbnails,
     and allows users to apply a style with a single click.
     """
 
     def __init__(self, style_manager: StyleManager, parent: QWidget | None = None) -> None:
-        """
-        Initialize the StylePresetView.
+        """Initialize the StylePresetView.
 
         Args:
             style_manager: The manager for handling style state.
@@ -71,8 +69,7 @@ class StylePresetView(QWidget):
         self.preset_list.itemClicked.connect(self._on_preset_clicked)
 
     async def _prepare_blank_video(self) -> None:
-        """
-        Create a short, blank video file to use as a canvas for rendering subtitle previews.
+        """Create a short, blank video file to use as a canvas for rendering subtitle previews.
 
         This avoids the need for an actual video file when generating thumbnails.
         """

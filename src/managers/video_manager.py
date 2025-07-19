@@ -15,14 +15,12 @@ class VideoEventType(EventType):
 
 
 class VideoManager(BaseManager[Path]):
-    """
-    Manages video-related operations, including setting the video path
+    """Manages video-related operations, including setting the video path
     and notifying listeners when the video changes.
     """
 
     def __init__(self, video_path: Path | None = None) -> None:
-        """
-        Initialize the VideoManager.
+        """Initialize the VideoManager.
 
         Args:
             video_path (Path, optional): The initial path to the video. Defaults to None.
@@ -35,8 +33,7 @@ class VideoManager(BaseManager[Path]):
         logger.info(f"VideoManager initialized with video path: {video_path}")
 
     def set_video_path(self, path: Path) -> None:
-        """
-        Set the path to the video and notify all registered listeners.
+        """Set the path to the video and notify all registered listeners.
 
         Args:
             path (Path): The new video path.

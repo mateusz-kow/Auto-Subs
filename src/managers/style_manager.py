@@ -7,7 +7,7 @@ from typing import Any
 
 from src.config import DEFAULT_STYLE
 from src.managers.base_manager import BaseManager, EventType
-from src.utils.QThrottler import QThrottler
+from src.utils.qthrottler import QThrottler
 
 logger = getLogger(__name__)
 
@@ -31,8 +31,7 @@ class StyleManager(BaseManager[dict[str, Any]]):
         self._style_loaded_throttler = QThrottler(1000)
 
     def from_dict(self, new_style: dict[str, Any], notify_loaded: bool = False) -> None:
-        """
-        Update the current style with a new style dictionary and notify listeners.
+        """Update the current style with a new style dictionary and notify listeners.
 
         Args:
             new_style (dict): A dictionary containing the new style values.
@@ -55,8 +54,7 @@ class StyleManager(BaseManager[dict[str, Any]]):
         self.from_dict(DEFAULT_STYLE.copy(), notify_loaded=True)
 
     def save_to_file(self, path: Path) -> Path:
-        """
-        Save the current style to a JSON file.
+        """Save the current style to a JSON file.
 
         Args:
             path (Optional[str]): The file path where the style should be saved. Defaults to the style title.
@@ -73,14 +71,13 @@ class StyleManager(BaseManager[dict[str, Any]]):
                 json.dump(self._style, f, indent=2)
             logger.info(f"Style saved to {path}")
         except OSError as e:
-            logger.error(f"Failed to save style to {path}: {e}")
+            logger.exception(f"Failed to save style to {path}: {e}")
             raise
 
         return path
 
     def load_from_file(self, path: Path) -> None:
-        """
-        Load style from a JSON file.
+        """Load style from a JSON file.
 
         Args:
             path (str): The file path from which to load the style.
@@ -97,7 +94,7 @@ class StyleManager(BaseManager[dict[str, Any]]):
             logger.debug(f"Loaded style from {path}: {data}")
             self.from_dict(data, notify_loaded=True)
         except (OSError, json.JSONDecodeError) as e:
-            logger.error(f"Failed to load style from {path}: {e}")
+            logger.exception(f"Failed to load style from {path}: {e}")
             raise
 
     @property

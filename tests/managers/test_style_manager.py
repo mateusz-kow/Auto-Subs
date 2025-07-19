@@ -8,13 +8,12 @@ from pytest_mock import MockerFixture
 
 from src.config import DEFAULT_STYLE
 from src.managers.style_manager import StyleManager
-from src.utils.QThrottler import QThrottler
+from src.utils.qthrottler import QThrottler
 
 
 @pytest.fixture
 def style_manager(mocker: MockerFixture) -> StyleManager:
-    """
-    Fixture to provide a StyleManager instance where the QThrottler
+    """Fixture to provide a StyleManager instance where the QThrottler
     is mocked to execute immediately (synchronously).
     """
     mocker.patch.object(QThrottler, "call", side_effect=lambda func, *args, **kwargs: func(*args, **kwargs))
