@@ -1,5 +1,6 @@
-from src.config import REQUIRED_DIRS, LOGGING_CONFIG
 from logging.config import dictConfig
+
+from src.config import LOGGING_CONFIG, REQUIRED_DIRS
 
 
 def setup_project() -> None:

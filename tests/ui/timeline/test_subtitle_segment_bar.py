@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from pytestqt.qtbot import QtBot
 
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
-from src.ui.SubtitleEditorApp import SubtitleEditorApp
+from src.ui.subtitle_editor_app import SubtitleEditorApp
 from src.ui.timeline.constants import TIME_SCALE_FACTOR
 from src.ui.timeline.SubtitleSegmentBar import SubtitleSegmentBar
 

@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from src.managers.StyleManager import StyleManager
+from src.config import STYLES_DIR, TEMP_DIR
+from src.managers.style_manager import StyleManager
 from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
-from src.config import STYLES_DIR, TEMP_DIR
 from src.utils.ffmpeg_utils import get_preview_image
 
 logger = getLogger(__name__)

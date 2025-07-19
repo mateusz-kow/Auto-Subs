@@ -1,30 +1,38 @@
+# src/managers/video_manager.py
 from logging import getLogger
 from pathlib import Path
-from typing import Any, Callable, Union
 
+from src.managers.base_manager import BaseManager, EventType
 from src.utils.ffmpeg_utils import get_video_duration
 
 logger = getLogger(__name__)
 
 
-class VideoManager:
+class VideoEventType(EventType):
+    """Defines the event types for the VideoManager."""
+
+    VIDEO_CHANGED = "on_video_changed"
+
+
+class VideoManager(BaseManager[Path]):
     """
     Manages video-related operations, including setting the video path
     and notifying listeners when the video changes.
     """
 
-    def __init__(self, video_path: Union[Path, None] = None) -> None:
+    def __init__(self, video_path: Path | None = None) -> None:
         """
         Initialize the VideoManager.
 
         Args:
             video_path (Path, optional): The initial path to the video. Defaults to None.
         """
+        super().__init__(VideoEventType)
+
         self._video_duration: float = 0.0
         self._video_path: Path = video_path if video_path is not None else Path()
-        self._video_changed_listeners: list[Callable[[Path], Any]] = []
 
-        logger.info("VideoManager initialized with video path: %s", video_path)
+        logger.info(f"VideoManager initialized with video path: {video_path}")
 
     def set_video_path(self, path: Path) -> None:
         """
@@ -37,26 +45,10 @@ class VideoManager:
             raise ValueError("The video path must be a Path object.")
 
         self._video_path = path
-        self._video_duration = get_video_duration(str(path))  # Ensure it's passed as str
+        self._video_duration = get_video_duration(str(path))
         logger.info("Video path set to: %s, Duration: %.2f seconds", path, self._video_duration)
 
-        for listener in self._video_changed_listeners:
-            listener(path)
-
-    def add_video_listener(self, listener: Callable[[Path], Any]) -> None:
-        """
-        Register a listener to be notified when the video path changes.
-
-        Args:
-            listener (Callable[[Path], Any]): A function to be called when the video path changes.
-        """
-        if not callable(listener):
-            raise ValueError("The listener must be callable.")
-
-        if listener not in self._video_changed_listeners:
-            self._video_changed_listeners.append(listener)
-        else:
-            raise ValueError("The listener is already registered.")
+        self._notify_listeners(path, VideoEventType.VIDEO_CHANGED)
 
     @property
     def video_path(self) -> Path:

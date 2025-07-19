@@ -8,7 +8,7 @@ from qasync import QEventLoop
 
 from src.config import TEMP_DIR
 from src.setup import setup_project
-from src.ui.SubtitleEditorApp import SubtitleEditorApp
+from src.ui.subtitle_editor_app import SubtitleEditorApp
 from src.utils.exception_handler import install_handler
 
 logger = getLogger(__name__)

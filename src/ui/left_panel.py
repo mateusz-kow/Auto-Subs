@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.managers.StyleManager import StyleManager
-from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.style_manager import StyleManager
+from src.managers.subtitles_manager import SubtitlesManager
 from src.subtitles.models import Subtitles, SubtitleWord
 from src.ui.style.StyleLayout import StyleLayout
 from src.ui.style.StylePresetView import StylePresetView

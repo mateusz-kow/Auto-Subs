@@ -3,8 +3,8 @@ from logging import getLogger
 from pathlib import Path
 from typing import Any
 
-from src.subtitles.models import Subtitles
 from src.config import TEMP_DIR
+from src.subtitles.models import Subtitles
 from src.utils.file_operations import generate_ass_header
 
 logger = getLogger(__name__)

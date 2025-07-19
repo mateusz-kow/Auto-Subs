@@ -1,3 +1,4 @@
+# src/ui/timeline/SegmentsBar.py
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable
@@ -6,8 +7,8 @@ from PySide6.QtCore import QPoint, QPointF, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QPen, QWheelEvent
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsTextItem, QGraphicsView, QMenu
 
-from src.managers.SubtitlesManager import SubtitlesManager
-from src.managers.VideoManager import VideoManager
+from src.managers.subtitles_manager import SubtitlesManager
+from src.managers.video_manager import VideoManager
 from src.subtitles.models import Subtitles
 from src.ui.timeline.constants import (
     MAJOR_MARKER_HEIGHT,
@@ -63,12 +64,8 @@ class SegmentsBar(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        # Register data change listeners
-        self.video_manager.add_video_listener(self.on_video_changed)
-        self.subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
-
         self._step = 0
-        self._subtitles = subtitles_manager.subtitles
+        self._subtitles: Subtitles | None = subtitles_manager.subtitles
         self._video_duration = 0.0
 
         logger.debug("SegmentsBar initialized")
@@ -92,7 +89,7 @@ class SegmentsBar(QGraphicsView):
             self.clear_selection()
             self._select_segment(segment_item)
 
-    def update_timeline(self, subtitles: Subtitles, video_duration: float) -> None:
+    def update_timeline(self, subtitles: Subtitles | None, video_duration: float) -> None:
         """
         Refresh the entire timeline with new subtitle and video data.
 
@@ -100,9 +97,10 @@ class SegmentsBar(QGraphicsView):
             subtitles: Subtitle data structure with segments.
             video_duration (float): Duration of the video in seconds.
         """
+        segment_count = len(subtitles.segments) if subtitles and subtitles.segments else 0
         logger.info(
             "Updating timeline (segments=%d, duration=%.2f)",
-            len(subtitles.segments) if subtitles and subtitles.segments else 0,
+            segment_count,
             video_duration,
         )
 
@@ -151,8 +149,9 @@ class SegmentsBar(QGraphicsView):
 
     def _add_video_bar(self, video_duration: float) -> None:
         """Add the video playback bar to the timeline."""
-        video_bar = VideoSegmentBar(video_duration, self)
-        self._scene.addItem(video_bar)
+        if video_duration > 0:
+            video_bar = VideoSegmentBar(video_duration, self)
+            self._scene.addItem(video_bar)
 
     def _add_time_markers(self, video_duration: float) -> None:
         """Add visual time markers to the timeline based on video duration."""
@@ -250,6 +249,9 @@ class SegmentsBar(QGraphicsView):
         Returns:
             A tuple (left_boundary, right_boundary) in seconds.
         """
+        if not self.subtitles_manager.subtitles:
+            return 0.0, self.video_manager.video_duration
+
         segments = self.subtitles_manager.subtitles.segments
         # Left boundary is the end time of the previous segment, or 0.0
         left_boundary = segments[segment_index - 1].end if segment_index > 0 else 0.0
@@ -299,8 +301,7 @@ class SegmentsBar(QGraphicsView):
         """
         logger.info("Subtitles changed (%d segments)", len(subtitles.segments) if subtitles else 0)
         self.clear_selection()
-        video_duration = getattr(self.video_manager, "_video_duration", 0)
-        self.update_timeline(subtitles, video_duration)
+        self.update_timeline(subtitles, self.video_manager.video_duration)
 
     def on_video_changed(self, video_path: Path) -> None:
         """
@@ -311,6 +312,4 @@ class SegmentsBar(QGraphicsView):
         """
         logger.info("Video changed: %s", video_path)
         self.clear_selection()
-        video_duration = self.video_manager.video_duration
-        subtitles = self.subtitles_manager.subtitles
-        self.update_timeline(subtitles, video_duration)
+        self.update_timeline(self.subtitles_manager.subtitles, self.video_manager.video_duration)

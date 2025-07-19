@@ -5,9 +5,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.managers.SubtitlesManager import SubtitlesManager
-from src.managers.VideoManager import VideoManager
-from src.ui.MediaPlayer import MediaPlayer
+from src.managers.subtitles_manager import SubtitlesManager
+from src.managers.video_manager import VideoManager
+from src.ui.media_player import MediaPlayer
 from src.ui.timeline.constants import SUBTITLE_BAR_HEIGHT, SUBTITLE_BAR_Y
 from src.ui.timeline.SegmentsBar import SegmentsBar
 

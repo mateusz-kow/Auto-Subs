@@ -2,7 +2,7 @@ from typing import Any
 
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
-from src.managers.StyleManager import StyleManager
+from src.managers.style_manager import StyleManager
 
 from .FontStyleLayout import FontStyleLayout
 from .HighlightStyleLayout import HighlightStyleLayout
@@ -32,9 +32,6 @@ class StyleLayout(QScrollArea):
 
         self.font_layout.settings_changed.connect(self.apply_current_style)
         self.highlight_layout.settings_changed.connect(self.apply_current_style)
-
-        # Subscribe to style loaded events
-        style_manager.add_style_loaded_listener(self.on_style_loaded)
 
         # Set the container widget as the scrollable area
         self.setWidget(container)
