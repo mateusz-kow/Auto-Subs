@@ -52,8 +52,31 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 fix = true
 line-length = 120
-lint.select = ["E", "F", "W", "I", "D", "B", "UP", "C4", "SIM", "PLW", "N", "ISC", "TID",]
-lint.ignore = ["D100", "D104", "D205",]
+lint.select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "D",   # pydocstyle
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "PLW", # pylint warnings
+    "N",   # pep8-naming
+    "ISC", # flake8-implicit-str-concat
+    "TID", # flake8-tidy-imports
+]
+lint.ignore = [
+    "D100",   # Missing docstring in public module
+    "D104",   # Missing docstring in public package
+    "D205",   # 1 blank line required between summary line and description
+    "ISC001", # Implicitly concatenated string on one line (conflicts with ruff format)
+    "N802",   # Function name should be lowercase (for Qt method overrides like `closeEvent`)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

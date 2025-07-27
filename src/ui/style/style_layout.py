@@ -3,9 +3,8 @@ from typing import Any
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from src.managers.style_manager import StyleManager
-
-from .font_style_layout import FontStyleLayout
-from .highlight_style_layout import HighlightStyleLayout
+from src.ui.style.font_style_layout import FontStyleLayout
+from src.ui.style.highlight_style_layout import HighlightStyleLayout
 
 
 class StyleLayout(QScrollArea):
