@@ -13,7 +13,7 @@ Designed for content creators, translators, and professionals, Auto Subs provide
 
 ## ✨ Key Features
 
-*   **🎤 Automatic Transcription:** High-accuracy, word-level speech recognition powered by local OpenAI Whisper models.
+*   **🎙️ Automatic Transcription:** High-accuracy, word-level speech recognition powered by local OpenAI Whisper models.
 *   **🎞️ Universal Format Support:** Natively handles MP4, MKV, AVI, and other popular video formats through its integrated FFmpeg engine.
 *   **🎬 High-Fidelity Video Preview:** Edit subtitles with a real-time preview rendered by `mpv`, ensuring perfect playback and accurate display of complex `.ass` styles.
 *   **✍️ Intuitive Subtitle Editor:**
@@ -25,12 +25,13 @@ Designed for content creators, translators, and professionals, Auto Subs provide
     *   Fine-tune alignment, margins, border style, shadow, and rotation.
     *   Apply dynamic highlight styles to emphasize specific words.
     *   Save and load custom style presets to maintain a consistent brand.
-*   **📤 Multiple Export Options:**
+*   **🗂️ Project Management:** Save your entire session (video, subtitles, and style settings) into a single `.asproj` file. Load projects to seamlessly resume your work.
+*   **💾 Multiple Export Options:**
     *   Export subtitle files in **SRT**, **ASS**, or plain **TXT** formats.
     *   Burn subtitles directly into the video to create a permanent **hardsub** MP4 file.
 *   **🖥️ Modern Desktop UI:** A clean and responsive interface built with PySide6 (Qt for Python) for a native look and feel.
-*   **🔒 Works Offline:** After an initial model download, all transcription and editing are performed locally on your machine. No internet connection is required.
-*   **💸 Free & Open Source:** Licensed under the MIT license. Your tool, no strings attached.
+*   **🔌 Works Offline:** After an initial model download, all transcription and editing are performed locally on your machine. No internet connection is required.
+*   **💰 Free & Open Source:** Licensed under the MIT license. Your tool, no strings attached.
 
 ## 📸 Screenshots
 
@@ -87,8 +88,8 @@ Ensure you have the following software installed and available in your system's 
 
 ## 📖 How to Use
 
-1.  **Load Video:** Launch the application and go to `File > Import MP4` to load your video file.
-2.  **Automatic Transcription:** The transcription process will begin automatically. Progress is logged to the console.
+1.  **Load Video:** Launch the application and go to `File > Import Video...` to load your video file. Alternatively, open a project with `File > Open Project...`.
+2.  **Automatic Transcription:** If you loaded a new video, the transcription process can be started from the toolbar.
 3.  **Edit & Refine:**
     *   The transcribed segments appear on the timeline at the bottom.
     *   Click a segment on the timeline to select it. This will open the **Word Editor** in the left panel.
@@ -96,10 +97,12 @@ Ensure you have the following software installed and available in your system's 
 4.  **Style Your Subtitles:**
     *   Switch to the **Style Editor** in the left panel.
     *   Customize fonts, colors, alignment, and more. Your changes will be reflected in the video preview in real-time.
-    *   Save your configuration via `Style > Save Style` for future use.
+    *   Save your configuration via `Style > Save Style As...` for future use.
 5.  **Export Your Work:**
     *   **Subtitle File:** Go to `File > Export as...` to save your work as an `.srt`, `.ass`, or `.txt` file.
-    *   **Burned-in Video:** Choose `File > Export as MP4` to create a new video file with the subtitles permanently rendered on the frames.
+    *   **Burned-in Video:** Choose `File > Export as MP4...` to create a new video file with the subtitles permanently rendered on the frames.
+6.  **Save Your Project:**
+    *   Use `File > Save Project` or `File > Save Project As...` to save all your progress into a single `.asproj` file.
 
 ## 🤝 Contributing
 
@@ -116,10 +119,9 @@ We have an exciting future planned for Auto Subs! Here are some of the features 
 *   [ ] More sophisticated timeline editing features (e.g., drag-and-drop, resizing).
 *   [ ] Integration with cloud-based transcription services as an option.
 *   [ ] Customizable keyboard shortcuts.
-*   [ ] Project saving/loading to resume work sessions.
 *   [ ] Packaging the application as a standalone executable (e.g., using PyInstaller or Nuitka).
 
-## 📜 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

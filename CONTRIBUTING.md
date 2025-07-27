@@ -80,7 +80,7 @@ If you have an idea for a new feature or an improvement, please open an issue fi
     ```bash
     git push origin my-awesome-feature
     ```
-4.  Open a pull request from your branch to the `main` branch of the original `auto-subs` repository.
+4.  Open a pull request from your branch to the `dev` branch of the original `auto-subs` repository.
 5.  In your pull request description, explain the changes you've made and link to any relevant issues.
 
 ## Code Style and Quality Standards

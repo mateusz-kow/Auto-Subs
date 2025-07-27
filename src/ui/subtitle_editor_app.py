@@ -1,4 +1,3 @@
-# src/ui/subtitle_editor_app.py
 import asyncio
 from pathlib import Path
 from typing import Any
