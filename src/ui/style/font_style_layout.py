@@ -51,7 +51,7 @@ class FontStyleLayout(QVBoxLayout):
             style (dict): A dictionary containing font style configuration.
         """
         super().__init__()
-        # Typowanie uproszczone do Any, aby uniknąć problemów z unią typów
+        self._block_signals = False
         self.color_buttons: dict[str, dict[str, Any]] = {}
 
         self.font_selector = QFontComboBox()
@@ -175,6 +175,8 @@ class FontStyleLayout(QVBoxLayout):
 
     def _emit_settings(self) -> None:
         """Emit the settings_changed signal with the current settings."""
+        if self._block_signals:
+            return
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
@@ -214,27 +216,31 @@ class FontStyleLayout(QVBoxLayout):
         Args:
             settings (dict): Font style configuration to apply.
         """
-        self.font_selector.setCurrentText(settings.get("font", "Arial"))
-        self.font_size.setValue(settings.get("font_size", 36))
-        self.bold_checkbox.setChecked(settings.get("bold", 0) == -1)
-        self.italic_checkbox.setChecked(settings.get("italic", 0) == 1)
-        self.underline_checkbox.setChecked(settings.get("underline", 0) == 1)
-        self.strikeout_checkbox.setChecked(settings.get("strikeout", 0) == 1)
+        self._block_signals = True
+        try:
+            self.font_selector.setCurrentText(settings.get("font", "Arial"))
+            self.font_size.setValue(settings.get("font_size", 36))
+            self.bold_checkbox.setChecked(settings.get("bold", 0) == -1)
+            self.italic_checkbox.setChecked(settings.get("italic", 0) == 1)
+            self.underline_checkbox.setChecked(settings.get("underline", 0) == 1)
+            self.strikeout_checkbox.setChecked(settings.get("strikeout", 0) == 1)
 
-        for name in self.color_buttons:
-            color = ass_to_qcolor(settings.get(name, "&H00FFFFFF"))
-            self.color_buttons[name]["color"] = color
-            self._update_color_button_style(name)
+            for name in self.color_buttons:
+                color = ass_to_qcolor(settings.get(name, "&H00FFFFFF"))
+                self.color_buttons[name]["color"] = color
+                self._update_color_button_style(name)
 
-        self._alignment.setCurrentIndex(max(0, settings.get("alignment", 2) - 1))
-        self.margin_l.setValue(settings.get("margin_l", 10))
-        self.margin_r.setValue(settings.get("margin_r", 10))
-        self.margin_v.setValue(settings.get("margin_v", 10))
-        self.border_style.setCurrentIndex(0 if settings.get("border_style", 1) == 1 else 1)
-        self.outline.setValue(settings.get("outline", 1))
-        self.shadow.setValue(settings.get("shadow", 0))
-        self.scale_x.setValue(settings.get("scale_x", 100))
-        self.scale_y.setValue(settings.get("scale_y", 100))
-        self.spacing_spinbox.setValue(settings.get("spacing_spinbox", 0.0))
-        self.angle.setValue(settings.get("angle", 0))
-        self.encoding.setCurrentIndex(settings.get("encoding", 0))
+            self._alignment.setCurrentIndex(max(0, settings.get("alignment", 2) - 1))
+            self.margin_l.setValue(settings.get("margin_l", 10))
+            self.margin_r.setValue(settings.get("margin_r", 10))
+            self.margin_v.setValue(settings.get("margin_v", 10))
+            self.border_style.setCurrentIndex(0 if settings.get("border_style", 1) == 1 else 1)
+            self.outline.setValue(settings.get("outline", 1))
+            self.shadow.setValue(settings.get("shadow", 0))
+            self.scale_x.setValue(settings.get("scale_x", 100))
+            self.scale_y.setValue(settings.get("scale_y", 100))
+            self.spacing_spinbox.setValue(settings.get("spacing_spinbox", 0.0))
+            self.angle.setValue(settings.get("angle", 0))
+            self.encoding.setCurrentIndex(settings.get("encoding", 0))
+        finally:
+            self._block_signals = False

@@ -28,6 +28,7 @@ class HighlightStyleLayout(QVBoxLayout):
             style (dict): Initial style dictionary to load.
         """
         super().__init__()
+        self._block_signals = False
 
         # Default values
         self.highlight_color = QColor("#ffcc99")
@@ -71,6 +72,8 @@ class HighlightStyleLayout(QVBoxLayout):
 
     def _emit_settings(self) -> None:
         """Emit the current settings dictionary to listeners."""
+        if self._block_signals:
+            return
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
@@ -93,21 +96,25 @@ class HighlightStyleLayout(QVBoxLayout):
         Args:
             settings (dict): A dictionary containing highlight style configuration.
         """
-        style = settings.get("highlight_style", {})
+        self._block_signals = True
+        try:
+            style = settings.get("highlight_style", {})
 
-        # Set text highlight color
-        if "text_color" in style:
-            color = ass_to_qcolor(style["text_color"])
-            if color.isValid():
-                self.highlight_color = color
-                self.highlight_color_button.setStyleSheet(f"background-color: {color.name()}")
+            # Set text highlight color
+            if "text_color" in style:
+                color = ass_to_qcolor(style["text_color"])
+                if color.isValid():
+                    self.highlight_color = color
+                    self.highlight_color_button.setStyleSheet(f"background-color: {color.name()}")
 
-        # Set border highlight color
-        if "border_color" in style:
-            color = ass_to_qcolor(style["border_color"])
-            if color.isValid():
-                self.highlight_border_color = color
-                self.highlight_border_button.setStyleSheet(f"background-color: {color.name()}")
+            # Set border highlight color
+            if "border_color" in style:
+                color = ass_to_qcolor(style["border_color"])
+                if color.isValid():
+                    self.highlight_border_color = color
+                    self.highlight_border_button.setStyleSheet(f"background-color: {color.name()}")
 
-        # Set fade toggle
-        self.fade_highlight_checkbox.setChecked(bool(style.get("fade", False)))
+            # Set fade toggle
+            self.fade_highlight_checkbox.setChecked(bool(style.get("fade", False)))
+        finally:
+            self._block_signals = False
