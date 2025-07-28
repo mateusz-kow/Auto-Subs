@@ -12,8 +12,6 @@ class StyleLayout(QScrollArea):
     and allows applying those styles via StyleManager.
     """
 
-
-
     def __init__(self, style_manager: StyleManager) -> None:
         """Initialize the StyleLayout with font and highlight style managers."""
         super().__init__()
