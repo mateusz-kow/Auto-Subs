@@ -90,7 +90,7 @@ class SubtitleEditorApp(QMainWindow):
         # Connect UI component signals to slots
         self.timeline_bar.segments_bar.segment_clicked.connect(self.left_panel.show_editor_for_segment)
         self.timeline_bar.segments_bar.segment_clicked.connect(self._seek_player_to_segment)
-        self.timeline_bar.segments_bar.add_preview_time_listener(self.on_preview_time_changed)
+        self.media_player.time_changed.connect(self.timeline_bar.segments_bar.update_indicator_position)
 
     def _setup_layout(self) -> None:
         """Set up the main window layout with a central widget and dockable panels."""
@@ -257,12 +257,6 @@ class SubtitleEditorApp(QMainWindow):
         if self.subtitles_manager.subtitles:
             segment = self.subtitles_manager.subtitles.segments[segment_index]
             self.media_player.set_timestamp(int(segment.start * 1000))
-
-    @Slot(float)
-    def on_preview_time_changed(self, time: float) -> None:
-        """Update the video timestamp when preview time changes."""
-        if self.video_manager.video_path and time >= 0:
-            self.media_player.set_timestamp(int(time * 1000))
 
     # --- Transcription Button Logic ---
 

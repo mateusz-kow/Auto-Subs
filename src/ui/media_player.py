@@ -4,6 +4,7 @@ from logging import getLogger
 from pathlib import Path
 
 from mpv import MPV
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtGui import QCloseEvent, QShowEvent
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
@@ -12,6 +13,8 @@ logger = getLogger(__name__)
 
 class MediaPlayer(QWidget):
     """A media player widget using the MPV library for video playback."""
+
+    time_changed = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize the MediaPlayer widget. MPV instance is initialized on first show.
@@ -22,6 +25,10 @@ class MediaPlayer(QWidget):
         super().__init__(parent)
         self.player: MPV | None = None
         self.mpv_initialized = False
+
+        self._position_timer = QTimer(self)
+        self._position_timer.setInterval(33)  # ~30 FPS updates
+        self._position_timer.timeout.connect(self._emit_current_time)
 
         # Set up the layout
         layout = QVBoxLayout(self)
@@ -65,6 +72,11 @@ class MediaPlayer(QWidget):
             logger.warning("MPV player is not initialized or has been terminated.")
             return False
         return True
+
+    def _emit_current_time(self) -> None:
+        """Emit the current playback time if the player is active."""
+        if self.player and self.player.time_pos is not None:
+            self.time_changed.emit(self.player.time_pos)
 
     def set_subtitles_only(self, subtitle_path: Path) -> None:
         """Add a subtitle file for playback.
@@ -123,6 +135,7 @@ class MediaPlayer(QWidget):
         try:
             self.pause()
             self.player.loadfile(str(video_path), mode="replace")
+            self.time_changed.emit(0.0)
 
             if subtitle_path:
                 self.set_subtitles_only(subtitle_path)
@@ -141,6 +154,7 @@ class MediaPlayer(QWidget):
                 return
 
             self.player.pause = False
+            self._position_timer.start()
             logger.info("Playback started.")
         except Exception as e:
             logger.error(f"Failed to play media: {e}", exc_info=True)
@@ -157,6 +171,7 @@ class MediaPlayer(QWidget):
                 return
 
             self.player.pause = True
+            self._position_timer.stop()
             logger.info("Playback paused.")
         except Exception as e:
             logger.error(f"Failed to pause media: {e}", exc_info=True)
@@ -173,6 +188,11 @@ class MediaPlayer(QWidget):
                 return
 
             self.player.pause = not self.player.pause
+            if self.player.pause:
+                self._position_timer.stop()
+            else:
+                self._position_timer.start()
+
             state = "paused" if self.player.pause else "playing"
             logger.info(f"Playback state toggled: {state}.")
         except Exception as e:
@@ -195,6 +215,7 @@ class MediaPlayer(QWidget):
 
             seconds = timestamp / 1000.0
             self.player.seek(seconds, reference="absolute", precision="exact")
+            self.time_changed.emit(seconds)
             logger.info(f"Playback position set to {seconds:.3f}s.")
         except Exception as e:
             logger.error(f"Failed to set timestamp: {e}", exc_info=True)

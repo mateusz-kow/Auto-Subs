@@ -1,15 +1,21 @@
 # src/ui/timeline/segments_bar.py
 from logging import getLogger
 from pathlib import Path
-from typing import Any, Callable
 
 from PySide6.QtCore import QPoint, QPointF, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QPen, QWheelEvent
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsTextItem, QGraphicsView, QMenu
+from PySide6.QtWidgets import (
+    QGraphicsScene,
+    QGraphicsSceneMouseEvent,
+    QGraphicsTextItem,
+    QGraphicsView,
+    QMenu,
+)
 
 from src.managers.subtitles_manager import SubtitlesManager
 from src.managers.video_manager import VideoManager
 from src.subtitles.models import Subtitles
+from src.ui.media_player import MediaPlayer
 from src.ui.timeline.constants import (
     MAJOR_MARKER_HEIGHT,
     MAJOR_MARKER_INTERVAL,
@@ -23,6 +29,7 @@ from src.ui.timeline.constants import (
     TIME_SCALE_FACTOR,
 )
 from src.ui.timeline.subtitle_segment_bar import SubtitleSegmentBar
+from src.ui.timeline.timeline_indicator import TimelineIndicator
 from src.ui.timeline.video_segment_bar import VideoSegmentBar
 
 logger = getLogger(__name__)
@@ -41,19 +48,25 @@ class SegmentsBar(QGraphicsView):
 
     segment_clicked = Signal(int)
 
-    def __init__(self, subtitles_manager: SubtitlesManager, video_manager: VideoManager) -> None:
+    def __init__(
+        self,
+        subtitles_manager: SubtitlesManager,
+        video_manager: VideoManager,
+        media_player: MediaPlayer,
+    ) -> None:
         """Initialize the SegmentsBar.
 
         Args:
             subtitles_manager: Manages subtitle segment data.
             video_manager: Manages video metadata and playback state.
+            media_player: The media player for seeking.
         """
         super().__init__()
 
         self.subtitles_manager = subtitles_manager
         self.video_manager = video_manager
+        self.media_player = media_player
         self.selected_segments: set[int] = set()
-        self.preview_time_listeners: list[Callable[[float], Any]] = []
 
         # Graphics scene setup
         self._scene = QGraphicsScene()
@@ -65,6 +78,7 @@ class SegmentsBar(QGraphicsView):
         self._step = 0
         self._subtitles: Subtitles | None = subtitles_manager.subtitles
         self._video_duration = 0.0
+        self._timeline_indicator: TimelineIndicator | None = None
 
         logger.debug("SegmentsBar initialized")
 
@@ -106,6 +120,7 @@ class SegmentsBar(QGraphicsView):
         self._step = 0
         self._subtitles = subtitles
         self._video_duration = video_duration
+        self._timeline_indicator = None
 
         QTimer.singleShot(0, self._step_update)
 
@@ -130,9 +145,14 @@ class SegmentsBar(QGraphicsView):
                     self._subtitles.segments[-1].end if self._subtitles and self._subtitles.segments else 0,
                 )
                 scene_width = max(SCENE_MIN_WIDTH, int(total_duration * TIME_SCALE_FACTOR))
-                scene_height = SUBTITLE_BAR_Y + SUBTITLE_BAR_HEIGHT + 5  # Ensure scene is tall enough for content
+                scene_height = SUBTITLE_BAR_Y + SUBTITLE_BAR_HEIGHT + 5
                 self._scene.setSceneRect(0, 0, scene_width, scene_height)
 
+                if self._video_duration > 0:
+                    self._timeline_indicator = TimelineIndicator(scene_height)
+                    self._scene.addItem(self._timeline_indicator)
+
+            elif self._step == 4:
                 self.setUpdatesEnabled(True)
                 logger.info("Timeline update complete")
                 return  # Exit the loop
@@ -142,6 +162,15 @@ class SegmentsBar(QGraphicsView):
 
         except Exception:
             logger.exception(f"Error during timeline update step {self._step}")
+
+    def update_indicator_position(self, time: float) -> None:
+        """Update the position of the timeline indicator.
+
+        Args:
+            time (float): The current time in seconds.
+        """
+        if self._timeline_indicator:
+            self._timeline_indicator.set_position(time)
 
     def _add_video_bar(self, video_duration: float) -> None:
         """Add the video playback bar to the timeline."""
@@ -262,27 +291,27 @@ class SegmentsBar(QGraphicsView):
         delta = event.angleDelta().y()
         self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta)
 
-    def notify_preview_time_change(self, timestamp: float) -> None:
-        """Notify registered listeners that the preview time has changed.
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:  # noqa: N802
+        """Handle mouse clicks on the timeline for seeking.
+
+        If a click is not on a subtitle segment, it is treated as a seek request.
 
         Args:
-            timestamp (float): New preview timestamp in seconds.
+            event (QGraphicsSceneMouseEvent): The mouse press event.
         """
-        logger.debug("Preview time changed: %.2f seconds", timestamp)
-        for listener in self.preview_time_listeners:
-            listener(timestamp)
+        item = self.itemAt(event.pos())
 
-    def add_preview_time_listener(self, listener: Callable[[float], Any]) -> None:
-        """Add a listener for preview time updates.
+        # If the click is on an item that is NOT a subtitle segment, or on the background
+        if not isinstance(item, SubtitleSegmentBar):
+            if event.button() == Qt.MouseButton.LeftButton:
+                scene_pos = self.mapToScene(event.pos())
+                time = max(0.0, scene_pos.x() / TIME_SCALE_FACTOR)
+                self.media_player.set_timestamp(int(time * 1000))
+                event.accept()
+                return
 
-        Args:
-            listener (Callable): Function to call with updated timestamp.
-        """
-        if listener not in self.preview_time_listeners:
-            self.preview_time_listeners.append(listener)
-            logger.debug("Preview time listener added: %s", listener)
-        else:
-            logger.warning("Listener already registered: %s", listener)
+        # Let the event propagate to the items (e.g., SubtitleSegmentBar)
+        super().mousePressEvent(event)
 
     def on_subtitles_changed(self, subtitles: Subtitles) -> None:
         """Callback for subtitle data changes.

@@ -46,7 +46,7 @@ class TimelineBar(QWidget):
 
         # Create components
         button_container = self._create_control_buttons()
-        self.segments_bar = SegmentsBar(subtitles_manager, video_manager)
+        self.segments_bar = SegmentsBar(subtitles_manager, video_manager, media_player)
 
         main_layout.addWidget(button_container, 0)
         main_layout.addWidget(self.segments_bar, 1)
@@ -62,11 +62,11 @@ class TimelineBar(QWidget):
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(2)
 
-        self.play_pause_button = QPushButton("⏯")  # Play/Pause symbol
+        self.play_pause_button = QPushButton("âŹŻ")  # Play/Pause symbol
         self.play_pause_button.setToolTip("Play/Pause (Space)")
         self.play_pause_button.clicked.connect(self._toggle_play_pause)
 
-        self.reset_button = QPushButton("⏮")  # Rewind to start symbol
+        self.reset_button = QPushButton("âŹ®")  # Rewind to start symbol
         self.reset_button.setToolTip("Go to Start")
         self.reset_button.clicked.connect(self._reset_to_start)
 
