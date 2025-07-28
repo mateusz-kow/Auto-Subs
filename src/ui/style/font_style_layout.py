@@ -1,6 +1,6 @@
 from typing import Any
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -8,10 +8,13 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFontComboBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QSpinBox,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -35,16 +38,61 @@ def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:
     return row
 
 
-class FontStyleLayout(QVBoxLayout):
-    """A layout that provides user controls for configuring subtitle font styles.
+class _CollapsibleBox(QWidget):
+    """A custom widget that provides a collapsible group box."""
 
-    Emits:
-        settings_changed (dict): Signal emitted whenever the style configuration is updated.
+    def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        """Initialize the _CollapsibleBox."""
+        super().__init__(parent)
+
+        self.toggle_button = QToolButton()
+        self.toggle_button.setText(title)
+        self.toggle_button.setCheckable(True)
+        self.toggle_button.setChecked(False)
+        self.toggle_button.setStyleSheet("QToolButton { border: none; }")
+        self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.toggle_button.setArrowType(Qt.ArrowType.RightArrow)
+        self.toggle_button.pressed.connect(self._on_pressed)
+
+        self.content_area = QFrame()
+        self.content_area.setLayout(QVBoxLayout())
+        self.content_area.setMaximumHeight(0)
+        self.content_area.setMinimumHeight(0)
+        self.content_area.setFrameShape(QFrame.Shape.NoFrame)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.toggle_button)
+        main_layout.addWidget(self.content_area)
+
+    def _on_pressed(self) -> None:
+        """Handle button press to toggle visibility and arrow direction."""
+        checked = self.toggle_button.isChecked()
+        self.toggle_button.setArrowType(Qt.ArrowType.DownArrow if not checked else Qt.ArrowType.RightArrow)
+
+        if not checked:
+            self.content_area.setMaximumHeight(16777215)
+        else:
+            self.content_area.setMaximumHeight(0)
+
+    def set_content_layout(self, layout: QLayout) -> None:
+        """Set the layout for the content area."""
+        # Destroy the old layout before setting the new one
+        old_layout = self.content_area.layout()
+        if old_layout is not None:
+            QWidget().setLayout(old_layout)
+        self.content_area.setLayout(layout)
+
+
+class FontStyleLayout(QWidget):
+    """A widget that provides user controls for configuring subtitle font styles,
+    organized into collapsible sections.
     """
 
     settings_changed = Signal(object)
 
-    def __init__(self, style: dict[str, Any]):
+    def __init__(self, style: dict[str, Any]) -> None:
         """Initialize the font style layout with given style settings.
 
         Args:
@@ -54,48 +102,52 @@ class FontStyleLayout(QVBoxLayout):
         self._block_signals = False
         self.color_buttons: dict[str, dict[str, Any]] = {}
 
-        self.font_selector = QFontComboBox()
-        self.font_selector.currentFontChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Font:", self.font_selector))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
 
+        # --- Font & Text Section ---
+        font_section = _CollapsibleBox("Font & Text")
+        font_layout = QVBoxLayout()
+        self.font_selector = QFontComboBox()
+        font_layout.addLayout(_create_labeled_row("Font:", self.font_selector))
         self.font_size = QSpinBox()
         self.font_size.setRange(6, 100)
-        self.font_size.setValue(36)
-        self.font_size.valueChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Size:", self.font_size))
-
-        # Font style checkboxes
+        font_layout.addLayout(_create_labeled_row("Size:", self.font_size))
         self.bold_checkbox = QCheckBox("Bold")
-        self.bold_checkbox.stateChanged.connect(self._emit_settings)
-        self.addWidget(self.bold_checkbox)
-
         self.italic_checkbox = QCheckBox("Italic")
-        self.italic_checkbox.stateChanged.connect(self._emit_settings)
-        self.addWidget(self.italic_checkbox)
-
         self.underline_checkbox = QCheckBox("Underline")
-        self.underline_checkbox.stateChanged.connect(self._emit_settings)
-        self.addWidget(self.underline_checkbox)
-
         self.strikeout_checkbox = QCheckBox("Strikeout")
-        self.strikeout_checkbox.stateChanged.connect(self._emit_settings)
-        self.addWidget(self.strikeout_checkbox)
+        font_layout.addWidget(self.bold_checkbox)
+        font_layout.addWidget(self.italic_checkbox)
+        font_layout.addWidget(self.underline_checkbox)
+        font_layout.addWidget(self.strikeout_checkbox)
+        self.spacing_spinbox = QDoubleSpinBox()
+        self.spacing_spinbox.setRange(-10.0, 10.0)
+        self.spacing_spinbox.setDecimals(2)
+        self.spacing_spinbox.setSingleStep(0.1)
+        font_layout.addLayout(_create_labeled_row("Letter spacing:", self.spacing_spinbox))
+        font_section.set_content_layout(font_layout)
+        main_layout.addWidget(font_section)
 
-        # Color selection buttons
+        # --- Colors Section ---
+        colors_section = _CollapsibleBox("Colors")
+        colors_layout = QVBoxLayout()
         for name in ["primary_color", "secondary_color", "outline_color", "back_color"]:
             btn = QPushButton(name.replace("_", " ").title())
             btn.clicked.connect(lambda _, n=name: self._select_color(n))
             self.color_buttons[name] = {"button": btn, "color": QColor("#ffffff")}
             self._update_color_button_style(name)
-            self.addWidget(btn)
+            colors_layout.addWidget(btn)
+        colors_section.set_content_layout(colors_layout)
+        main_layout.addWidget(colors_section)
 
+        # --- Positioning & Layout Section ---
+        pos_section = _CollapsibleBox("Positioning & Layout")
+        pos_layout = QVBoxLayout()
         self._alignment = QComboBox()
         self._alignment.addItems(["Left", "Center", "Right"])
-        self._alignment.setCurrentIndex(1)
-        self._alignment.currentIndexChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Alignment:", self._alignment))
-
-        # Margin spinboxes
+        pos_layout.addLayout(_create_labeled_row("Alignment:", self._alignment))
         self.margin_l = QSpinBox()
         self.margin_r = QSpinBox()
         self.margin_v = QSpinBox()
@@ -105,67 +157,86 @@ class FontStyleLayout(QVBoxLayout):
             ("Vertical margin:", self.margin_v),
         ]:
             box.setRange(0, 1000)
-            box.valueChanged.connect(self._emit_settings)
-            self.addLayout(_create_labeled_row(label, box))
+            pos_layout.addLayout(_create_labeled_row(label, box))
+        self.angle = QSpinBox()
+        self.angle.setRange(-360, 360)
+        pos_layout.addLayout(_create_labeled_row("Rotation (Angle):", self.angle))
+        pos_section.set_content_layout(pos_layout)
+        main_layout.addWidget(pos_section)
 
+        # --- Border & Shadow Section ---
+        border_section = _CollapsibleBox("Border & Shadow")
+        border_layout = QVBoxLayout()
         self.border_style = QComboBox()
         self.border_style.addItems(["Outline", "Opaque Box"])
-        self.border_style.currentIndexChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Border style:", self.border_style))
-
+        border_layout.addLayout(_create_labeled_row("Border style:", self.border_style))
         self.outline = QSpinBox()
         self.outline.setRange(0, 20)
-        self.outline.valueChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Outline:", self.outline))
-
+        border_layout.addLayout(_create_labeled_row("Outline:", self.outline))
         self.shadow = QSpinBox()
         self.shadow.setRange(0, 20)
-        self.shadow.valueChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Shadow:", self.shadow))
+        border_layout.addLayout(_create_labeled_row("Shadow:", self.shadow))
+        border_section.set_content_layout(border_layout)
+        main_layout.addWidget(border_section)
 
+        # --- Advanced Section ---
+        advanced_section = _CollapsibleBox("Advanced")
+        advanced_layout = QVBoxLayout()
         self.scale_x = QSpinBox()
         self.scale_y = QSpinBox()
         for label, box in [("Scale X:", self.scale_x), ("Scale Y:", self.scale_y)]:
             box.setRange(10, 500)
             box.setSuffix("%")
-            box.valueChanged.connect(self._emit_settings)
-            self.addLayout(_create_labeled_row(label, box))
-
-        self.spacing_spinbox = QDoubleSpinBox()
-        self.spacing_spinbox.setRange(-10.0, 10.0)
-        self.spacing_spinbox.setDecimals(2)
-        self.spacing_spinbox.setSingleStep(0.1)
-        self.spacing_spinbox.valueChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Letter spacing:", self.spacing_spinbox))
-
-        self.angle = QSpinBox()
-        self.angle.setRange(-360, 360)
-        self.angle.valueChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Rotation (Angle):", self.angle))
-
+            advanced_layout.addLayout(_create_labeled_row(label, box))
         self.encoding = QComboBox()
         self.encoding.addItems(["ANSI", "UTF-8", "Unicode"])
-        self.encoding.currentIndexChanged.connect(self._emit_settings)
-        self.addLayout(_create_labeled_row("Encoding:", self.encoding))
+        advanced_layout.addLayout(_create_labeled_row("Encoding:", self.encoding))
+        advanced_section.set_content_layout(advanced_layout)
+        main_layout.addWidget(advanced_section)
 
+        self._connect_signals()
         self.set_settings(style)
 
-    def _update_color_button_style(self, name: str) -> None:
-        """Update the background color of a color picker button.
+    def _connect_signals(self) -> None:
+        """Connect all widget signals to the settings emitter."""
+        widgets_to_connect = [
+            self.font_selector,
+            self.font_size,
+            self.bold_checkbox,
+            self.italic_checkbox,
+            self.underline_checkbox,
+            self.strikeout_checkbox,
+            self._alignment,
+            self.margin_l,
+            self.margin_r,
+            self.margin_v,
+            self.border_style,
+            self.outline,
+            self.shadow,
+            self.scale_x,
+            self.scale_y,
+            self.spacing_spinbox,
+            self.angle,
+            self.encoding,
+        ]
+        for widget in widgets_to_connect:
+            if isinstance(widget, QComboBox):
+                widget.currentIndexChanged.connect(self._emit_settings)
+            elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                widget.valueChanged.connect(self._emit_settings)
+            elif isinstance(widget, QCheckBox):
+                widget.stateChanged.connect(self._emit_settings)
+            elif isinstance(widget, QFontComboBox):
+                widget.currentFontChanged.connect(self._emit_settings)
 
-        Args:
-            name (str): The name of the color field (e.g., "primary_color").
-        """
+    def _update_color_button_style(self, name: str) -> None:
+        """Update the background color of a color picker button."""
         color: QColor = self.color_buttons[name]["color"]
         button: QPushButton = self.color_buttons[name]["button"]
         button.setStyleSheet(f"background-color: {color.name()}")
 
     def _select_color(self, name: str) -> None:
-        """Open a QColorDialog for selecting a new color.
-
-        Args:
-            name (str): The color field to update (e.g., "back_color").
-        """
+        """Open a QColorDialog for selecting a new color."""
         current: QColor = self.color_buttons[name]["color"]
         color = QColorDialog.getColor(current)
         if color.isValid():
@@ -180,11 +251,7 @@ class FontStyleLayout(QVBoxLayout):
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
-        """Retrieve the current font style configuration.
-
-        Returns:
-            dict: The current font style settings.
-        """
+        """Retrieve the current font style configuration."""
         return {
             "font": self.font_selector.currentText(),
             "font_size": self.font_size.value(),
@@ -211,11 +278,7 @@ class FontStyleLayout(QVBoxLayout):
         }
 
     def set_settings(self, settings: dict[str, Any]) -> None:
-        """Apply a font style configuration from a dictionary.
-
-        Args:
-            settings (dict): Font style configuration to apply.
-        """
+        """Apply a font style configuration from a dictionary."""
         self._block_signals = True
         try:
             self.font_selector.setCurrentText(settings.get("font", "Arial"))

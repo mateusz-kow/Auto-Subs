@@ -2,26 +2,20 @@ from typing import Any
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QCheckBox, QColorDialog, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QColorDialog, QPushButton, QVBoxLayout, QWidget
 
+from src.ui.style.font_style_layout import _CollapsibleBox
 from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
 
 
-class HighlightStyleLayout(QVBoxLayout):
-    """A layout providing controls to configure subtitle highlight styles using a structured dictionary.
-
-    Users can customize:
-        - Highlight text color
-        - Highlight border color
-        - Whether to fade the highlight in/out
-
-    Emits:
-        settings_changed (dict): Emitted when the user modifies any setting.
+class HighlightStyleLayout(QWidget):
+    """A layout providing controls to configure subtitle highlight styles
+    inside a collapsible section.
     """
 
     settings_changed = Signal(object)
 
-    def __init__(self, style: dict[str, Any]):
+    def __init__(self, style: dict[str, Any]) -> None:
         """Initialize the highlight style configuration UI.
 
         Args:
@@ -29,29 +23,34 @@ class HighlightStyleLayout(QVBoxLayout):
         """
         super().__init__()
         self._block_signals = False
-
-        # Default values
         self.highlight_color = QColor("#ffcc99")
         self.highlight_border_color = QColor("#000000")
 
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+
+        section = _CollapsibleBox("Highlight Style")
+        content_layout = QVBoxLayout()
+
         # Highlight color button
         self.highlight_color_button = QPushButton("Highlight Color (Text)")
-        self.highlight_color_button.setStyleSheet(f"background-color: {self.highlight_color.name()}")
         self.highlight_color_button.clicked.connect(self._select_highlight_color)
-        self.addWidget(self.highlight_color_button)
+        content_layout.addWidget(self.highlight_color_button)
 
         # Border color button
         self.highlight_border_button = QPushButton("Highlight Color (Border)")
-        self.highlight_border_button.setStyleSheet(f"background-color: {self.highlight_border_color.name()}")
         self.highlight_border_button.clicked.connect(self._select_highlight_border_color)
-        self.addWidget(self.highlight_border_button)
+        content_layout.addWidget(self.highlight_border_button)
 
         # Fade toggle
         self.fade_highlight_checkbox = QCheckBox("Fade Highlight In/Out")
-        self.fade_highlight_checkbox.stateChanged.connect(lambda _: self._emit_settings())
-        self.addWidget(self.fade_highlight_checkbox)
+        self.fade_highlight_checkbox.stateChanged.connect(self._emit_settings)
+        content_layout.addWidget(self.fade_highlight_checkbox)
 
-        # Load initial settings
+        section.set_content_layout(content_layout)
+        main_layout.addWidget(section)
+
         self.set_settings(style)
 
     def _select_highlight_color(self) -> None:
@@ -77,11 +76,7 @@ class HighlightStyleLayout(QVBoxLayout):
         self.settings_changed.emit(self.get_settings())
 
     def get_settings(self) -> dict[str, Any]:
-        """Retrieve the current highlight style as a dictionary.
-
-        Returns:
-            dict: A dictionary with keys `text_color`, `border_color`, and `fade`.
-        """
+        """Retrieve the current highlight style as a dictionary."""
         return {
             "highlight_style": {
                 "text_color": qcolor_to_ass(self.highlight_color),
@@ -100,21 +95,14 @@ class HighlightStyleLayout(QVBoxLayout):
         try:
             style = settings.get("highlight_style", {})
 
-            # Set text highlight color
-            if "text_color" in style:
-                color = ass_to_qcolor(style["text_color"])
-                if color.isValid():
-                    self.highlight_color = color
-                    self.highlight_color_button.setStyleSheet(f"background-color: {color.name()}")
+            text_color = ass_to_qcolor(style.get("text_color", "&H0099CCFF"))
+            self.highlight_color = text_color
+            self.highlight_color_button.setStyleSheet(f"background-color: {text_color.name()}")
 
-            # Set border highlight color
-            if "border_color" in style:
-                color = ass_to_qcolor(style["border_color"])
-                if color.isValid():
-                    self.highlight_border_color = color
-                    self.highlight_border_button.setStyleSheet(f"background-color: {color.name()}")
+            border_color = ass_to_qcolor(style.get("border_color", "&H00000000"))
+            self.highlight_border_color = border_color
+            self.highlight_border_button.setStyleSheet(f"background-color: {border_color.name()}")
 
-            # Set fade toggle
             self.fade_highlight_checkbox.setChecked(bool(style.get("fade", False)))
         finally:
             self._block_signals = False

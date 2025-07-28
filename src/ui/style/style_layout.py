@@ -12,6 +12,8 @@ class StyleLayout(QScrollArea):
     and allows applying those styles via StyleManager.
     """
 
+
+
     def __init__(self, style_manager: StyleManager) -> None:
         """Initialize the StyleLayout with font and highlight style managers."""
         super().__init__()
@@ -19,6 +21,8 @@ class StyleLayout(QScrollArea):
         # Create a container widget for the scrollable content
         container = QWidget()
         self.main_layout = QVBoxLayout(container)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(5)
 
         self.style_manager = style_manager
 
@@ -26,8 +30,9 @@ class StyleLayout(QScrollArea):
         self.font_layout = FontStyleLayout(style)
         self.highlight_layout = HighlightStyleLayout(style)
 
-        self.main_layout.addLayout(self.font_layout)
-        self.main_layout.addLayout(self.highlight_layout)
+        self.main_layout.addWidget(self.font_layout)
+        self.main_layout.addWidget(self.highlight_layout)
+        self.main_layout.addStretch()
 
         self.font_layout.settings_changed.connect(self.apply_current_style)
         self.highlight_layout.settings_changed.connect(self.apply_current_style)
