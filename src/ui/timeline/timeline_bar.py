@@ -5,16 +5,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.managers.SubtitlesManager import SubtitlesManager
-from src.managers.VideoManager import VideoManager
-from src.ui.MediaPlayer import MediaPlayer
+from src.managers.subtitles_manager import SubtitlesManager
+from src.managers.video_manager import VideoManager
+from src.ui.media_player import MediaPlayer
 from src.ui.timeline.constants import SUBTITLE_BAR_HEIGHT, SUBTITLE_BAR_Y
-from src.ui.timeline.SegmentsBar import SegmentsBar
+from src.ui.timeline.segments_bar import SegmentsBar
 
 
 class TimelineBar(QWidget):
-    """
-    A widget representing the timeline bar of a video editor interface.
+    """A widget representing the timeline bar of a video editor interface.
 
     This bar includes playback control buttons and a visual segments bar that
     displays subtitle segments and video markers. It is designed to be resizeable.
@@ -27,8 +26,7 @@ class TimelineBar(QWidget):
     def __init__(
         self, subtitles_manager: SubtitlesManager, video_manager: VideoManager, media_player: MediaPlayer
     ) -> None:
-        """
-        Initialize the TimelineBar widget.
+        """Initialize the TimelineBar widget.
 
         Args:
             subtitles_manager: Manager handling subtitle data.
@@ -54,8 +52,7 @@ class TimelineBar(QWidget):
         main_layout.addWidget(self.segments_bar, 1)
 
     def _create_control_buttons(self) -> QWidget:
-        """
-        Create and return a widget containing the playback control buttons.
+        """Create and return a widget containing the playback control buttons.
 
         Returns:
             QWidget: The container widget with the buttons.

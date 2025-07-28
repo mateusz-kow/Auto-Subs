@@ -2,24 +2,25 @@ from typing import Any
 
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
-from src.managers.StyleManager import StyleManager
-
-from .FontStyleLayout import FontStyleLayout
-from .HighlightStyleLayout import HighlightStyleLayout
+from src.managers.style_manager import StyleManager
+from src.ui.style.font_style_layout import FontStyleLayout
+from src.ui.style.highlight_style_layout import HighlightStyleLayout
 
 
 class StyleLayout(QScrollArea):
-    """
-    A layout that combines font and highlight styling controls
+    """A layout that combines font and highlight styling controls
     and allows applying those styles via StyleManager.
     """
 
     def __init__(self, style_manager: StyleManager) -> None:
+        """Initialize the StyleLayout with font and highlight style managers."""
         super().__init__()
 
         # Create a container widget for the scrollable content
         container = QWidget()
         self.main_layout = QVBoxLayout(container)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(5)
 
         self.style_manager = style_manager
 
@@ -27,14 +28,12 @@ class StyleLayout(QScrollArea):
         self.font_layout = FontStyleLayout(style)
         self.highlight_layout = HighlightStyleLayout(style)
 
-        self.main_layout.addLayout(self.font_layout)
-        self.main_layout.addLayout(self.highlight_layout)
+        self.main_layout.addWidget(self.font_layout)
+        self.main_layout.addWidget(self.highlight_layout)
+        self.main_layout.addStretch()
 
         self.font_layout.settings_changed.connect(self.apply_current_style)
         self.highlight_layout.settings_changed.connect(self.apply_current_style)
-
-        # Subscribe to style loaded events
-        style_manager.add_style_loaded_listener(self.on_style_loaded)
 
         # Set the container widget as the scrollable area
         self.setWidget(container)
@@ -46,8 +45,7 @@ class StyleLayout(QScrollArea):
         self.style_manager.from_dict(style_data)
 
     def get_current_settings(self) -> dict[str, Any]:
-        """
-        Combines font and highlight managers into a single dictionary.
+        """Combines font and highlight managers into a single dictionary.
 
         Returns:
             dict: Combined style managers.
@@ -59,8 +57,7 @@ class StyleLayout(QScrollArea):
         }
 
     def on_style_loaded(self, new_style: dict[str, Any]) -> None:
-        """
-        Callback for when a new style is loaded.
+        """Callback for when a new style is loaded.
 
         Args:
             new_style (dict): The loaded style data.

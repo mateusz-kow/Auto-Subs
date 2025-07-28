@@ -9,8 +9,7 @@ def segment_words(
     max_chars: int = 10,
     break_chars: tuple[str, ...] = (".", ",", "!", "?"),
 ) -> list[dict[str, Any]]:
-    """
-    Segments a transcription into subtitle chunks based on character limits
+    """Segments a transcription into subtitle chunks based on character limits
     and punctuation.
 
     Args:

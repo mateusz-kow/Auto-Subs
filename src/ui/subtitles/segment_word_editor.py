@@ -17,8 +17,7 @@ logger = getLogger(__name__)
 
 
 class SegmentWordEditor(QWidget):
-    """
-    Provides a spreadsheet-like interface (QTableWidget) to edit words
+    """Provides a spreadsheet-like interface (QTableWidget) to edit words
     of a single subtitle segment.
     """
 
@@ -60,8 +59,7 @@ class SegmentWordEditor(QWidget):
         self.delete_word_button.clicked.connect(self._on_delete_word)
 
     def populate(self, segment: SubtitleSegment, segment_index: int) -> None:
-        """
-        Populate the table with words from the given segment.
+        """Populate the table with words from the given segment.
 
         Args:
             segment: The subtitle segment to display.

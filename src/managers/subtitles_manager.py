@@ -1,30 +1,35 @@
+# src/managers/subtitles_manager.py
 import asyncio
 from logging import getLogger
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from src.managers.base_manager import BaseManager, EventType
 from src.subtitles.models import Subtitles, SubtitleSegment, SubtitleWord
 
 logger = getLogger(__name__)
 
 
-class SubtitlesManager:
+class SubtitlesEventType(EventType):
+    """Defines the event types for the SubtitlesManager."""
+
+    SUBTITLES_CHANGED = "on_subtitles_changed"
+
+
+class SubtitlesManager(BaseManager[Subtitles]):
     """Manages subtitle operations and notifies listeners of changes."""
 
     def __init__(self, subtitles: Subtitles | None = None) -> None:
+        """Initialize the SubtitlesManager."""
+        super().__init__(SubtitlesEventType)
         self._subtitles: Subtitles = subtitles if subtitles else Subtitles.empty()
-        self._subtitles_listeners: list[Callable[[Subtitles], Any]] = []
-        logger.info("SubtitlesManager initialized with subtitles: %s", subtitles)
+        logger.info(f"SubtitlesManager initialized with subtitles: {subtitles}")
 
     def set_subtitles(self, subtitles: Subtitles) -> None:
         """Set the current subtitles and notify listeners."""
         self._subtitles = subtitles
         logger.info("Subtitles set to: %s", subtitles)
-        self._notify_listeners()
-
-    def add_subtitles_listener(self, listener: Callable[[Subtitles], Any]) -> None:
-        """Register a listener to be notified of subtitle changes."""
-        self._subtitles_listeners.append(listener)
+        self._notify_listeners(subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
     def delete_word(self, segment_index: int, word_index: int) -> None:
         """Delete a word from a specific segment."""
@@ -66,7 +71,7 @@ class SubtitlesManager:
 
         merged_segment = SubtitleSegment(words=words)
         self.subtitles.add_segment(merged_segment)
-        self._notify_listeners()
+        self._notify_listeners(self._subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
     def resize_segment(self, segment_index: int, new_start: float, new_end: float) -> None:
         """Resize a segment and scale its words proportionally."""
@@ -118,29 +123,26 @@ class SubtitlesManager:
 
         async def task() -> None:
             self._subtitles = await asyncio.to_thread(Subtitles.from_transcription, transcription)
-            self._notify_listeners()
+            self._notify_listeners(self._subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
         asyncio.create_task(task())
 
     def on_video_changed(self, video_path: Path) -> None:
+        """Listener for when the video changes. Clears existing subtitles."""
         self._subtitles = Subtitles.empty()
+        self._notify_listeners(self._subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
     def _refresh_segment(self, segment_index: int) -> None:
         """Refresh a specific segment and notify listeners."""
         self._subtitles.segments[segment_index].refresh()
-        self._notify_listeners()
+        self._notify_listeners(self._subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
     def _refresh_subtitles(self) -> None:
         """Refresh all subtitles and notify listeners."""
         self._subtitles.refresh()
-        self._notify_listeners()
-
-    def _notify_listeners(self) -> None:
-        """Notify all registered listeners of subtitle changes."""
-        logger.info("Subtitles changed.")
-        for listener in self._subtitles_listeners:
-            listener(self._subtitles)
+        self._notify_listeners(self._subtitles, SubtitlesEventType.SUBTITLES_CHANGED)
 
     @property
     def subtitles(self) -> Subtitles:
+        """Return the current Subtitles object."""
         return self._subtitles

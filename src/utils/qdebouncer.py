@@ -4,14 +4,12 @@ from PySide6.QtCore import QObject, QTimer
 
 
 class QDebouncer(QObject):
-    """
-    A utility class to debounce function calls, ensuring that the function is only executed
+    """A utility class to debounce function calls, ensuring that the function is only executed
     after a specified delay has passed since the last call.
     """
 
     def __init__(self, delay_ms: int):
-        """
-        Initialize the QDebouncer.
+        """Initialize the QDebouncer.
 
         Args:
             delay_ms (int): The debounce delay in milliseconds.
@@ -28,8 +26,7 @@ class QDebouncer(QObject):
         self.timer.timeout.connect(self._trigger)
 
     def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
-        """
-        Schedule a function to be called after the debounce delay.
+        """Schedule a function to be called after the debounce delay.
 
         Args:
             func (Callable): The function to debounce.

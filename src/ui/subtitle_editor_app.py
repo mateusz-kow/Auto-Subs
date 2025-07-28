@@ -1,7 +1,4 @@
 import asyncio
-import json
-import uuid
-import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -17,16 +14,17 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from src.managers.StyleManager import StyleManager
-from src.managers.SubtitlesManager import SubtitlesManager
-from src.managers.TranscriptionManager import TranscriptionManager
-from src.managers.VideoManager import VideoManager
+from src.config import STYLES_DIR
+from src.managers.project_manager import ProjectManager
+from src.managers.style_manager import StyleManager
+from src.managers.subtitles_manager import SubtitlesManager
+from src.managers.transcription_manager import TranscriptionManager
+from src.managers.video_manager import VideoManager
 from src.subtitles.generator import SubtitleGenerator
 from src.subtitles.models import Subtitles
-from src.ui.LeftPanel import LeftPanel
-from src.ui.MediaPlayer import MediaPlayer
-from src.ui.timeline.TimelineBar import TimelineBar
-from src.utils.constants import TEMP_DIR
+from src.ui.left_panel import LeftPanel
+from src.ui.media_player import MediaPlayer
+from src.ui.timeline.timeline_bar import TimelineBar
 from src.utils.ffmpeg_utils import get_video_with_subtitles
 
 
@@ -34,14 +32,15 @@ class SubtitleEditorApp(QMainWindow):
     """Main application window for the Subtitle Editor."""
 
     def __init__(self) -> None:
+        """Initialize the SubtitleEditorApp."""
         super().__init__()
-        self._current_project_path: Path | None = None
+        self._initialize_managers()
         self._update_window_title()
 
-        self._initialize_managers()
         self._initialize_ui()
         self._setup_layout()
         self._setup_menus_and_toolbars()
+        self._connect_observers()
 
         self.statusBar().showMessage("Ready")
 
@@ -51,13 +50,33 @@ class SubtitleEditorApp(QMainWindow):
         self.subtitles_manager = SubtitlesManager()
         self.video_manager = VideoManager()
         self.transcription_manager = TranscriptionManager()
+        self.project_manager = ProjectManager(self.video_manager, self.subtitles_manager, self.style_manager)
 
-        # Connect managers
-        self.video_manager.add_video_listener(self.transcription_manager.on_video_changed)
-        self.video_manager.add_video_listener(self.subtitles_manager.on_video_changed)
-        self.video_manager.add_video_listener(self.on_video_loaded_status)
-        self.video_manager.add_video_listener(self._on_video_media_changed)
-        self.transcription_manager.add_transcription_listener(self.subtitles_manager.on_transcription_changed)
+    def _connect_observers(self) -> None:
+        """Connect the managers to their respective observers."""
+        managers = (
+            self.style_manager,
+            self.subtitles_manager,
+            self.video_manager,
+            self.transcription_manager,
+            self.project_manager,
+        )
+
+        # UI components and other managers that listen to manager events
+        listeners = (
+            self,  # The main window itself
+            self.subtitles_manager,  # Listens to transcription and video events
+            self.transcription_manager,  # Listens to video events
+            self.left_panel,  # Listens to subtitle events
+            self.left_panel.style_layout,  # Listens for style loaded events
+            self.timeline_bar.segments_bar,  # Listens to subtitle and video events
+        )
+
+        for manager in managers:
+            for listener in listeners:
+                if manager is listener:  # A manager should not listen to itself via this mechanism
+                    continue
+                manager.register_listener(listener)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI components."""
@@ -72,13 +91,6 @@ class SubtitleEditorApp(QMainWindow):
         self.timeline_bar.segments_bar.segment_clicked.connect(self.left_panel.show_editor_for_segment)
         self.timeline_bar.segments_bar.segment_clicked.connect(self._seek_player_to_segment)
         self.timeline_bar.segments_bar.add_preview_time_listener(self.on_preview_time_changed)
-
-        # Connect manager signals to slots
-        self.subtitles_manager.add_subtitles_listener(self.left_panel.on_subtitles_changed)
-        self.subtitles_manager.add_subtitles_listener(self.on_subtitles_changed)
-        self.style_manager.add_style_listener(self.on_style_changed)
-        self.style_manager.add_style_loaded_listener(self.left_panel.style_layout.on_style_loaded)
-        self.video_manager.add_video_listener(self._on_video_changed_for_transcribe_button)
 
     def _setup_layout(self) -> None:
         """Set up the main window layout with a central widget and dockable panels."""
@@ -169,12 +181,14 @@ class SubtitleEditorApp(QMainWindow):
         self.transcribe_btn.clicked.connect(self._on_transcribe_cancel_clicked)
         main_toolbar.addWidget(self.transcribe_btn)
 
-        # Listen for transcription state changes to update button
-        self.transcription_manager.add_transcription_listener(self._on_transcription_finished)
-        self.transcription_manager.add_transcription_failed_listener(self._on_transcription_failed)
-        self.transcription_manager.add_transcription_cancelled_listener(self._on_transcription_cancelled)
+    # --- Listener Callbacks ---
 
-    # --- Video & Subtitle Rendering Slots ---
+    def on_video_changed(self, video_path: Path) -> None:
+        """Handle video change events."""
+        if video_path and video_path.exists():
+            self.statusBar().showMessage(f"'{video_path.name}' loaded successfully.", 5000)
+            self.media_player.set_media(video_path, None)
+        self._reset_transcribe_button()
 
     def on_subtitles_changed(self, subtitles: Subtitles) -> None:
         """Callback to refresh subtitles when content changes."""
@@ -186,6 +200,48 @@ class SubtitleEditorApp(QMainWindow):
         if self.subtitles_manager.subtitles and self.video_manager.video_path.exists():
             self._render_subtitles_on_player(self.subtitles_manager.subtitles)
 
+    def on_transcription_changed(self, result: Any) -> None:
+        """Resets the transcribe button after transcription is complete."""
+        self.statusBar().showMessage("Transcription complete.", 5000)
+        self._reset_transcribe_button()
+
+    def on_transcription_failed(self, error: Exception) -> None:
+        """Shows a failure message when transcription fails."""
+        self.statusBar().showMessage(f"Transcription failed: {str(error)}", 5000)
+        self._reset_transcribe_button()
+        QMessageBox.critical(self, "Transcription Error", f"Could not transcribe video:\n{str(error)}")
+
+    def on_transcription_cancelled(self, data: dict[str, Any]) -> None:
+        """Resets the transcribe button after transcription is cancelled."""
+        self.statusBar().showMessage("Transcription cancelled.", 5000)
+        self._reset_transcribe_button()
+
+    def on_project_opened(self, path: Path) -> None:
+        """Handle project opened events."""
+        self.statusBar().showMessage(f"Project '{path.name}' loaded successfully.", 5000)
+        self._update_window_title()
+
+    def on_project_saved(self, path: Path) -> None:
+        """Handle project saved events."""
+        self.statusBar().showMessage(f"Project saved to '{path.name}'.", 5000)
+        self._update_window_title()
+
+    def on_project_closed(self, data: None) -> None:
+        """Handle project closed events."""
+        self._update_window_title()
+
+    def on_project_load_failed(self, error: Exception) -> None:
+        """Handle project load failure."""
+        QMessageBox.critical(self, "Load Error", f"Failed to load project:\n{str(error)}")
+        self.statusBar().showMessage("Project load failed.", 5000)
+
+    def on_project_save_failed(self, error: Exception) -> None:
+        """Handle project save failure."""
+        QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{str(error)}")
+        self.statusBar().showMessage("Project save failed.", 5000)
+
+    # --- UI Action Slots and Helpers ---
+
     def _render_subtitles_on_player(self, subtitles: Subtitles) -> None:
         """Generate and apply subtitles to the media player."""
 
@@ -195,26 +251,12 @@ class SubtitleEditorApp(QMainWindow):
 
         asyncio.create_task(task())
 
-    # --- UI Action Slots ---
-
     @Slot(int)
     def _seek_player_to_segment(self, segment_index: int) -> None:
-        """Seeks the media player to the start of the selected segment."""
+        """Seek the media player to the start of the selected segment."""
         if self.subtitles_manager.subtitles:
             segment = self.subtitles_manager.subtitles.segments[segment_index]
             self.media_player.set_timestamp(int(segment.start * 1000))
-
-    @Slot(Path)
-    def on_video_loaded_status(self, video_path: Path) -> None:
-        """Updates the status bar when a new video is loaded."""
-        if video_path and video_path.exists():
-            self.statusBar().showMessage(f"'{video_path.name}' loaded successfully.", 5000)
-
-    @Slot(Path)
-    def _on_video_media_changed(self, video_path: Path) -> None:
-        """Load a new video into the media player."""
-        if video_path and video_path.exists():
-            self.media_player.set_media(video_path, None)
 
     @Slot(float)
     def on_preview_time_changed(self, time: float) -> None:
@@ -225,7 +267,7 @@ class SubtitleEditorApp(QMainWindow):
     # --- Transcription Button Logic ---
 
     def _on_transcribe_cancel_clicked(self) -> None:
-        """Handles clicks on the dynamic 'Transcribe/Cancel' button."""
+        """Handle clicks on the dynamic 'Transcribe/Cancel' button."""
         if self.transcribe_btn.text() == "Transcribe Video":
             self.statusBar().showMessage("Transcribing video... This may take a while.")
             self.transcription_manager.start_transcription()
@@ -235,29 +277,8 @@ class SubtitleEditorApp(QMainWindow):
             self.transcribe_btn.setText("Cancelling...")
             self.transcribe_btn.setEnabled(False)
 
-    @Slot(Path)
-    def _on_video_changed_for_transcribe_button(self, video_path: Path) -> None:
-        """Enables or disables the transcribe button based on video presence."""
-        self._reset_transcribe_button()
-
-    def _on_transcription_finished(self, result: Any) -> None:
-        """Resets the transcribe button after transcription is complete."""
-        self.statusBar().showMessage("Transcription complete.", 5000)
-        self._reset_transcribe_button()
-
-    @Slot(Exception)
-    def _on_transcription_failed(self, error: Exception) -> None:
-        """Shows a failure message when transcription fails."""
-        self.statusBar().showMessage(f"Transcription failed: {str(error)}", 5000)
-        self._reset_transcribe_button()
-
-    def _on_transcription_cancelled(self) -> None:
-        """Resets the transcribe button after transcription is cancelled."""
-        self.statusBar().showMessage("Transcription cancelled.", 5000)
-        self._reset_transcribe_button()
-
     def _reset_transcribe_button(self) -> None:
-        """Resets the transcribe button to its default state based on video presence."""
+        """Reset the transcribe button to its default state based on video presence."""
         self.transcribe_btn.setText("Transcribe Video")
         has_video = bool(self.video_manager.video_path and self.video_manager.video_path.exists())
         self.transcribe_btn.setEnabled(has_video)
@@ -273,54 +294,13 @@ class SubtitleEditorApp(QMainWindow):
 
         path = Path(selected_path)
         self.statusBar().showMessage(f"Opening project {path.name}...")
-
-        project_temp_dir = TEMP_DIR / f"project_{path.stem}_{uuid.uuid4().hex[:8]}"
-        project_temp_dir.mkdir(parents=True, exist_ok=True)
-
-        try:
-
-            def _extract_and_find_files() -> tuple[Path, Path]:
-                with zipfile.ZipFile(path, "r") as zf:
-                    namelist = zf.namelist()
-                    video_arcname = next((name for name in namelist if name.startswith("video.")), None)
-                    if not video_arcname:
-                        raise FileNotFoundError("Video file not found in project archive.")
-                    if "project.json" not in namelist:
-                        raise FileNotFoundError("'project.json' not found in project archive.")
-
-                    zf.extractall(project_temp_dir)
-
-                    return project_temp_dir / "project.json", project_temp_dir / video_arcname
-
-            project_json_path, video_path_in_temp = await asyncio.to_thread(_extract_and_find_files)
-
-            with open(project_json_path, encoding="utf-8") as f:
-                project_data = json.load(f)
-
-            style_data = project_data.get("style_data", {})
-            subtitles_data = project_data.get("subtitles_data", {})
-
-            self.video_manager.set_video_path(video_path_in_temp)
-            self.style_manager.from_dict(style_data, notify_loaded=True)
-            new_subtitles = await asyncio.to_thread(Subtitles.from_dict, subtitles_data)
-            self.subtitles_manager.set_subtitles(new_subtitles)
-
-            self._current_project_path = path
-            self._update_window_title()
-            self.statusBar().showMessage(f"Project '{path.name}' loaded successfully.", 5000)
-
-        except (zipfile.BadZipFile, json.JSONDecodeError, ValueError, FileNotFoundError) as e:
-            QMessageBox.critical(self, "Load Error", f"Failed to load project:\n{str(e)}")
-            self.statusBar().showMessage("Project load failed.", 5000)
-        except Exception as e:
-            QMessageBox.critical(self, "Load Error", f"An unexpected error occurred while loading project:\n{str(e)}")
-            self.statusBar().showMessage("Project load failed.", 5000)
+        await self.project_manager.open_project(path)
 
     @asyncSlot()  # type: ignore[misc]
     async def save_project(self) -> None:
         """Save the current project to its existing path, or prompt for a new one."""
-        if self._current_project_path:
-            await self._save_to_path(self._current_project_path)
+        if self.project_manager.current_project_path:
+            await self.project_manager.save_project()
         else:
             await self.save_project_as()
 
@@ -332,39 +312,13 @@ class SubtitleEditorApp(QMainWindow):
             return
 
         path = Path(selected_path)
-        await self._save_to_path(path)
-        self._current_project_path = path
-        self._update_window_title()
-
-    async def _save_to_path(self, path: Path) -> None:
-        """Serialize the application state and write it to a compressed archive."""
-        if not self.video_manager.video_path.exists():
-            QMessageBox.warning(self, "Cannot Save", "A video must be loaded before saving a project.")
-            return
-
-        self.statusBar().showMessage(f"Saving project to {path.name}...")
-        try:
-            project_json_content = {
-                "subtitles_data": self.subtitles_manager.subtitles.to_dict(),
-                "style_data": self.style_manager.style,
-            }
-            video_source_path = self.video_manager.video_path
-
-            def _create_archive() -> None:
-                with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
-                    zf.writestr("project.json", json.dumps(project_json_content, indent=2))
-                    zf.write(video_source_path, arcname=f"video{video_source_path.suffix}")
-
-            await asyncio.to_thread(_create_archive)
-            self.statusBar().showMessage(f"Project saved to '{path.name}'.", 5000)
-        except Exception as e:
-            QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{str(e)}")
-            self.statusBar().showMessage("Project save failed.", 5000)
+        await self.project_manager.save_project_as(path)
 
     def _update_window_title(self) -> None:
         """Update the main window title based on the current project path."""
-        if self._current_project_path:
-            self.setWindowTitle(f"Auto Subs - {self._current_project_path.name}")
+        project_path = self.project_manager.current_project_path
+        if project_path:
+            self.setWindowTitle(f"Auto Subs - {project_path.name}")
         else:
             self.setWindowTitle("Auto Subs")
 
@@ -375,8 +329,7 @@ class SubtitleEditorApp(QMainWindow):
         """Prompt the user to select a video file to import."""
         selected_path, _ = QFileDialog.getOpenFileName(self, "Import Video", "", "Video files (*.mp4 *.mkv *.avi)")
         if selected_path:
-            self._current_project_path = None
-            self._update_window_title()
+            self.project_manager.close_project()
             path = Path(selected_path)
             self.video_manager.set_video_path(path)
 
@@ -472,7 +425,7 @@ class SubtitleEditorApp(QMainWindow):
     @asyncSlot()  # type: ignore[misc]
     async def save_style_to_file(self) -> None:
         """Save the current style to a JSON file."""
-        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style As", "", "JSON files (*.json)")
+        selected_path, _ = QFileDialog.getSaveFileName(self, "Save Style As", str(STYLES_DIR), "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:
@@ -484,7 +437,7 @@ class SubtitleEditorApp(QMainWindow):
     @asyncSlot()  # type: ignore[misc]
     async def load_style_from_file(self) -> None:
         """Load subtitle styling from a JSON file."""
-        selected_path, _ = QFileDialog.getOpenFileName(self, "Load Style", "", "JSON files (*.json)")
+        selected_path, _ = QFileDialog.getOpenFileName(self, "Load Style", str(STYLES_DIR), "JSON files (*.json)")
         if selected_path:
             path = Path(selected_path)
             try:

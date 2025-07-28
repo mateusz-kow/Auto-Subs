@@ -9,8 +9,7 @@ logger = getLogger(__name__)
 
 
 def global_exception_handler(exctype: type[BaseException], value: BaseException, tb: TracebackType | None) -> None:
-    """
-    A global exception handler to catch unhandled exceptions, log them,
+    """A global exception handler to catch unhandled exceptions, log them,
     and display a user-friendly error message in a QMessageBox.
 
     This function is designed to be set as sys.excepthook.

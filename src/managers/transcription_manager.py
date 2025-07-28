@@ -1,19 +1,31 @@
+# src/managers/transcription_manager.py
 import asyncio
 import threading
 from logging import getLogger
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, cast
 
 import whisper
 
-from src.utils.constants import WHISPER_MODEL
+from src.config import WHISPER_MODEL
+from src.managers.base_manager import BaseManager, EventType
 
 logger = getLogger(__name__)
 
 
-class TranscriptionManager:
-    """
-    Manages asynchronous transcription using OpenAI's Whisper model.
+TranscriptionResult = dict[str, str | list[dict[str, int]]]
+
+
+class TranscriptionEventType(EventType):
+    """Defines the event types for the TranscriptionManager."""
+
+    TRANSCRIPTION_CHANGED = "on_transcription_changed"
+    TRANSCRIPTION_FAILED = "on_transcription_failed"
+    TRANSCRIPTION_CANCELLED = "on_transcription_cancelled"
+
+
+class TranscriptionManager(BaseManager[Any]):
+    """Manages asynchronous transcription using OpenAI's Whisper model.
 
     This class loads the Whisper model in a background thread and provides
     an asynchronous interface to transcribe audio files. It also supports
@@ -21,17 +33,15 @@ class TranscriptionManager:
     """
 
     def __init__(self, whisper_model: str = WHISPER_MODEL) -> None:
-        """
-        Initialize the TranscriptionManager and begin loading the Whisper model.
+        """Initialize the TranscriptionManager and begin loading the Whisper model.
 
         Args:
             whisper_model (str): Name or path of the Whisper model to load.
         """
-        self._model = None
+        super().__init__(TranscriptionEventType)
+        self._model: whisper.Whisper | None = None
         self._model_lock = asyncio.Lock()
-        self._transcription_listeners: list[Callable[[dict[str, Any]], None]] = []
-        self._transcription_failed_listeners: list[Callable[[Exception], None]] = []
-        self._transcription_cancelled_listeners: list[Callable[[], None]] = []
+
         self._model_loaded_event = threading.Event()
         self._model_loading_thread: threading.Thread | None = None
         self._current_audio_path: Path | None = None
@@ -40,8 +50,7 @@ class TranscriptionManager:
         self._load_model(whisper_model)
 
     def _load_model(self, whisper_model: str) -> None:
-        """
-        Load the Whisper model in a separate thread to avoid blocking the main thread.
+        """Load the Whisper model in a separate thread to avoid blocking the main thread.
 
         Args:
             whisper_model (str): The model name (e.g., 'base', 'small') or file path.
@@ -63,9 +72,8 @@ class TranscriptionManager:
 
     async def transcribe(
         self, audio_path: Path, word_timestamps: bool = True, language: str | None = None
-    ) -> dict[str, Any] | None:
-        """
-        Asynchronously transcribe an audio file using the loaded Whisper model.
+    ) -> TranscriptionResult | None:
+        """Asynchronously transcribe an audio file using the loaded Whisper model.
 
         Args:
             audio_path (str): Path to the input audio file.
@@ -87,15 +95,18 @@ class TranscriptionManager:
 
             try:
                 logger.info(f"Starting transcription for: {audio_path}")
-                result = await asyncio.to_thread(
-                    self._model.transcribe,
-                    audio=str(audio_path),
-                    word_timestamps=word_timestamps,
-                    language=language,
+                result = cast(
+                    TranscriptionResult,
+                    await asyncio.to_thread(
+                        self._model.transcribe,
+                        audio=str(audio_path),
+                        word_timestamps=word_timestamps,
+                        language=language,
+                    ),
                 )
                 if self._is_cancellation_requested:
                     logger.info("Transcription was cancelled. Discarding result.")
-                    self._notify_cancelled_listeners()
+                    self._notify_listeners({}, TranscriptionEventType.TRANSCRIPTION_CANCELLED)
                     return None
 
                 if self._current_audio_path != audio_path:
@@ -103,82 +114,28 @@ class TranscriptionManager:
                     return None
 
                 logger.info("Transcription completed successfully.")
-                self._notify_listeners(result)
+                self._notify_listeners(result, TranscriptionEventType.TRANSCRIPTION_CHANGED)
                 return result
 
             except Exception as e:
                 logger.exception("Error during transcription")
-                self._notify_failed_listeners(e)
+                self._notify_listeners(e, TranscriptionEventType.TRANSCRIPTION_FAILED)
                 return None
 
-    def add_transcription_listener(self, listener: Callable[[dict[str, Any]], None]) -> None:
-        """
-        Register a listener to be called when transcription completes.
-
-        Args:
-            listener (Callable[[dict], None]): A callback function that takes
-                the transcription result as an argument.
-        """
-        self._transcription_listeners.append(listener)
-
-    def add_transcription_failed_listener(self, listener: Callable[[Exception], None]) -> None:
-        """
-        Register a listener to be called when transcription fails.
-
-        Args:
-            listener: A callback function that takes the exception as an argument.
-        """
-        self._transcription_failed_listeners.append(listener)
-
-    def add_transcription_cancelled_listener(self, listener: Callable[[], None]) -> None:
-        """Register a listener to be called when transcription is cancelled."""
-        self._transcription_cancelled_listeners.append(listener)
-
-    def _notify_listeners(self, transcription: dict[str, Any]) -> None:
-        """
-        Notify all registered listeners with the transcription result.
-
-        Args:
-            transcription (dict): The completed transcription result.
-        """
-        for listener in self._transcription_listeners:
-            try:
-                listener(transcription)
-            except Exception as e:
-                logger.warning(f"Listener raised an exception: {e}")
-
-    def _notify_failed_listeners(self, error: Exception) -> None:
-        """
-        Notify all registered listeners about a transcription failure.
-
-        Args:
-            error (Exception): The exception that occurred during transcription.
-        """
-        for listener in self._transcription_failed_listeners:
-            try:
-                listener(error)
-            except Exception as e:
-                logger.warning(f"Failure listener raised an exception: {e}")
-
-    def _notify_cancelled_listeners(self) -> None:
-        """Notify all registered listeners that transcription was cancelled."""
-        for listener in self._transcription_cancelled_listeners:
-            try:
-                listener()
-            except Exception as e:
-                logger.warning(f"Cancellation listener raised an exception: {e}")
-
     def on_video_changed(self, video_path: Path) -> None:
-        """
-        Update the manager with the current video path. This is called when
-        a new video is loaded to keep the manager's state in sync for
-        preventing stale transcription results from being applied.
+        """Update the manager with the current video path.
+
+        This is called when a new video is loaded to keep the manager's state
+        in sync and prevent stale transcription results from being applied.
+
+        Args:
+            video_path: The path to the newly loaded video.
         """
         self._current_audio_path = video_path
 
     def start_transcription(self) -> None:
-        """
-        Starts the transcription process for the video path currently held by the manager.
+        """Start the transcription process for the video path currently held by the manager.
+
         This is intended to be called manually (e.g., by a button press).
         """
         if not self._current_audio_path:
@@ -191,6 +148,6 @@ class TranscriptionManager:
         asyncio.create_task(self.transcribe(audio_path_to_transcribe))
 
     def cancel_transcription(self) -> None:
-        """Requests cancellation of the ongoing transcription task."""
+        """Request cancellation of the ongoing transcription task."""
         self._is_cancellation_requested = True
         logger.info("Transcription cancellation requested.")

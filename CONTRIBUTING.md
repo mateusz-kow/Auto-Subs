@@ -87,15 +87,15 @@ If you have an idea for a new feature or an improvement, please open an issue fi
 
 To maintain code quality and consistency, we use a few automated tools. Your pull request must pass all these checks.
 
-*   **Formatting:** We use `black` for strict code formatting.
-*   **Linting:** We use `ruff` to check for a wide range of potential errors and style issues.
+*   **Formatting & Import Sorting:** We use `ruff format`, which incorporates `black` formatting and `isort` for consistent import sorting.
+*   **Linting:** We use `ruff check` to check for a wide range of potential errors and style issues.
 *   **Type Checking:** We use `mypy` for static type analysis.
 
 You can run these checks locally before committing your changes:
 
 ```bash
-# Check formatting with Black
-poetry run black . --check
+# Check formatting and import sorting
+poetry run ruff format . --check
 
 # Lint with Ruff
 poetry run ruff check .
@@ -104,9 +104,9 @@ poetry run ruff check .
 poetry run mypy .
 ```
 
-To automatically fix formatting and some linting issues, you can run:
+To automatically fix formatting, sorting, and some linting issues, you can run:
 ```bash
-poetry run black .
+poetry run ruff format .
 poetry run ruff check . --fix
 ```
 

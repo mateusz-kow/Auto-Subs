@@ -6,19 +6,43 @@ from logging import getLogger
 from PySide6.QtWidgets import QApplication
 from qasync import QEventLoop
 
-from src.ui.SubtitleEditorApp import SubtitleEditorApp
-from src.utils.constants import clean_temp_dir
+from src.config import TEMP_DIR
+from src.setup import setup_project
+from src.ui.subtitle_editor_app import SubtitleEditorApp
 from src.utils.exception_handler import install_handler
 
 logger = getLogger(__name__)
 
 
-def main() -> None:
+def clean_temp_dir() -> None:
+    """Clean the temporary directory by removing all files and folders inside.
+
+    Raises:
+        OSError: If a file or folder cannot be removed.
     """
-    Entry point for the Subtitle Editor application.
+    try:
+        for item in TEMP_DIR.iterdir():
+            try:
+                if item.is_dir():
+                    item.rmdir()
+                else:
+                    item.unlink()
+            except Exception as e:
+                logger.warning(f"Could not delete {item}: {e}")
+        logger.info(f"Temporary directory cleaned: {TEMP_DIR}")
+    except OSError:
+        logger.exception(f"Failed to clean temporary directory: {TEMP_DIR}")
+        raise
+
+
+def main() -> None:
+    """Entry point for the Subtitle Editor application.
     Sets up the QApplication, integrates the asyncio event loop with Qt,
     and starts the main application window.
     """
+    # Set up the project environment
+    setup_project()
+
     # Create the Qt application
     logger.debug("Initializing application")
     app = QApplication(sys.argv)
@@ -41,8 +65,8 @@ def main() -> None:
             loop.run_forever()
     except KeyboardInterrupt:
         logger.info("Application interrupted by user.")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+    except Exception:
+        logger.exception("An unexpected error occurred")
     finally:
         tasks = [t for t in all_tasks(loop) if not t.done()]
         if tasks:

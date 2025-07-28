@@ -1,3 +1,4 @@
+import asyncio
 from logging import getLogger
 
 from PySide6.QtCore import Slot
@@ -10,21 +11,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.managers.StyleManager import StyleManager
-from src.managers.SubtitlesManager import SubtitlesManager
+from src.managers.style_manager import StyleManager
+from src.managers.subtitles_manager import SubtitlesManager
 from src.subtitles.models import Subtitles, SubtitleWord
-from src.ui.style.StyleLayout import StyleLayout
-from src.ui.subtitles.SegmentWordEditor import SegmentWordEditor
+from src.ui.style.style_layout import StyleLayout
+from src.ui.style.style_preset_view import StylePresetView
+from src.ui.subtitles.segment_word_editor import SegmentWordEditor
 
 logger = getLogger(__name__)
 
 
 class LeftPanel(QWidget):
-    """
-    A widget for the left panel of the application.
+    """A widget for the left panel of the application.
 
-    This panel contains a QStackedWidget to switch between the Style editor
-    and the context-aware Segment Word Editor.
+    This panel contains a QStackedWidget to switch between the Style editor,
+    the context-aware Segment Word Editor, and the Style Preset browser.
     """
 
     def __init__(
@@ -60,6 +61,11 @@ class LeftPanel(QWidget):
         switcher_layout.addWidget(self.word_editor_button)
         self.button_group.addButton(self.word_editor_button, 1)
 
+        self.presets_button = QPushButton("Presets")
+        self.presets_button.setCheckable(True)
+        switcher_layout.addWidget(self.presets_button)
+        self.button_group.addButton(self.presets_button, 2)
+
         main_layout.addLayout(switcher_layout)
 
         # --- Stacked Widget to Hold Different Layouts ---
@@ -74,6 +80,10 @@ class LeftPanel(QWidget):
         self.word_editor = SegmentWordEditor()
         self.stacked_widget.addWidget(self.word_editor)
 
+        # --- View 2: Style Preset View ---
+        self.preset_view = StylePresetView(self.style_manager)
+        self.stacked_widget.addWidget(self.preset_view)
+
         # --- Initial State ---
         self.style_button.setChecked(True)
         self.stacked_widget.setCurrentIndex(0)
@@ -82,6 +92,7 @@ class LeftPanel(QWidget):
     def _connect_signals(self) -> None:
         """Connect signals to slots."""
         self.button_group.idClicked.connect(self.stacked_widget.setCurrentIndex)
+        self.stacked_widget.currentChanged.connect(self._on_view_changed)
 
         # Connect signals from the word editor to the subtitles manager
         self.word_editor.word_changed.connect(self._on_word_changed)
@@ -89,9 +100,14 @@ class LeftPanel(QWidget):
         self.word_editor.word_deleted.connect(self._on_delete_word)
 
     @Slot(int)
+    def _on_view_changed(self, index: int) -> None:
+        """Handle logic when switching views, like refreshing the preset list."""
+        if index == 2:  # Preset view is now visible
+            asyncio.create_task(self.preset_view.refresh_presets())
+
+    @Slot(int)
     def show_editor_for_segment(self, segment_index: int) -> None:
-        """
-        Public slot to switch the view to the word editor and populate it
+        """Public slot to switch the view to the word editor and populate it
         with data for the specified segment.
         """
         if self.subtitles_manager.subtitles is None:
