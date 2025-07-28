@@ -8,11 +8,12 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFontComboBox,
+    QFormLayout,
     QFrame,
     QHBoxLayout,
-    QLabel,
     QLayout,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QToolButton,
     QVBoxLayout,
@@ -20,22 +21,6 @@ from PySide6.QtWidgets import (
 )
 
 from src.utils.operations.color_operations import ass_to_qcolor, qcolor_to_ass
-
-
-def _create_labeled_row(label_text: str, widget: QWidget) -> QHBoxLayout:
-    """Utility function to create a horizontal layout row with a label and widget.
-
-    Args:
-        label_text (str): Text for the QLabel.
-        widget (QWidget): Widget to place next to the label.
-
-    Returns:
-        QHBoxLayout: The completed layout row.
-    """
-    row = QHBoxLayout()
-    row.addWidget(QLabel(label_text))
-    row.addWidget(widget)
-    return row
 
 
 class _CollapsibleBox(QWidget):
@@ -48,17 +33,25 @@ class _CollapsibleBox(QWidget):
         self.toggle_button = QToolButton()
         self.toggle_button.setText(title)
         self.toggle_button.setCheckable(True)
-        self.toggle_button.setChecked(False)
-        self.toggle_button.setStyleSheet("QToolButton { border: none; }")
+        self.toggle_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.toggle_button.setArrowType(Qt.ArrowType.RightArrow)
-        self.toggle_button.pressed.connect(self._on_pressed)
+        self.toggle_button.setStyleSheet(
+            """
+            QToolButton {
+                border: none;
+                font-weight: bold;
+                padding: 5px;
+                text-align: left;
+            }
+            QToolButton:hover {
+                background-color: #80808033;
+            }
+        """
+        )
 
         self.content_area = QFrame()
-        self.content_area.setLayout(QVBoxLayout())
-        self.content_area.setMaximumHeight(0)
-        self.content_area.setMinimumHeight(0)
         self.content_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.content_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(0)
@@ -66,19 +59,22 @@ class _CollapsibleBox(QWidget):
         main_layout.addWidget(self.toggle_button)
         main_layout.addWidget(self.content_area)
 
-    def _on_pressed(self) -> None:
-        """Handle button press to toggle visibility and arrow direction."""
-        checked = self.toggle_button.isChecked()
-        self.toggle_button.setArrowType(Qt.ArrowType.DownArrow if not checked else Qt.ArrowType.RightArrow)
+        self.toggle_button.toggled.connect(self._on_toggled)
 
-        if not checked:
-            self.content_area.setMaximumHeight(16777215)
-        else:
-            self.content_area.setMaximumHeight(0)
+        # Set initial state to expanded (open) by default
+        self.toggle_button.setChecked(True)
+
+    def _on_toggled(self, checked: bool) -> None:
+        """Handle toggling the collapsible box.
+
+        Args:
+            checked: True if the box is expanded, False if collapsed.
+        """
+        self.toggle_button.setArrowType(Qt.ArrowType.DownArrow if checked else Qt.ArrowType.RightArrow)
+        self.content_area.setVisible(checked)
 
     def set_content_layout(self, layout: QLayout) -> None:
         """Set the layout for the content area."""
-        # Destroy the old layout before setting the new one
         old_layout = self.content_area.layout()
         if old_layout is not None:
             QWidget().setLayout(old_layout)
@@ -108,25 +104,28 @@ class FontStyleLayout(QWidget):
 
         # --- Font & Text Section ---
         font_section = _CollapsibleBox("Font & Text")
-        font_layout = QVBoxLayout()
+        font_layout = QFormLayout()
         self.font_selector = QFontComboBox()
-        font_layout.addLayout(_create_labeled_row("Font:", self.font_selector))
+        font_layout.addRow("Font:", self.font_selector)
         self.font_size = QSpinBox()
         self.font_size.setRange(6, 100)
-        font_layout.addLayout(_create_labeled_row("Size:", self.font_size))
+        font_layout.addRow("Size:", self.font_size)
         self.bold_checkbox = QCheckBox("Bold")
         self.italic_checkbox = QCheckBox("Italic")
         self.underline_checkbox = QCheckBox("Underline")
         self.strikeout_checkbox = QCheckBox("Strikeout")
-        font_layout.addWidget(self.bold_checkbox)
-        font_layout.addWidget(self.italic_checkbox)
-        font_layout.addWidget(self.underline_checkbox)
-        font_layout.addWidget(self.strikeout_checkbox)
+        checkbox_layout = QHBoxLayout()
+        checkbox_layout.addWidget(self.bold_checkbox)
+        checkbox_layout.addWidget(self.italic_checkbox)
+        checkbox_layout.addWidget(self.underline_checkbox)
+        checkbox_layout.addWidget(self.strikeout_checkbox)
+        checkbox_layout.addStretch()
+        font_layout.addRow(checkbox_layout)
         self.spacing_spinbox = QDoubleSpinBox()
         self.spacing_spinbox.setRange(-10.0, 10.0)
         self.spacing_spinbox.setDecimals(2)
         self.spacing_spinbox.setSingleStep(0.1)
-        font_layout.addLayout(_create_labeled_row("Letter spacing:", self.spacing_spinbox))
+        font_layout.addRow("Letter spacing:", self.spacing_spinbox)
         font_section.set_content_layout(font_layout)
         main_layout.addWidget(font_section)
 
@@ -144,53 +143,52 @@ class FontStyleLayout(QWidget):
 
         # --- Positioning & Layout Section ---
         pos_section = _CollapsibleBox("Positioning & Layout")
-        pos_layout = QVBoxLayout()
+        pos_layout = QFormLayout()
         self._alignment = QComboBox()
         self._alignment.addItems(["Left", "Center", "Right"])
-        pos_layout.addLayout(_create_labeled_row("Alignment:", self._alignment))
+        pos_layout.addRow("Alignment:", self._alignment)
         self.margin_l = QSpinBox()
         self.margin_r = QSpinBox()
         self.margin_v = QSpinBox()
-        for label, box in [
-            ("Left margin:", self.margin_l),
-            ("Right margin:", self.margin_r),
-            ("Vertical margin:", self.margin_v),
-        ]:
+        for box in (self.margin_l, self.margin_r, self.margin_v):
             box.setRange(0, 1000)
-            pos_layout.addLayout(_create_labeled_row(label, box))
+        pos_layout.addRow("Left margin:", self.margin_l)
+        pos_layout.addRow("Right margin:", self.margin_r)
+        pos_layout.addRow("Vertical margin:", self.margin_v)
         self.angle = QSpinBox()
         self.angle.setRange(-360, 360)
-        pos_layout.addLayout(_create_labeled_row("Rotation (Angle):", self.angle))
+        pos_layout.addRow("Rotation (Angle):", self.angle)
         pos_section.set_content_layout(pos_layout)
         main_layout.addWidget(pos_section)
 
         # --- Border & Shadow Section ---
         border_section = _CollapsibleBox("Border & Shadow")
-        border_layout = QVBoxLayout()
+        border_layout = QFormLayout()
         self.border_style = QComboBox()
         self.border_style.addItems(["Outline", "Opaque Box"])
-        border_layout.addLayout(_create_labeled_row("Border style:", self.border_style))
+        border_layout.addRow("Border style:", self.border_style)
         self.outline = QSpinBox()
         self.outline.setRange(0, 20)
-        border_layout.addLayout(_create_labeled_row("Outline:", self.outline))
+        border_layout.addRow("Outline:", self.outline)
         self.shadow = QSpinBox()
         self.shadow.setRange(0, 20)
-        border_layout.addLayout(_create_labeled_row("Shadow:", self.shadow))
+        border_layout.addRow("Shadow:", self.shadow)
         border_section.set_content_layout(border_layout)
         main_layout.addWidget(border_section)
 
         # --- Advanced Section ---
         advanced_section = _CollapsibleBox("Advanced")
-        advanced_layout = QVBoxLayout()
+        advanced_layout = QFormLayout()
         self.scale_x = QSpinBox()
         self.scale_y = QSpinBox()
-        for label, box in [("Scale X:", self.scale_x), ("Scale Y:", self.scale_y)]:
+        for box in (self.scale_x, self.scale_y):
             box.setRange(10, 500)
             box.setSuffix("%")
-            advanced_layout.addLayout(_create_labeled_row(label, box))
+        advanced_layout.addRow("Scale X:", self.scale_x)
+        advanced_layout.addRow("Scale Y:", self.scale_y)
         self.encoding = QComboBox()
         self.encoding.addItems(["ANSI", "UTF-8", "Unicode"])
-        advanced_layout.addLayout(_create_labeled_row("Encoding:", self.encoding))
+        advanced_layout.addRow("Encoding:", self.encoding)
         advanced_section.set_content_layout(advanced_layout)
         main_layout.addWidget(advanced_section)
 
